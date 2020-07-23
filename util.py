@@ -55,3 +55,73 @@ def authenticate_creds():
             pickle.dump(creds, token)
 
     return creds
+
+
+def apply_named_range(sheet, spreadsheetId, name, range='A:F'):
+
+    sheetId = get_sheet(sheet, spreadsheetId, range)[
+        'sheets'][0]['properties']['sheetId']
+
+    sheet_range = range.split('!')[1].split(':')
+
+    body = {
+        "requests": [{
+            "addNamedRange": {
+                "namedRange": {
+                    "namedRangeId": range,
+                    "name": name+"_NR",
+                    "range": {
+                        "sheetId": sheetId,
+                        "startRowIndex": int(sheet_range[0][1:]) - 1,
+                        "endRowIndex": sheet_range[1][1:],
+                        "startColumnIndex": ord(sheet_range[0][:1]) % 65,
+                        "endColumnIndex": ord(sheet_range[1][:1]) % 65 + 1
+                    }
+                }
+            },
+        }
+        ]
+    }
+
+    response = service.spreadsheets().batchUpdate(
+        spreadsheetId=spreadsheetId, body=body).execute()
+
+    print(response)
+
+
+def get_sheet(sheet, spreadsheetId, range='A:F'):
+
+    return sheet.get(spreadsheetId=spreadsheetId,
+                     ranges=range).execute()
+
+
+def clear_sheet_data(sheet, spreadsheetId, range='A2:Z1000'):
+    # Clear values
+    sheet.values().clear(spreadsheetId=spreadsheetId,
+                         range='A2:Z1000', body={}).execute()
+
+
+def clear_sheet_charts(sheet, spreadsheetId, range='A2:Z1000'):
+    # Clear charts
+    sheet_properties = get_sheet(sheet, spreadsheetId, range)
+
+    if 'charts' in sheet_properties['sheets'][0]:
+        for chart in sheet_properties['sheets'][0]['charts']:
+
+            requests = {
+                "deleteEmbeddedObject": {
+                    "objectId": chart['chartId']
+                }
+            }
+
+            body = {
+                "requests": requests
+            }
+
+            sheet.batchUpdate(spreadsheetId=spreadsheetId, body=body).execute()
+
+
+def get_named_range(sheet, spreadsheetId, range='A:F'):
+    spreadsheet = get_sheet(sheet, spreadsheetId, range)
+
+    # print(spreadsheet['namedRanges'])

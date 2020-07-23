@@ -7,6 +7,7 @@ from config import *
 from get_aws_pricing import get_ondemand_hourly_price
 from util import read_sheet, append_to_sheet, authenticate_creds
 from stream_parse import extract_stream_data
+import graph
 
 
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
@@ -14,7 +15,7 @@ SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 # ToDo: Check first if spreadsheet exists and then check if corresponding sheet for test is created, else create
 
 
-def create_sheet(sheet, test_name, spreadsheet_Id):
+def create_sheet(sheet, spreadsheetId, test_name):
     if test_name == 'linpack':
         spreadsheet = {
             'properties': {
@@ -41,7 +42,7 @@ def create_sheet(sheet, test_name, spreadsheet_Id):
 
         spreadsheet = sheet.create(body=spreadsheet,
                                    fields='spreadsheetId').execute()
-        spreadsheet_Id = spreadsheet['spreadsheetId']
+        spreadsheetId = spreadsheet['spreadsheetId']
 
         # Add header rows
         values = [
@@ -52,7 +53,7 @@ def create_sheet(sheet, test_name, spreadsheet_Id):
             'values': values
         }
 
-        return sheet.values().update(spreadsheetId=spreadsheet_Id,
+        return sheet.values().update(spreadsheetId=spreadsheetId,
                                      range='A:F',
                                      valueInputOption='USER_ENTERED',
                                      body=body).execute()
@@ -75,12 +76,12 @@ def create_sheet(sheet, test_name, spreadsheet_Id):
 
         try:
             response = sheet.batchUpdate(
-                spreadsheetId=spreadsheet_Id, body=body).execute()
+                spreadsheetId=spreadsheetId, body=body).execute()
         except HttpError as error:
             print(error)
 
 
-def extract_data(path):
+def extract_linpack_data(path):
     """
     """
     # Find and seek logic
@@ -105,13 +106,13 @@ def extract_data(path):
 def main():
     """
     """
-    # if spreadsheet_Id is None:
-    spreadsheet = create_sheet(sheet, test_name, spreadsheet_Id)
+    # if spreadsheetId is None:
+    spreadsheet = create_sheet(sheet, spreadsheetId, test_name)
 
     if test_name == 'linpack':
         results = []
-        gflops = extract_data(linpack_result_path)
-        if cloud == 'AWS':
+        gflops = extract_linpack_data(linpack_result_path)
+        if cloud_type == 'AWS':
             price_per_hour = get_ondemand_hourly_price(
                 'm5.xlarge', 'US East (N. Virginia)')
         results.append(system_name)
@@ -125,7 +126,12 @@ def main():
     if test_name == 'stream':
         results = extract_stream_data(stream_path, system_name)
 
-    response = append_to_sheet(sheet, spreadsheet_Id, results, test_name)
+    response = append_to_sheet(sheet, spreadsheetId, results, test_name)
+
+    # Graphing
+
+    graph_process_data = getattr(graph, 'graph_%s_data' % (test_name))
+    graph_process_data(sheet, spreadsheetId, test_name)
 
 
 # TO:DO Add parser information here
