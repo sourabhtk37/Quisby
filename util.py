@@ -98,7 +98,7 @@ def get_sheet(sheet, spreadsheetId, range='A:F'):
 def clear_sheet_data(sheet, spreadsheetId, range='A2:Z1000'):
     # Clear values
     sheet.values().clear(spreadsheetId=spreadsheetId,
-                         range='A2:Z1000', body={}).execute()
+                         range=range, body={}).execute()
 
 
 def clear_sheet_charts(sheet, spreadsheetId, range='A2:Z1000'):

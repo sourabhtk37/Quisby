@@ -7,7 +7,10 @@ from config import *
 
 def extract_stream_data(path, system_name='System'):
     """
-    Extracts streams data and takes average of multiple iterations
+    Extracts streams data and appends empty list for each seperate stream runs
+
+    :path: stream summary results file from stream_wrapper_benchmark runs
+    :system_name: machine name (eg: m5.2xlarge, Standard_D64s_v3)
     """
 
     with open(path) as file:

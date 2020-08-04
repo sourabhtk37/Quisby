@@ -3,10 +3,26 @@ from util import *
 
 
 GFLOPS_PLOT_RANGE = 'B'
+PRICE_PER_PERF_RANGE = 'E'
+
+# TODO: remove mention of range with test_name
 
 
 def graph_linpack_data(sheet, spreadsheetId, range='A:F'):
+    """
+    Re-arrange data from the sheet into a dict grouped by machine name. 
+    The sheet data & charts are then cleared excluding the header row.
+    The function then processes loops over each groups of machine and plots the 
+    graphs.
 
+    Graphs: 
+    - GFLOP and GFLOPS scaling
+    - Price/perf
+
+    :sheet: sheet API function
+    :spreadsheetId
+    :range: range to graph up the data, it will be mostly sheet name
+    """
     data_dict = rearrange_linpack_data(sheet, spreadsheetId, test_name)
     header_row = data_dict[0][0]
 
@@ -16,21 +32,20 @@ def graph_linpack_data(sheet, spreadsheetId, range='A:F'):
     else:
         raise Exception("Data sheet empty")
 
-    for data in data_dict[1:]:
-        machine_class = data[0][0].split('.')[0]
+    for data in data_dict:
+        machine_class = data[0][1].split('.')[0]
 
         response = append_to_sheet(sheet, spreadsheetId, data, test_name)
-
         updated_range = response['updates']['updatedRange']
+        title, sheet_range = updated_range.split('!')
+        sheet_range = sheet_range.split(':')
 
         # apply_named_range(sheet, spreadsheetId, machine_class, updated_range)
 
         sheetId = get_sheet(sheet, spreadsheetId, updated_range)[
             'sheets'][0]['properties']['sheetId']
 
-        title, sheet_range = updated_range.split('!')
-        sheet_range = sheet_range.split(':')
-
+        # GFlops & GFlops scaling graph
         requests = {
             "addChart": {
                 "chart": {
@@ -101,7 +116,8 @@ def graph_linpack_data(sheet, spreadsheetId, range='A:F'):
                                     "targetAxis": "RIGHT_AXIS",
                                     "type": "LINE"
                                 }
-                            ]
+                            ],
+                            "headerCount": 1
                         }
                     },
                     "position": {
@@ -110,6 +126,84 @@ def graph_linpack_data(sheet, spreadsheetId, range='A:F'):
                                 "sheetId": sheetId,
                                 "rowIndex": int(sheet_range[0][1:]) - 1,
                                 "columnIndex": ord(sheet_range[1][:1]) % 65 + 2
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        # PRICE/PERF graph
+        body = {
+            "requests": requests
+        }
+
+        sheet.batchUpdate(
+            spreadsheetId=spreadsheetId, body=body).execute()
+
+        requests = {
+            "addChart": {
+                "chart": {
+                    "spec": {
+                        "title": "%s : %s " % (title, header_row[4]),
+                        "basicChart": {
+                            "chartType": "COLUMN",
+                            "legendPosition": "BOTTOM_LEGEND",
+                            "axis": [
+                                {
+                                    "position": "BOTTOM_AXIS",
+                                    "title": "%s" % (header_row[0])
+                                },
+                                {
+                                    "position": "LEFT_AXIS",
+                                    "title": "%s " % (header_row[4])
+                                }
+                            ],
+                            "domains": [
+                                {
+                                    "domain": {
+                                        "sourceRange": {
+                                            "sources": [
+                                                {
+                                                    "sheetId": sheetId,
+                                                    "startRowIndex": int(sheet_range[0][1:]) - 1,
+                                                    "endRowIndex": sheet_range[1][1:],
+                                                    "startColumnIndex": 0,
+                                                    "endColumnIndex": 1
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ],
+                            "series": [
+                                {
+                                    "series": {
+                                        "sourceRange": {
+                                            "sources": [
+                                                {
+                                                    "sheetId": sheetId,
+                                                    "startRowIndex": int(sheet_range[0][1:]) - 1,
+                                                    "endRowIndex": sheet_range[1][1:],
+                                                    "startColumnIndex": ord(PRICE_PER_PERF_RANGE) % 65,
+                                                    "endColumnIndex": ord(PRICE_PER_PERF_RANGE) % 65+1
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    "targetAxis": "LEFT_AXIS",
+                                    "type": "COLUMN"
+                                }
+                            ],
+                            "headerCount": 1
+                        }
+                    },
+                    "position": {
+                        "overlayPosition": {
+                            "anchorCell": {
+                                "sheetId": sheetId,
+                                "rowIndex": int(sheet_range[0][1:]) - 1,
+                                "columnIndex": ord(sheet_range[1][:1]) % 65 + 8
                             }
                         }
                     }
@@ -127,7 +221,11 @@ def graph_linpack_data(sheet, spreadsheetId, range='A:F'):
 
 def rearrange_linpack_data(sheet, spreadsheetId, range='A:F'):
     """
-    For linpack
+    Retreived data is sorted into groups by machine name
+
+    :sheet: sheet API function
+    :spreadsheetId
+    :range: range to graph up the data, it will be mostly sheet name
     """
     values = read_sheet(sheet, spreadsheetId, range=test_name)
 
@@ -136,18 +234,32 @@ def rearrange_linpack_data(sheet, spreadsheetId, range='A:F'):
     # Clear empty rows
     values = list(filter(None, values))
 
-    for row in values[1:]:
+    for row in values:
         key = row[0].split('.')[0]
+
+        # if row is header row, then skip
+        if key == 'System':
+            continue
+
         if cloud_type == 'AWS':
             if key in data_dict:
                 data_dict[row[0].split('.')[0]] += [row]
             else:
-                data_dict[row[0].split('.')[0]] = [row]
+                # Append header row and then append values to new dict
+                data_dict[row[0].split('.')[0]] = [values[0]]
+                data_dict[row[0].split('.')[0]] += [row]
 
-    return [[values[0]]] + list(data_dict.values())
+    return list(data_dict.values())
 
 
 def graph_stream_data(sheet, spreadsheetId, range):
+    """
+    Retreive each streams results and graph them up indvidually
+
+    :sheet: sheet API function
+    :spreadsheetId
+    :range: range to graph up the data, it will be mostly sheet name
+    """
     data = read_sheet(sheet, spreadsheetId, range)
     clear_sheet_charts(sheet, spreadsheetId, range)
 
@@ -181,7 +293,7 @@ def graph_stream_data(sheet, spreadsheetId, range):
                                                 "sources": [
                                                     {
                                                         "sheetId": sheetId,
-                                                        "startRowIndex": index+3,
+                                                        "startRowIndex": index+2,
                                                         "endRowIndex": index+7,
                                                         "startColumnIndex": 0,
                                                         "endColumnIndex": 1
@@ -198,7 +310,7 @@ def graph_stream_data(sheet, spreadsheetId, range):
                                                 "sources": [
                                                     {
                                                         "sheetId": sheetId,
-                                                        "startRowIndex": index+3,
+                                                        "startRowIndex": index+2,
                                                         "endRowIndex": index+7,
                                                         "startColumnIndex": 1,
                                                         "endColumnIndex": 2
@@ -214,7 +326,7 @@ def graph_stream_data(sheet, spreadsheetId, range):
                                                 "sources": [
                                                     {
                                                         "sheetId": sheetId,
-                                                        "startRowIndex": index+3,
+                                                        "startRowIndex": index+2,
                                                         "endRowIndex": index+7,
                                                         "startColumnIndex": 2,
                                                         "endColumnIndex": 3
@@ -230,7 +342,7 @@ def graph_stream_data(sheet, spreadsheetId, range):
                                                 "sources": [
                                                     {
                                                         "sheetId": sheetId,
-                                                        "startRowIndex": index+3,
+                                                        "startRowIndex": index+2,
                                                         "endRowIndex": index+7,
                                                         "startColumnIndex": 3,
                                                         "endColumnIndex": 4
@@ -246,7 +358,7 @@ def graph_stream_data(sheet, spreadsheetId, range):
                                                 "sources": [
                                                     {
                                                         "sheetId": sheetId,
-                                                        "startRowIndex": index+3,
+                                                        "startRowIndex": index+2,
                                                         "endRowIndex": index+7,
                                                         "startColumnIndex": 4,
                                                         "endColumnIndex": 5
@@ -256,7 +368,8 @@ def graph_stream_data(sheet, spreadsheetId, range):
                                         },
                                         "type": "COLUMN"
                                     }
-                                ]
+                                ],
+                                "headerCount": 1
                             }
                         },
                         "position": {
@@ -281,7 +394,7 @@ def graph_stream_data(sheet, spreadsheetId, range):
 
 
 if __name__ == '__main__':
-    test_name = 'linpack'
+    test_name = 'stream'
     cloud_type = 'AWS'
     creds = authenticate_creds()
     service = build('sheets', 'v4', credentials=creds)
@@ -291,3 +404,4 @@ if __name__ == '__main__':
 
     graph_linpack_data(sheet, spreadsheetId, test_name)
     graph_stream_data(sheet, spreadsheetId, test_name)
+

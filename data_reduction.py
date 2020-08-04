@@ -1,52 +1,84 @@
+# TODO: scope of sheet(), var:spreadsheetId and other vars is global,
+#       therefore function sizes can be reduced
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from googleapiclient.errors import HttpError
 
-from config import *
-from get_aws_pricing import get_ondemand_hourly_price
+import graph
+import cloud_pricing
 from util import read_sheet, append_to_sheet, authenticate_creds
 from stream_parse import extract_stream_data
-import graph
+from config import *
 
 
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
+LINPACK_HEADER_ROW = ["System", "GFLOPS",
+                      "GFLOP Scaling", "Cost/hr", "Price/Perf"]
 
-# ToDo: Check first if spreadsheet exists and then check if corresponding sheet for test is created, else create
+
+def create_spreadsheet(sheet, spreadsheet_name, test_name):
+    """
+    A new sheet is created if spreadsheetId is None
+
+    :sheet: Google sheet API function
+    :name: Spreadsheet title
+    """
+    spreadsheet = {
+        'properties': {
+            'title': spreadsheet_name
+        },
+        'sheets': {
+            'properties': {
+                'sheetId': 0,
+                'title': test_name,
+                'gridProperties': {
+                    'frozenRowCount': 1,
+                }
+            }
+        }
+    }
+
+    spreadsheet = sheet.create(body=spreadsheet,
+                               fields='spreadsheetId').execute()
+
+    return spreadsheet['spreadsheetId']
 
 
 def create_sheet(sheet, spreadsheetId, test_name):
-    if test_name == 'linpack':
-        spreadsheet = {
+    """
+    New sheet in spreadsheet is created
+
+    :sheet: Google sheet API function
+    :spreadsheetId
+    :test_name: range to graph up the data, it will be mostly sheet name
+    """
+    requests = {
+        'addSheet': {
             'properties': {
-                'title': test_name
-            },
-            'sheets': {
-                'properties': {
-                    'sheetId': 0,
-                    'title': test_name,
-                    'gridProperties': {
-                        'frozenRowCount': 1,
-                    }
-                },
-                'protectedRanges': {
-                    'protectedRangeId': 0,
-                    'range': {
-                        'sheetId': 0,
-                        'startRowIndex': 0,
-                        'endRowIndex': 1
-                    }
-                },
+                'sheetId': 1,
+                'title': test_name,
+                'gridProperties': {
+                    'frozenRowCount': 1,
+                }
             }
         }
+    }
 
-        spreadsheet = sheet.create(body=spreadsheet,
-                                   fields='spreadsheetId').execute()
-        spreadsheetId = spreadsheet['spreadsheetId']
+    body = {
+        'requests': requests
+    }
 
+    try:
+        response = sheet.batchUpdate(
+            spreadsheetId=spreadsheetId, body=body).execute()
+    except HttpError as error:
+        print(error)
+
+    if test_name == 'linpack':
         # Add header rows
         values = [
-            ["System", "GFLOPS", "GFLOP Scaling", "Cost/hr", "Price/Perf"]
+            LINPACK_HEADER_ROW
         ]
 
         body = {
@@ -54,35 +86,16 @@ def create_sheet(sheet, spreadsheetId, test_name):
         }
 
         return sheet.values().update(spreadsheetId=spreadsheetId,
-                                     range='A:F',
+                                     range=test_name,
                                      valueInputOption='USER_ENTERED',
                                      body=body).execute()
-    if test_name == 'stream':
-        requests = {
-            'addSheet': {
-                'properties': {
-                    'sheetId': 1,
-                    'title': test_name,
-                    'gridProperties': {
-                        'frozenRowCount': 1,
-                    }
-                }
-            }
-        }
-
-        body = {
-            'requests': requests
-        }
-
-        try:
-            response = sheet.batchUpdate(
-                spreadsheetId=spreadsheetId, body=body).execute()
-        except HttpError as error:
-            print(error)
 
 
 def extract_linpack_data(path):
     """
+    Reads linpack results file and extract gflops information
+
+    :path: linpack results path
     """
     # Find and seek logic
 
@@ -106,15 +119,22 @@ def extract_linpack_data(path):
 def main():
     """
     """
-    # if spreadsheetId is None:
+    global spreadsheetId
+
+    if not spreadsheetId:
+        spreadsheetId = create_spreadsheet(sheet, spreadsheet_name, test_name)
+    
     spreadsheet = create_sheet(sheet, spreadsheetId, test_name)
 
     if test_name == 'linpack':
         results = []
+
+        # Collecting data
         gflops = extract_linpack_data(linpack_result_path)
-        if cloud_type == 'AWS':
-            price_per_hour = get_ondemand_hourly_price(
-                'm5.xlarge', 'US East (N. Virginia)')
+        get_cloud_pricing = getattr(
+            cloud_pricing, 'get_%s_pricing' % cloud_type.lower())
+        price_per_hour = get_cloud_pricing(system_name, region)
+
         results.append(system_name)
         results.append(gflops)
         results.append(1)
