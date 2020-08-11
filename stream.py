@@ -44,7 +44,7 @@ def extract_stream_data(path, system_name='System'):
         for i in range(1, 5):
             proccessed_data[pos-i].append(x[pos_line-i])
 
-    print(proccessed_data)
+    return proccessed_data
 
 
 if __name__ == '__main__':

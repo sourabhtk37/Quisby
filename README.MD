@@ -1,5 +1,5 @@
-## QUISBY 
-###### (Unoffical name)
+## Quisby 
+###### (Unoffical name) Quisby: An idler; one who does not or will not work. (noun)
 
 Quisby is a tool to provide first view into the results from various benchmarks such as linpack, streams, fio etc. It doesn't aim to replace existing data viz tool but rather to provide a simplified view to the data with basic metric to understand the benchmark results from a higher level view. For detailed view, there are other tools such as pbench-dashboard, js-charts etc at hand.
 
