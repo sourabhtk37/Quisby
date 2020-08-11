@@ -23,6 +23,9 @@ def graph_linpack_data(sheet, spreadsheetId, range='A:F'):
     :spreadsheetId
     :range: range to graph up the data, it will be mostly sheet name
     """
+    GRAPH_COL_INDEX = 5
+    GRAPH_ROW_INDEX = 0
+    
     data_dict = rearrange_linpack_data(sheet, spreadsheetId, test_name)
     header_row = data_dict[0][0]
 
@@ -124,7 +127,7 @@ def graph_linpack_data(sheet, spreadsheetId, range='A:F'):
                         "overlayPosition": {
                             "anchorCell": {
                                 "sheetId": sheetId,
-                                "rowIndex": int(sheet_range[0][1:]) - 1,
+                                "rowIndex": GRAPH_ROW_INDEX,
                                 "columnIndex": ord(sheet_range[1][:1]) % 65 + 2
                             }
                         }
@@ -202,7 +205,7 @@ def graph_linpack_data(sheet, spreadsheetId, range='A:F'):
                         "overlayPosition": {
                             "anchorCell": {
                                 "sheetId": sheetId,
-                                "rowIndex": int(sheet_range[0][1:]) - 1,
+                                "rowIndex": GRAPH_ROW_INDEX,
                                 "columnIndex": ord(sheet_range[1][:1]) % 65 + 8
                             }
                         }
@@ -217,6 +220,8 @@ def graph_linpack_data(sheet, spreadsheetId, range='A:F'):
 
         sheet.batchUpdate(
             spreadsheetId=spreadsheetId, body=body).execute()
+
+        GRAPH_ROW_INDEX += 20
 
 
 def rearrange_linpack_data(sheet, spreadsheetId, range='A:F'):
@@ -260,6 +265,9 @@ def graph_stream_data(sheet, spreadsheetId, range):
     :spreadsheetId
     :range: range to graph up the data, it will be mostly sheet name
     """
+    GRAPH_COL_INDEX = 5
+    GRAPH_ROW_INDEX = 0
+
     data = read_sheet(sheet, spreadsheetId, range)
     clear_sheet_charts(sheet, spreadsheetId, range)
 
@@ -376,14 +384,19 @@ def graph_stream_data(sheet, spreadsheetId, range):
                             "overlayPosition": {
                                 "anchorCell": {
                                     "sheetId": sheetId,
-                                    "rowIndex": index,
-                                    "columnIndex": 6
-                                }
+                                    "rowIndex": GRAPH_ROW_INDEX,
+                                    "columnIndex": GRAPH_COL_INDEX}
                             }
                         }
                     }
                 }
             }
+
+            if GRAPH_COL_INDEX >= 15:
+                GRAPH_ROW_INDEX += 20
+                GRAPH_COL_INDEX = 5
+            else:
+                GRAPH_COL_INDEX += 6
 
             body = {
                 "requests": requests
@@ -393,8 +406,128 @@ def graph_stream_data(sheet, spreadsheetId, range):
                 spreadsheetId=spreadsheetId, body=body).execute()
 
 
+def graph_uperf_data(sheet, spreadsheetId, range):
+    """
+    """
+    GRAPH_COL_INDEX = 5
+    GRAPH_ROW_INDEX = 0
+
+    uperf_result = read_sheet(sheet, spreadsheetId, range)
+    clear_sheet_charts(sheet, spreadsheetId, range)
+
+    loc, test_name, system_name, test_metric = [], [], [], []
+    start_index = None
+    for index, data in enumerate(uperf_result):
+        if data == []:
+            system_name.append(uperf_result[index+1])
+            if start_index is not None:
+                loc.append([start_index, index])
+                start_index = None
+            continue
+
+        if 'Test' in str(data):
+            test_name.append(data)
+            test_metric.append(uperf_result[index+1][0])
+            continue
+
+        if 'Packet Size' in data:
+            start_index = index
+            continue
+
+        if index + 2 > len(uperf_result):
+            loc.append([start_index, index+1])
+            start_index = None
+
+    for index, data_index in enumerate(loc):
+
+        sheetId = get_sheet(sheet, spreadsheetId, range)[
+            'sheets'][0]['properties']['sheetId']
+
+        requests = {
+            "addChart": {
+                "chart": {
+                    "spec": {
+                        "title": "%s , %s" % (test_name[index][0].strip("\n"), system_name[index][0]),
+                        "basicChart": {
+                            "chartType": "COLUMN",
+                            "legendPosition": "BOTTOM_LEGEND",
+                            "axis": [
+                                {
+                                    "position": "BOTTOM_AXIS",
+                                    "title": "Packet Size: %s " % (uperf_result[data_index[0]+1][0])
+                                },
+                                {
+                                    "position": "LEFT_AXIS",
+                                    "title": "%s" % (test_metric[index])
+                                }
+                            ],
+                            "domains": [
+                                {
+                                    "domain": {
+                                        "sourceRange": {
+                                            "sources": [
+                                                {
+                                                    "sheetId": sheetId,
+                                                    "startRowIndex": data_index[0],
+                                                    "endRowIndex": data_index[1],
+                                                    "startColumnIndex": 1,
+                                                    "endColumnIndex": 2
+                                                }
+                                            ]
+                                        }
+                                    }
+                                },
+                            ],
+                            "series": [
+                                {
+                                    "series": {
+                                        "sourceRange": {
+                                            "sources": [
+                                                {
+                                                    "sheetId": sheetId,
+                                                    "startRowIndex": data_index[0],
+                                                    "endRowIndex": data_index[1],
+                                                    "startColumnIndex": 2,
+                                                    "endColumnIndex": 3
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    "type": "COLUMN"
+                                },
+                            ],
+                            "headerCount": 1
+                        }
+                    },
+                    "position": {
+                        "overlayPosition": {
+                            "anchorCell": {
+                                "sheetId": sheetId,
+                                "rowIndex": GRAPH_ROW_INDEX,
+                                "columnIndex": GRAPH_COL_INDEX
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if GRAPH_COL_INDEX >= 15:
+            GRAPH_ROW_INDEX += 18
+            GRAPH_COL_INDEX = 5
+        else:
+            GRAPH_COL_INDEX += 6
+
+        body = {
+            "requests": requests
+        }
+
+        sheet.batchUpdate(
+            spreadsheetId=spreadsheetId, body=body).execute()
+
+
 if __name__ == '__main__':
-    test_name = 'stream'
+    test_name = 'uperf'
     cloud_type = 'AWS'
     creds = authenticate_creds()
     service = build('sheets', 'v4', credentials=creds)
@@ -402,6 +535,4 @@ if __name__ == '__main__':
     sheet = service.spreadsheets()
     spreadsheetId = '1aUwUL99-FHfH0NdbxfGW886sqSEXVU2yVBOXAJf2RXc'
 
-    graph_linpack_data(sheet, spreadsheetId, test_name)
-    graph_stream_data(sheet, spreadsheetId, test_name)
-
+    globals()["graph_%s_data"%(test_name)](sheet, spreadsheetId, test_name)

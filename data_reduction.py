@@ -7,8 +7,9 @@ from googleapiclient.errors import HttpError
 
 import graph
 import cloud_pricing
-from util import read_sheet, append_to_sheet, authenticate_creds
-from stream_parse import extract_stream_data
+from util import read_sheet, append_to_sheet, authenticate_creds, get_sheet
+from stream import extract_stream_data
+from uperf import extract_uperf_data
 from config import *
 
 
@@ -45,7 +46,7 @@ def create_spreadsheet(sheet, spreadsheet_name, test_name):
     return spreadsheet['spreadsheetId']
 
 
-def create_sheet(sheet, spreadsheetId, test_name):
+def create_sheet(sheet, spreadsheetId, test_name, sheet_count):
     """
     New sheet in spreadsheet is created
 
@@ -56,7 +57,7 @@ def create_sheet(sheet, spreadsheetId, test_name):
     requests = {
         'addSheet': {
             'properties': {
-                'sheetId': 1,
+                'sheetId': sheet_count + 1,
                 'title': test_name,
                 'gridProperties': {
                     'frozenRowCount': 1,
@@ -69,11 +70,8 @@ def create_sheet(sheet, spreadsheetId, test_name):
         'requests': requests
     }
 
-    try:
-        response = sheet.batchUpdate(
-            spreadsheetId=spreadsheetId, body=body).execute()
-    except HttpError as error:
-        print(error)
+    sheet.batchUpdate(
+        spreadsheetId=spreadsheetId, body=body).execute()
 
     if test_name == 'linpack':
         # Add header rows
@@ -85,10 +83,10 @@ def create_sheet(sheet, spreadsheetId, test_name):
             'values': values
         }
 
-        return sheet.values().update(spreadsheetId=spreadsheetId,
-                                     range=test_name,
-                                     valueInputOption='USER_ENTERED',
-                                     body=body).execute()
+        sheet.values().update(spreadsheetId=spreadsheetId,
+                              range=test_name,
+                              valueInputOption='USER_ENTERED',
+                              body=body).execute()
 
 
 def extract_linpack_data(path):
@@ -120,11 +118,20 @@ def main():
     """
     """
     global spreadsheetId
+    sheet_exists = False
 
     if not spreadsheetId:
         spreadsheetId = create_spreadsheet(sheet, spreadsheet_name, test_name)
-    
-    spreadsheet = create_sheet(sheet, spreadsheetId, test_name)
+
+    sheet_info = get_sheet(sheet, spreadsheetId, [])['sheets']
+    for sheet_prop in sheet_info:
+        if test_name == sheet_prop['properties']['title']:
+            sheet_exists = True
+    if not sheet_exists:
+        sheet_count = len(sheet_info)
+        create_sheet(
+            sheet, spreadsheetId, test_name, sheet_count)
+
 
     if test_name == 'linpack':
         results = []
@@ -143,13 +150,16 @@ def main():
 
         results = [results]
 
-    if test_name == 'stream':
+    elif test_name == 'stream':
         results = extract_stream_data(stream_path, system_name)
 
+    elif test_name == 'uperf':
+        results = extract_uperf_data(uperf_path, system_name)
+
+    # Appending data to sheet
     response = append_to_sheet(sheet, spreadsheetId, results, test_name)
 
-    # Graphing
-
+    # Graphing up data
     graph_process_data = getattr(graph, 'graph_%s_data' % (test_name))
     graph_process_data(sheet, spreadsheetId, test_name)
 

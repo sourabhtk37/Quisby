@@ -1,7 +1,6 @@
 from operator import itemgetter
 
 from util import *
-
 from config import *
 
 
@@ -45,8 +44,8 @@ def extract_stream_data(path, system_name='System'):
         for i in range(1, 5):
             proccessed_data[pos-i].append(x[pos_line-i])
 
-    return proccessed_data
+    print(proccessed_data)
 
 
 if __name__ == '__main__':
-    graph_stream_data(sheet, spreadsheetId, test_name)
+    extract_stream_data(stream_path, 'i3en.xlarge')
