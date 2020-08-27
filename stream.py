@@ -48,4 +48,4 @@ def extract_stream_data(path, system_name='System'):
 
 
 if __name__ == '__main__':
-    extract_stream_data(stream_path, 'i3en.xlarge')
+    print(extract_stream_data(path, 'i3en.xlarge'))

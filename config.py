@@ -12,9 +12,7 @@ spreadsheetId = '1aUwUL99-FHfH0NdbxfGW886sqSEXVU2yVBOXAJf2RXc'
 spreadsheet_name = 'Sample test run' 
 
 test_name = 'uperf'
-linpack_result_path = 'linpack/perf64.perf.lab.eng.bos.redhat.com.txt'
-stream_path = 'results_streams_tuned_tuned_virtual-guest_sys_file_none/m5.24xlarge_results'
-uperf_path = 'uperf_result'
+path = 'result_1.csv'
 
 system_name = 'm5.24xlarge'
 region = 'US East (N. Virginia)'

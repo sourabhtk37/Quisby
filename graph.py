@@ -406,31 +406,63 @@ def graph_stream_data(sheet, spreadsheetId, range):
                 spreadsheetId=spreadsheetId, body=body).execute()
 
 
+def series_range_uperf(series_range, sheetId, index, data_index):
+    """
+    """
+    series_list = []
+    GRAPH_TYPE = 'COLUMN'
+    TARGET_AXIS = 'LEFT_AXIS'
+
+    for column in range(series_range[index][0]):
+        if column == 5 and series_range[index][1] > 1:
+            GRAPH_TYPE = 'LINE'
+            TARGET_AXIS = 'RIGHT_AXIS'
+
+        series_list.append({
+            "series": {
+                "sourceRange": {
+                    "sources": [
+                        {
+                            "sheetId": sheetId,
+                            "startRowIndex": data_index[0],
+                            "endRowIndex": data_index[1],
+                            "startColumnIndex": column+1,
+                            "endColumnIndex": column+2
+                        }
+                    ]
+                }
+            },
+            "targetAxis": TARGET_AXIS,
+            "type": GRAPH_TYPE
+        },
+        )
+    return series_list
+
+
 def graph_uperf_data(sheet, spreadsheetId, range):
     """
     """
-    GRAPH_COL_INDEX = 5
+    GRAPH_COL_INDEX = 6
     GRAPH_ROW_INDEX = 0
 
     uperf_result = read_sheet(sheet, spreadsheetId, range)
     clear_sheet_charts(sheet, spreadsheetId, range)
 
-    loc, test_name, system_name, test_metric = [], [], [], []
+    loc, test_name, system_name, test_metric, series_range = [], [], [], [], []
     start_index = None
     for index, data in enumerate(uperf_result):
         if data == []:
             system_name.append(uperf_result[index+1])
+            test_name.append(uperf_result[index+2])
             if start_index is not None:
                 loc.append([start_index, index])
                 start_index = None
             continue
 
-        if 'Test' in str(data):
-            test_name.append(data)
-            test_metric.append(uperf_result[index+1][0])
-            continue
+        if 'instance count' in data:
+            test_metric.append(set(data[1:]))
 
-        if 'Packet Size' in data:
+            series_range.append([len(data[1:]), len(test_metric[-1])])
             start_index = index
             continue
 
@@ -449,16 +481,16 @@ def graph_uperf_data(sheet, spreadsheetId, range):
                     "spec": {
                         "title": "%s , %s" % (test_name[index][0].strip("\n"), system_name[index][0]),
                         "basicChart": {
-                            "chartType": "COLUMN",
+                            "chartType": "COMBO",
                             "legendPosition": "BOTTOM_LEGEND",
                             "axis": [
                                 {
                                     "position": "BOTTOM_AXIS",
-                                    "title": "Packet Size: %s " % (uperf_result[data_index[0]+1][0])
+                                    "title": "Packet Size: %s " % (uperf_result[data_index[0]-1][0].split('-')[1])
                                 },
                                 {
                                     "position": "LEFT_AXIS",
-                                    "title": "%s" % (test_metric[index])
+                                    "title": "%s" % (",".join(test_metric[index]))
                                 }
                             ],
                             "domains": [
@@ -470,32 +502,16 @@ def graph_uperf_data(sheet, spreadsheetId, range):
                                                     "sheetId": sheetId,
                                                     "startRowIndex": data_index[0],
                                                     "endRowIndex": data_index[1],
-                                                    "startColumnIndex": 1,
-                                                    "endColumnIndex": 2
+                                                    "startColumnIndex": 0,
+                                                    "endColumnIndex": 1
                                                 }
                                             ]
                                         }
                                     }
                                 },
                             ],
-                            "series": [
-                                {
-                                    "series": {
-                                        "sourceRange": {
-                                            "sources": [
-                                                {
-                                                    "sheetId": sheetId,
-                                                    "startRowIndex": data_index[0],
-                                                    "endRowIndex": data_index[1],
-                                                    "startColumnIndex": 2,
-                                                    "endColumnIndex": 3
-                                                }
-                                            ]
-                                        }
-                                    },
-                                    "type": "COLUMN"
-                                },
-                            ],
+                            # TODO: Create a series dict according to number of series
+                            "series": series_range_uperf(series_range, sheetId, index, data_index),
                             "headerCount": 1
                         }
                     },
@@ -514,7 +530,7 @@ def graph_uperf_data(sheet, spreadsheetId, range):
 
         if GRAPH_COL_INDEX >= 15:
             GRAPH_ROW_INDEX += 18
-            GRAPH_COL_INDEX = 5
+            GRAPH_COL_INDEX = 6
         else:
             GRAPH_COL_INDEX += 6
 
@@ -535,4 +551,4 @@ if __name__ == '__main__':
     sheet = service.spreadsheets()
     spreadsheetId = '1aUwUL99-FHfH0NdbxfGW886sqSEXVU2yVBOXAJf2RXc'
 
-    globals()["graph_%s_data"%(test_name)](sheet, spreadsheetId, test_name)
+    globals()["graph_%s_data" % (test_name)](sheet, spreadsheetId, test_name)

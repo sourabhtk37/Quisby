@@ -111,5 +111,5 @@ def get_aws_pricing(instance_name, region):
 
 if __name__ == '__main__':
     region = 'US East 2'
-    # print(get_azure_pricing('Standard_D32s_v3', region))
+    print(get_azure_pricing('Standard_D32s_v3', region))
     print(get_aws_pricing('i3en.24xlarge', 'US East (N. Virginia)'))

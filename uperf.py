@@ -1,81 +1,78 @@
 import pprint
+import csv
 
 from config import *
 
 pp = pprint.PrettyPrinter()
 
-# TODO: Bad and hacky code, need more results data to generalise
-# WIP
+# TODO: Include all ports results
 def extract_uperf_data(path, system_name):
-    """
-    """
     results = []
-    average_trans = []
-    average_latency = []
 
-    with open(path) as file:
-        uperf_result = file.readlines()
+    with open(path) as csv_file:
+        csv_reader = csv.DictReader(csv_file)
+        index_trans, index_latency = [], []
+        iteration_name = []
+        header_row = []
+        for index, row in enumerate(csv_reader):
+            bandwidth, trans, latency = [], [], []
+            instance_count = row['iteration_name'].split('-')[2:][0]
 
-        for index, data in enumerate(uperf_result):
+            # pop failed runs
+            if 'fail' in row['iteration_name']:
+                continue
 
-            if 'Test' in data:
-                test_name = data
+            # remove empty values
+            row = {k: v for k, v in row.items() if v is not '' and k is not None}
 
-            elif 'GB/sec' in data:
-                nic_count_bw = len(uperf_result[index+1].split(':')[2:])
+            for k, v in row.items():
+                if 'Gb_sec' in k:
+                    bandwidth.append(v)
+                elif 'trans_sec' in k:
+                    trans.append(v)
+                elif 'usec' in k:
+                    latency.append(v)
 
-            elif 'trans/sec' in data:
-                nic_count_lat = len(uperf_result[index+1].split(':')[2:])
+            # Process results and create list(results) for appending to sheet
+            if bandwidth:
+                if iteration_name != row['iteration_name'].split('-')[:2]:
 
-            elif 'packet_size' in data:
-                system_name = data.split(':')[2].split(' ')[0]
-                packet_size = []
+                    iteration_name = row['iteration_name'].split('-')[:2]
+                    results.append([""])
+                    results.append([system_name])
+                    results.append(["-".join(iteration_name)])
+                    # for _ in len(bandwidth):
+                    header_row = [i.split(':')[0]
+                                  for i in list(row.keys())[2:]]
+                    results.append([*(['instance count']+header_row)])
 
+                results.append([instance_count, *bandwidth])
             else:
-                row_data = data.strip('\n').split(':')
-                packet_size.append(row_data.pop(0))
-                uperf_instance_count = row_data.pop(0)
+                header_row = [i.split(':')[0]
+                              for i in list(row.keys())[2:]]
+                if iteration_name != row['iteration_name'].split('-')[:2]:
 
-                # average of NICs
-                if len(row_data) > 4:
-                    if len(packet_size) == 1:
-                        average_trans.append([""])
-                        average_trans.append([system_name])
-                        average_trans.append([test_name])
-                        average_trans.append(
-                            ['Trans/sec', '%s Nics' % (nic_count_lat)])
-                        average_trans.append(
-                            ['Packet Size', 'Instances', 'Trans/sec'])
+                    iteration_name = row['iteration_name'].split('-')[:2]
+                    index_trans.append([""])
+                    index_trans.append([system_name])
+                    index_trans.append(["-".join(iteration_name)])
+                    index_trans.append(
+                        [*(['instance count'] + header_row[:len(trans)])])
 
-                        average_latency.append([""])
-                        average_latency.append([system_name])
-                        average_latency.append([test_name])
-                        average_latency.append(
-                            ['Latency (us)', '%s Nics' % (nic_count_lat)])
-                        average_latency.append(
-                            ['Packet Size', 'Instances', 'latency (us)'])
-                    average_trans.append(
-                        [packet_size[-1] + ' Bytes', uperf_instance_count+' instance', sum(map(float, row_data[:4]))/4])
-                    average_latency.append(
-                        [packet_size[-1] + ' Bytes', uperf_instance_count+' instance', sum(map(float, row_data[4:]))/4])
+                    index_latency.append([""])
+                    index_latency.append([system_name])
+                    index_latency.append(["-".join(iteration_name)])
+                    index_latency.append(
+                        [*(['instance count'] + header_row[len(trans):])])
 
-                else:
-                    average_bw = sum(map(float, row_data))/4
-                    if len(packet_size) == 1:
-                        results.append([""])
-                        results.append([system_name])
-                        results.append([test_name])
-                        results.append(
-                            ['Bandwidth GB/sec', '%s Nics' % (nic_count_bw)])
-                        results.append(['Packet Size', 'Instances', 'GB/sec'])
-                    results.append(
-                        [packet_size[-1] + ' Bytes', uperf_instance_count+' instance', average_bw])
+                index_trans.append([instance_count, *trans])
+                index_latency.append([instance_count, *latency])
 
-        results += average_trans
-        results += average_latency
+        results += index_trans
+        results += index_latency
 
-    return results
+        return results
 
 
 if __name__ == "__main__":
-    print(extract_uperf_data('uperf_result', 'i3en.xlarge'))
+    print(extract_uperf_data(path, 'i3en.xlarge'))

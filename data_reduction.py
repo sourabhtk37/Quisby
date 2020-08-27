@@ -95,23 +95,22 @@ def extract_linpack_data(path):
 
     :path: linpack results path
     """
-    # Find and seek logic
 
-    # data_index = 0
-    # with open(path) as file:
-    #     for line in file:
-    #         data = file.readlines()
-    #         if 'Performance Summar'
-
-    # for x in data:
-    #     if 'Performance Summary (GFlops)' in x:
-    #         gflops = data[data_index+3].split()[3]
-    #     index = index + 1
-
+    results = []
     with open(path) as file:
         gflops = file.readlines()[28].split()[3]
 
-    return gflops
+    get_cloud_pricing = getattr(
+        cloud_pricing, 'get_%s_pricing' % cloud_type.lower())
+    price_per_hour = get_cloud_pricing(system_name, region)
+
+    results.append(system_name)
+    results.append(gflops)
+    results.append(1)
+    results.append(price_per_hour)
+    results.append(float(gflops)/float(price_per_hour))
+
+    return [results]
 
 
 def main():
@@ -120,41 +119,34 @@ def main():
     global spreadsheetId
     sheet_exists = False
 
+    # TODO: Need to apply to config.py afterwards, Need a way to a manage multiple
+    #       spreadsheets
+    # Create new spreadsheet if it doesn't exist
     if not spreadsheetId:
         spreadsheetId = create_spreadsheet(sheet, spreadsheet_name, test_name)
 
+    # Check if sheet exits
     sheet_info = get_sheet(sheet, spreadsheetId, [])['sheets']
     for sheet_prop in sheet_info:
         if test_name == sheet_prop['properties']['title']:
             sheet_exists = True
+
+    # Create sheet if it doesn't exit
     if not sheet_exists:
         sheet_count = len(sheet_info)
         create_sheet(
             sheet, spreadsheetId, test_name, sheet_count)
 
-
+    # TODO: Remove if-else using getattr
     if test_name == 'linpack':
-        results = []
-
         # Collecting data
-        gflops = extract_linpack_data(linpack_result_path)
-        get_cloud_pricing = getattr(
-            cloud_pricing, 'get_%s_pricing' % cloud_type.lower())
-        price_per_hour = get_cloud_pricing(system_name, region)
-
-        results.append(system_name)
-        results.append(gflops)
-        results.append(1)
-        results.append(price_per_hour)
-        results.append(float(gflops)/float(price_per_hour))
-
-        results = [results]
+        results = extract_linpack_data(path)
 
     elif test_name == 'stream':
-        results = extract_stream_data(stream_path, system_name)
+        results = extract_stream_data(path, system_name)
 
     elif test_name == 'uperf':
-        results = extract_uperf_data(uperf_path, system_name)
+        results = extract_uperf_data(path, system_name)
 
     # Appending data to sheet
     response = append_to_sheet(sheet, spreadsheetId, results, test_name)
