@@ -113,6 +113,16 @@ def extract_linpack_data(path):
     return [results]
 
 
+def check_sheet_exists(sheet_info):
+    """
+    """
+    for sheet_prop in sheet_info:
+        if test_name == sheet_prop['properties']['title']:
+            return True
+
+    return False
+
+
 def main():
     """
     """
@@ -120,19 +130,16 @@ def main():
     sheet_exists = False
 
     # TODO: Need to apply to config.py afterwards, Need a way to a manage multiple
-    #       spreadsheets
+    #       spreadsheets.
+    # TODO: Write the created spreadsheetId to config file
     # Create new spreadsheet if it doesn't exist
     if not spreadsheetId:
         spreadsheetId = create_spreadsheet(sheet, spreadsheet_name, test_name)
 
-    # Check if sheet exits
     sheet_info = get_sheet(sheet, spreadsheetId, [])['sheets']
-    for sheet_prop in sheet_info:
-        if test_name == sheet_prop['properties']['title']:
-            sheet_exists = True
 
     # Create sheet if it doesn't exit
-    if not sheet_exists:
+    if not check_sheet_exists(sheet_info):
         sheet_count = len(sheet_info)
         create_sheet(
             sheet, spreadsheetId, test_name, sheet_count)
