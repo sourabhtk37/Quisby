@@ -6,13 +6,13 @@ from util import authenticate_creds
 
 # Change the following to your test requirements
 # ================================
-spreadsheetId = '1aUwUL99-FHfH0NdbxfGW886sqSEXVU2yVBOXAJf2RXc'
+# spreadsheetId = '1aUwUL99-FHfH0NdbxfGW886sqSEXVU2yVBOXAJf2RXc'
 # Leave empty if you want a new spreadsheet to be created.
-# spreadsheetId = ""
+spreadsheetId = ""
 spreadsheet_name = 'Sample test run' 
 
-test_name = 'uperf'
-path = 'result_1.csv'
+test_name = ''
+test_path = ''
 
 system_name = 'm5.24xlarge'
 region = 'US East (N. Virginia)'

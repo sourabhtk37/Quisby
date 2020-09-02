@@ -6,6 +6,83 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 
 
+LINPACK_HEADER_ROW = ["System", "GFLOPS",
+                      "GFLOP Scaling", "Cost/hr", "Price/Perf"]
+
+
+def check_sheet_exists(sheet_info, test_name):
+    """
+    """
+
+    for sheet_prop in sheet_info:
+        if test_name == sheet_prop['properties']['title']:
+            return True
+
+    return False
+
+
+def create_spreadsheet(sheet, spreadsheet_name, test_name):
+    """
+    A new sheet is created if spreadsheetId is None
+
+    :sheet: Google sheet API function
+    :name: Spreadsheet title
+    """
+    spreadsheet = {
+        'properties': {
+            'title': spreadsheet_name
+        }
+    }
+
+    spreadsheet = sheet.create(body=spreadsheet,
+                               fields='spreadsheetId').execute()
+
+    return spreadsheet['spreadsheetId']
+
+
+def create_sheet(sheet, spreadsheetId, test_name, sheet_count):
+    """
+    New sheet in spreadsheet is created
+
+    :sheet: Google sheet API function
+    :spreadsheetId
+    :test_name: range to graph up the data, it will be mostly sheet name
+    """
+    requests = {
+        'addSheet': {
+            'properties': {
+                'sheetId': sheet_count + 1,
+                'title': test_name,
+                'gridProperties': {
+                    'frozenRowCount': 1,
+                }
+            }
+        }
+    }
+
+    body = {
+        'requests': requests
+    }
+
+    sheet.batchUpdate(
+        spreadsheetId=spreadsheetId, body=body).execute()
+
+    if test_name == 'linpack':
+        # Add header rows
+        values = [
+            LINPACK_HEADER_ROW
+        ]
+
+        body = {
+            'values': values
+        }
+
+        sheet.values().update(spreadsheetId=spreadsheetId,
+                              range=test_name,
+                              valueInputOption='USER_ENTERED',
+                              body=body).execute()
+
+
 def read_sheet(sheet, spreadsheet_Id, range='A:F'):
     """
     """
