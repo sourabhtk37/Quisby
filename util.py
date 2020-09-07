@@ -1,9 +1,4 @@
-import pickle
-import os.path
-
-from googleapiclient.discovery import build
-from google_auth_oauthlib.flow import InstalledAppFlow
-from google.auth.transport.requests import Request
+from config import *
 
 
 LINPACK_HEADER_ROW = ["System", "GFLOPS",
@@ -31,27 +26,10 @@ def create_spreadsheet(sheet, spreadsheet_name, test_name):
     spreadsheet = {
         'properties': {
             'title': spreadsheet_name
-        }
-    }
-
-    spreadsheet = sheet.create(body=spreadsheet,
-                               fields='spreadsheetId').execute()
-
-    return spreadsheet['spreadsheetId']
-
-
-def create_sheet(sheet, spreadsheetId, test_name, sheet_count):
-    """
-    New sheet in spreadsheet is created
-
-    :sheet: Google sheet API function
-    :spreadsheetId
-    :test_name: range to graph up the data, it will be mostly sheet name
-    """
-    requests = {
-        'addSheet': {
+        },
+        'sheets': {
             'properties': {
-                'sheetId': sheet_count + 1,
+                'sheetId': 0,
                 'title': test_name,
                 'gridProperties': {
                     'frozenRowCount': 1,
@@ -60,12 +38,9 @@ def create_sheet(sheet, spreadsheetId, test_name, sheet_count):
         }
     }
 
-    body = {
-        'requests': requests
-    }
-
-    sheet.batchUpdate(
-        spreadsheetId=spreadsheetId, body=body).execute()
+    spreadsheet = sheet.create(body=spreadsheet,
+                               fields='spreadsheetId').execute()
+    spreadsheetId = spreadsheet['spreadsheetId']
 
     if test_name == 'linpack':
         # Add header rows
@@ -81,6 +56,63 @@ def create_sheet(sheet, spreadsheetId, test_name, sheet_count):
                               range=test_name,
                               valueInputOption='USER_ENTERED',
                               body=body).execute()
+
+    return spreadsheetId
+
+
+def get_sheet(sheet, spreadsheetId, range='A:F'):
+
+    return sheet.get(spreadsheetId=spreadsheetId,
+                     ranges=range).execute()
+
+
+def create_sheet(sheet, spreadsheetId, test_name):
+    """
+    New sheet in spreadsheet is created
+
+    :sheet: Google sheet API function
+    :spreadsheetId
+    :test_name: range to graph up the data, it will be mostly sheet name
+    """
+    sheet_info = get_sheet(sheet, spreadsheetId, [])['sheets']
+
+    # Create sheet if it doesn't exit
+    if not check_sheet_exists(sheet_info, test_name):
+        sheet_count = len(sheet_info)
+
+        requests = {
+            'addSheet': {
+                'properties': {
+                    'sheetId': sheet_count + 1,
+                    'title': test_name,
+                    'gridProperties': {
+                        'frozenRowCount': 1,
+                    }
+                }
+            }
+        }
+
+        body = {
+            'requests': requests
+        }
+
+        sheet.batchUpdate(
+            spreadsheetId=spreadsheetId, body=body).execute()
+
+        if test_name == 'linpack':
+            # Add header rows
+            values = [
+                LINPACK_HEADER_ROW
+            ]
+
+            body = {
+                'values': values
+            }
+
+            sheet.values().update(spreadsheetId=spreadsheetId,
+                                  range=test_name,
+                                  valueInputOption='USER_ENTERED',
+                                  body=body).execute()
 
 
 def read_sheet(sheet, spreadsheet_Id, range='A:F'):
@@ -106,32 +138,6 @@ def append_to_sheet(sheet, spreadsheet_Id, results, range='A:F'):
                                      valueInputOption='USER_ENTERED',
                                      body=body).execute()
     return response
-
-
-def authenticate_creds():
-    """
-    Authenticate credentials
-    """
-    creds = None
-    # The file token.pickle stores the user's access and refresh tokens, and is
-    # created automatically when the authorization flow completes for the first
-    # time.
-    if os.path.exists('token.pickle'):
-        with open('token.pickle', 'rb') as token:
-            creds = pickle.load(token)
-    # If there are no (valid) credentials available, let the user log in.
-    if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
-            flow = InstalledAppFlow.from_client_secrets_file(
-                'credentials.json', SCOPES)
-            creds = flow.run_local_server(port=0)
-        # Save the credentials for the next run
-        with open('token.pickle', 'wb') as token:
-            pickle.dump(creds, token)
-
-    return creds
 
 
 def apply_named_range(sheet, spreadsheetId, name, range='A:F'):
@@ -164,12 +170,6 @@ def apply_named_range(sheet, spreadsheetId, name, range='A:F'):
         spreadsheetId=spreadsheetId, body=body).execute()
 
     print(response)
-
-
-def get_sheet(sheet, spreadsheetId, range='A:F'):
-
-    return sheet.get(spreadsheetId=spreadsheetId,
-                     ranges=range).execute()
 
 
 def clear_sheet_data(sheet, spreadsheetId, range='A2:Z1000'):

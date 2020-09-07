@@ -2,19 +2,20 @@
 
 from googleapiclient.discovery import build
 
-from util import authenticate_creds
+from creds import authenticate_creds
 
 # Change the following to your test requirements
 # ================================
 # spreadsheetId = '1aUwUL99-FHfH0NdbxfGW886sqSEXVU2yVBOXAJf2RXc'
 # Leave empty if you want a new spreadsheet to be created.
-spreadsheetId = ""
-spreadsheet_name = 'Sample test run' 
+spreadsheetId = ''
+spreadsheet_name = 'AWS rhel 8.2 report' 
+OS_RELEASE = '8.2'
 
 test_name = ''
 test_path = ''
 
-system_name = 'm5.24xlarge'
+system_name = ''
 region = 'US East (N. Virginia)'
 cloud_type = 'AWS'
 # ================================

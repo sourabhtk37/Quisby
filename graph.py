@@ -25,8 +25,7 @@ def graph_linpack_data(sheet, spreadsheetId, range='A:F'):
     """
     GRAPH_COL_INDEX = 5
     GRAPH_ROW_INDEX = 0
-    
-    data_dict = rearrange_linpack_data(sheet, spreadsheetId, test_name)
+    data_dict = rearrange_linpack_data(sheet, spreadsheetId, range)
     header_row = data_dict[0][0]
 
     if data_dict:
@@ -38,7 +37,7 @@ def graph_linpack_data(sheet, spreadsheetId, range='A:F'):
     for data in data_dict:
         machine_class = data[0][1].split('.')[0]
 
-        response = append_to_sheet(sheet, spreadsheetId, data, test_name)
+        response = append_to_sheet(sheet, spreadsheetId, data, range)
         updated_range = response['updates']['updatedRange']
         title, sheet_range = updated_range.split('!')
         sheet_range = sheet_range.split(':')
@@ -232,7 +231,7 @@ def rearrange_linpack_data(sheet, spreadsheetId, range='A:F'):
     :spreadsheetId
     :range: range to graph up the data, it will be mostly sheet name
     """
-    values = read_sheet(sheet, spreadsheetId, range=test_name)
+    values = read_sheet(sheet, spreadsheetId, range=range)
 
     data_dict = {}
 

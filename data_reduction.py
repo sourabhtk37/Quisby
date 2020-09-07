@@ -16,7 +16,7 @@ from config import *
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 
 
-def extract_linpack_data(path):
+def extract_linpack_data(path, system_name):
     """
     Reads linpack results file and extract gflops information
 
@@ -40,7 +40,7 @@ def extract_linpack_data(path):
     return [results]
 
 
-def main(test_name, test_path):
+def main(test_name, test_path, system_name):
     """
     """
     global spreadsheetId
@@ -62,9 +62,9 @@ def main(test_name, test_path):
             sheet, spreadsheetId, test_name, sheet_count)
 
     # TODO: Remove if-else using getattr
+    # Collecting data
     if test_name == 'linpack':
-        # Collecting data
-        results = extract_linpack_data(test_path)
+        results = extract_linpack_data(test_path, system_name)
 
     elif test_name == 'stream':
         results = extract_stream_data(test_path, system_name)
