@@ -13,8 +13,6 @@ from uperf import extract_uperf_data
 from config import *
 
 
-SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
-
 
 def extract_linpack_data(path, system_name):
     """
