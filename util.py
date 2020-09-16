@@ -1,5 +1,5 @@
-from config import *
-
+import config
+from sheetapi import sheet
 
 LINPACK_HEADER_ROW = ["System", "GFLOPS",
                       "GFLOP Scaling", "Cost/hr", "Price/Perf"]
@@ -16,7 +16,7 @@ def check_sheet_exists(sheet_info, test_name):
     return False
 
 
-def create_spreadsheet(sheet, spreadsheet_name, test_name):
+def create_spreadsheet(spreadsheet_name, test_name):
     """
     A new sheet is created if spreadsheetId is None
 
@@ -60,13 +60,13 @@ def create_spreadsheet(sheet, spreadsheet_name, test_name):
     return spreadsheetId
 
 
-def get_sheet(sheet, spreadsheetId, range='A:F'):
+def get_sheet(spreadsheetId, range='A:F'):
 
     return sheet.get(spreadsheetId=spreadsheetId,
                      ranges=range).execute()
 
 
-def create_sheet(sheet, spreadsheetId, test_name):
+def create_sheet(spreadsheetId, test_name):
     """
     New sheet in spreadsheet is created
 
@@ -74,7 +74,7 @@ def create_sheet(sheet, spreadsheetId, test_name):
     :spreadsheetId
     :test_name: range to graph up the data, it will be mostly sheet name
     """
-    sheet_info = get_sheet(sheet, spreadsheetId, [])['sheets']
+    sheet_info = get_sheet(spreadsheetId, [])['sheets']
 
     # Create sheet if it doesn't exit
     if not check_sheet_exists(sheet_info, test_name):
@@ -115,7 +115,7 @@ def create_sheet(sheet, spreadsheetId, test_name):
                                   body=body).execute()
 
 
-def read_sheet(sheet, spreadsheet_Id, range='A:F'):
+def read_sheet(spreadsheet_Id, range='A:F'):
     """
     """
     result = sheet.values().get(spreadsheetId=spreadsheet_Id,
@@ -125,7 +125,7 @@ def read_sheet(sheet, spreadsheet_Id, range='A:F'):
     return values
 
 
-def append_to_sheet(sheet, spreadsheet_Id, results, range='A:F'):
+def append_to_sheet(spreadsheet_Id, results, range='A:F'):
     """
     """
 
@@ -140,9 +140,9 @@ def append_to_sheet(sheet, spreadsheet_Id, results, range='A:F'):
     return response
 
 
-def apply_named_range(sheet, spreadsheetId, name, range='A:F'):
+def apply_named_range(spreadsheetId, name, range='A:F'):
 
-    sheetId = get_sheet(sheet, spreadsheetId, range)[
+    sheetId = get_sheet(spreadsheetId, range)[
         'sheets'][0]['properties']['sheetId']
 
     sheet_range = range.split('!')[1].split(':')
@@ -172,15 +172,15 @@ def apply_named_range(sheet, spreadsheetId, name, range='A:F'):
     print(response)
 
 
-def clear_sheet_data(sheet, spreadsheetId, range='A2:Z1000'):
+def clear_sheet_data(spreadsheetId, range='A2:Z1000'):
     # Clear values
     sheet.values().clear(spreadsheetId=spreadsheetId,
                          range=range, body={}).execute()
 
 
-def clear_sheet_charts(sheet, spreadsheetId, range='A2:Z1000'):
+def clear_sheet_charts(spreadsheetId, range='A2:Z1000'):
     # Clear charts
-    sheet_properties = get_sheet(sheet, spreadsheetId, range)
+    sheet_properties = get_sheet(spreadsheetId, range)
 
     if 'charts' in sheet_properties['sheets'][0]:
         for chart in sheet_properties['sheets'][0]['charts']:
@@ -198,7 +198,7 @@ def clear_sheet_charts(sheet, spreadsheetId, range='A2:Z1000'):
             sheet.batchUpdate(spreadsheetId=spreadsheetId, body=body).execute()
 
 
-def get_named_range(sheet, spreadsheetId, range='A:F'):
-    spreadsheet = get_sheet(sheet, spreadsheetId, range)
+def get_named_range(spreadsheetId, range='A:F'):
+    spreadsheet = get_sheet(spreadsheetId, range)
 
     # print(spreadsheet['namedRanges'])

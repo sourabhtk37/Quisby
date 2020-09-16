@@ -1,7 +1,59 @@
-from operator import itemgetter
+from itertools import groupby
+import config
 
-from util import *
-from config import *
+
+def stream_sort_data_by_system_family(results):
+    """
+    """
+    stream_data = []
+    sorted_result = []
+
+    for index in range(0, len(results), 7):
+        stream_data.append(results[index:index+7])
+
+    # stream_data.sort(key=lambda x: (x[2][0].split('.')[0])
+    for _, items in groupby(stream_data, key=lambda x: x[2][0].split('.')[0]):
+        sorted_result += sorted(list(items),
+                                key=lambda x: int(x[2][0].split('.')[1].split('x')[0]))
+
+    return sorted_result
+
+
+def calc_max_throuput(data):
+    """
+    """
+    num_of_socket = data[1][0].split(' ')[0]
+    system_name = data[2][0]
+    max_copy = max(data[3][1:])
+    max_scale = max(data[4][1:])
+    max_add = max(data[5][1:])
+    max_triad = max(data[6][1:])
+
+    return [system_name+" Sockets:" + num_of_socket,
+            max_copy, max_scale, max_add, max_triad]
+
+
+def create_summary_stream_data(stream_data):
+    """
+    Create summary data for Max throughput and Scaling
+    """
+    results = []
+    stream_data = stream_sort_data_by_system_family(stream_data)
+
+    # Group by system family
+    for key, items in groupby(stream_data, key=lambda x: x[2][0].split('.')[0]):
+        max_calc_result = []
+        for item in items:
+            results += item
+            max_calc_result.append(calc_max_throuput(item))
+        results.append([""])
+        results.append([
+            "Max Througput", f"Copy-{config.OS_RELEASE}", f"Scale-{config.OS_RELEASE}",
+            f"Add-{config.OS_RELEASE}", f"Triad-{config.OS_RELEASE}"])
+            
+        results += max_calc_result
+
+    return results
 
 
 def extract_stream_data(path, system_name='System'):
@@ -11,7 +63,6 @@ def extract_stream_data(path, system_name='System'):
     :path: stream summary results file from stream_wrapper_benchmark runs
     :system_name: machine name (eg: m5.2xlarge, Standard_D64s_v3)
     """
-
     with open(path) as file:
         streams_results = file.readlines()
 
@@ -22,8 +73,9 @@ def extract_stream_data(path, system_name='System'):
             data_index = index
         streams_results[index] = data.strip('\n').split(':')
 
+    # Slice and sort only necessary data by socket number, column 2
     streams_results = sorted(
-        streams_results[data_index+1:], key=itemgetter(2))
+        streams_results[data_index+1:], key=lambda x: x[2])
 
     # A list of list is created which has format
     # [[''], ['<Socket number>'], [system_name], [<COPY data>],
@@ -31,21 +83,26 @@ def extract_stream_data(path, system_name='System'):
 
     socket_number = ''
     proccessed_data = []
-    for x in streams_results:
-        if socket_number != x[2]:
-            socket_number = x[2]
-            proccessed_data += [''], ['%s Socket' % x[2]], [system_name], [
+    for row in streams_results:
+        if socket_number != row[2]:
+            socket_number = row[2]
+            proccessed_data += [''], [f'{socket_number} Socket'], [system_name], [
                 'Copy'], ['Scale'], ['Add'], ['Triad']
 
         # Appending copy, scale, add and triad data
+
         pos = len(proccessed_data)
-        pos_line = len(x)
-        proccessed_data[pos - 5].append(x[0])
+        data_pos = len(row)
+
+        # Append stream array size
+        proccessed_data[pos - 5].append(row[0]+"-"+config.OS_RELEASE)
+
+        # append each function data
         for i in range(1, 5):
-            proccessed_data[pos-i].append(x[pos_line-i])
+            proccessed_data[pos-i].append(row[data_pos-i])
 
     return proccessed_data
 
 
 if __name__ == '__main__':
-    print(extract_stream_data(path, 'i3en.xlarge'))
+    print(extract_stream_data('stream_result_8.2/i3en.2xlarge/regression__lsp_i3en.2xlarge_1_1/results_streams_tuned_tuned_virtual-guest_sys_file_none_20200810091326/results_streams_tuned_tuned_virtual-guest_sys_file_none_20200810091326/streams_results/results_streams_tuned_tuned_virtual-guest_sys_file_none_20200810091326/results_streams.csv', 'i3en.xlarge'))

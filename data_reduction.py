@@ -1,17 +1,15 @@
-# TODO: scope of sheet(), var:spreadsheetId and other vars is global,
-#       therefore function sizes can be reduced
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from googleapiclient.errors import HttpError
 
+import config
 import graph
 import cloud_pricing
-from util import *
 from stream import extract_stream_data
 from uperf import extract_uperf_data
-from config import *
-
+from sheetapi import sheet
+from util import create_sheet, create_spreadsheet, get_sheet, append_to_sheet
 
 
 def extract_linpack_data(path, system_name):
@@ -41,23 +39,21 @@ def extract_linpack_data(path, system_name):
 def main(test_name, test_path, system_name):
     """
     """
-    global spreadsheetId
     sheet_exists = False
 
     # TODO: Need to apply to config.py afterwards, Need a way to a manage multiple
     #       spreadsheets.
     # TODO: Write the created spreadsheetId to config file
     # Create new spreadsheet if it doesn't exist
-    if not spreadsheetId:
-        spreadsheetId = create_spreadsheet(sheet, spreadsheet_name, test_name)
+    if not config.spreadsheetId:
+        config.spreadsheetId = create_spreadsheet(spreadsheet_name, test_name)
 
-    sheet_info = get_sheet(sheet, spreadsheetId, [])['sheets']
+    sheet_info = get_sheet(config.spreadsheetId, [])['sheets']
 
     # Create sheet if it doesn't exit
     if not check_sheet_exists(sheet_info, test_name):
         sheet_count = len(sheet_info)
-        create_sheet(
-            sheet, spreadsheetId, test_name, sheet_count)
+        create_sheet(config.spreadsheetId, test_name, sheet_count)
 
     # TODO: Remove if-else using getattr
     # Collecting data
@@ -71,13 +67,13 @@ def main(test_name, test_path, system_name):
         results = extract_uperf_data(test_path, system_name)
 
     # Appending data to sheet
-    response = append_to_sheet(sheet, spreadsheetId, results, test_name)
+    response = append_to_sheet(config.spreadsheetId, results, test_name)
 
     # Graphing up data
     graph_process_data = getattr(graph, 'graph_%s_data' % (test_name))
-    graph_process_data(sheet, spreadsheetId, test_name)
+    graph_process_data(config.spreadsheetId, test_name)
 
 
 # TO:DO Add parser information here
 if __name__ == '__main__':
-    main()
+    main(test_name, test_path, system_name)
