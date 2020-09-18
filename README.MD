@@ -50,12 +50,12 @@ You will be good to go!
 #### config.py 
 `config.py` is the only file you need to edit. Sample example have been provided in the file. 
 
-#### data_reduction.py
-This is the main driver program that needs to be called once you have edited `config.py` file accordingly. 
+#### reduce_results.py
+This is the main driver program that needs to be called once you have edited `config.py` file accordingly. It takes in an input file with list of location to the test results.
 
-`python data_reduction.py`
+`python reduce_results.py test_locations`
 
-*That's it. Visit the google sheets page and you will see a newly created spreadsheet with the data populated and graphed.*
+*That's it. It will return a google sheet. Visit the google sheet page and you will see a newly created spreadsheet with the data populated and graphed.*
 
 ## Contributing
 Create issues and create a seperate feature branch to work on it. Push the changes to your clone repo and then create a pull request to the master branch of the origin repo.

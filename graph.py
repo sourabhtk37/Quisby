@@ -1,21 +1,22 @@
-from config import *
-from util import *
+from itertools import groupby
 
+import config
+from sheetapi import sheet
+from uperf import combine_uperf_data
+from sheet_util import clear_sheet_charts, clear_sheet_data, append_to_sheet, read_sheet, get_sheet
 
-GFLOPS_PLOT_RANGE = 'B'
-PRICE_PER_PERF_RANGE = 'E'
 
 # TODO: remove mention of range with test_name
 
 
-def graph_linpack_data(sheet, spreadsheetId, range='A:F'):
+def graph_linpack_data(spreadsheetId, range='A:F'):
     """
-    Re-arrange data from the sheet into a dict grouped by machine name. 
+    Re-arrange data from the sheet into a dict grouped by machine name.
     The sheet data & charts are then cleared excluding the header row.
-    The function then processes loops over each groups of machine and plots the 
+    The function then processes loops over each groups of machine and plots the
     graphs.
 
-    Graphs: 
+    Graphs:
     - GFLOP and GFLOPS scaling
     - Price/perf
 
@@ -23,28 +24,30 @@ def graph_linpack_data(sheet, spreadsheetId, range='A:F'):
     :spreadsheetId
     :range: range to graph up the data, it will be mostly sheet name
     """
+    GFLOPS_PLOT_RANGE = 'B'
+    PRICE_PER_PERF_RANGE = 'D'
     GRAPH_COL_INDEX = 5
     GRAPH_ROW_INDEX = 0
-    data_dict = rearrange_linpack_data(sheet, spreadsheetId, range)
+    data_dict = rearrange_linpack_data(spreadsheetId, range)
     header_row = data_dict[0][0]
 
     if data_dict:
-        clear_sheet_data(sheet, spreadsheetId, range)
-        clear_sheet_charts(sheet, spreadsheetId, range)
+        clear_sheet_data(spreadsheetId, range)
+        clear_sheet_charts(spreadsheetId, range)
     else:
         raise Exception("Data sheet empty")
 
     for data in data_dict:
         machine_class = data[0][1].split('.')[0]
 
-        response = append_to_sheet(sheet, spreadsheetId, data, range)
+        response = append_to_sheet(spreadsheetId, data, range)
         updated_range = response['updates']['updatedRange']
         title, sheet_range = updated_range.split('!')
         sheet_range = sheet_range.split(':')
 
-        # apply_named_range(sheet, spreadsheetId, machine_class, updated_range)
+        # apply_named_range(spreadsheetId, machine_class, updated_range)
 
-        sheetId = get_sheet(sheet, spreadsheetId, updated_range)[
+        sheetId = get_sheet(spreadsheetId, updated_range)[
             'sheets'][0]['properties']['sheetId']
 
         # GFlops & GFlops scaling graph
@@ -223,7 +226,7 @@ def graph_linpack_data(sheet, spreadsheetId, range='A:F'):
         GRAPH_ROW_INDEX += 20
 
 
-def rearrange_linpack_data(sheet, spreadsheetId, range='A:F'):
+def rearrange_linpack_data(spreadsheetId, range='A:F'):
     """
     Retreived data is sorted into groups by machine name
 
@@ -231,32 +234,52 @@ def rearrange_linpack_data(sheet, spreadsheetId, range='A:F'):
     :spreadsheetId
     :range: range to graph up the data, it will be mostly sheet name
     """
-    values = read_sheet(sheet, spreadsheetId, range=range)
+    sorted_result = []
 
-    data_dict = {}
+    values = read_sheet(spreadsheetId, range=range)
 
     # Clear empty rows
     values = list(filter(None, values))
+    header_row = [values[0]]
+    # Pop Header row to sort by system size
+    values = [row for row in values if row[0] != 'System']
 
-    for row in values:
-        key = row[0].split('.')[0]
+    for _, items in groupby(values, key=lambda x: x[0].split('.')[0]):
+        sorted_data = sorted(list(items), key=lambda x: int(
+            x[0].split('.')[1].split('x')[0]))
 
-        # if row is header row, then skip
-        if key == 'System':
-            continue
+        sorted_result.append(header_row + sorted_data)
 
-        if cloud_type == 'AWS':
-            if key in data_dict:
-                data_dict[row[0].split('.')[0]] += [row]
-            else:
-                # Append header row and then append values to new dict
-                data_dict[row[0].split('.')[0]] = [values[0]]
-                data_dict[row[0].split('.')[0]] += [row]
-
-    return list(data_dict.values())
+    return sorted_result
 
 
-def graph_stream_data(sheet, spreadsheetId, range):
+def create_series_range_list_stream(column_count, sheetId, start_index, end_index):
+    series = []
+
+    for index in range(end_index - start_index):
+
+        series.append({
+            "series": {
+                "sourceRange": {
+                    "sources": [
+                        {
+                            "sheetId": sheetId,
+                            "startRowIndex": start_index+index,
+                            "endRowIndex": start_index+index+1,
+                            "startColumnIndex": 0,
+                            "endColumnIndex": 5
+
+                        }
+                    ]
+                }
+            },
+            "type": "COLUMN"
+        })
+
+    return series
+
+
+def graph_stream_data(spreadsheetId, range):
     """
     Retreive each streams results and graph them up indvidually
 
@@ -264,22 +287,35 @@ def graph_stream_data(sheet, spreadsheetId, range):
     :spreadsheetId
     :range: range to graph up the data, it will be mostly sheet name
     """
-    GRAPH_COL_INDEX = 5
+    GRAPH_COL_INDEX = 0
     GRAPH_ROW_INDEX = 0
+    start_index = 0
+    end_index = 0
 
-    data = read_sheet(sheet, spreadsheetId, range)
-    clear_sheet_charts(sheet, spreadsheetId, range)
+    data = read_sheet(spreadsheetId, range)
+    clear_sheet_charts(spreadsheetId, range)
 
-    for index, x in enumerate(data):
-        if x == []:
-            graph_data = data[index+1:index+7]
-            sheetId = get_sheet(sheet, spreadsheetId, range)[
+    for index, row in enumerate(data):
+        if 'Max Througput' in row:
+            start_index = index
+
+        if start_index:
+            if row == []:
+                end_index = index
+            if index+1 == len(data):
+                end_index = index + 1
+
+        if end_index:
+            graph_data = data[start_index:end_index]
+            column_count = len(graph_data[0])
+
+            sheetId = get_sheet(spreadsheetId, range)[
                 'sheets'][0]['properties']['sheetId']
             requests = {
                 "addChart": {
                     "chart": {
                         "spec": {
-                            "title": "Streams : %s, System name:%s" % (graph_data[0], graph_data[1][0]),
+                            "title": "Streams : %s and System_Family: %s" % (graph_data[0][0], graph_data[1][0].split('.')[0]),
                             "basicChart": {
                                 "chartType": "COLUMN",
                                 "legendPosition": "BOTTOM_LEGEND",
@@ -300,82 +336,17 @@ def graph_stream_data(sheet, spreadsheetId, range):
                                                 "sources": [
                                                     {
                                                         "sheetId": sheetId,
-                                                        "startRowIndex": index+2,
-                                                        "endRowIndex": index+7,
+                                                        "startRowIndex": start_index,
+                                                        "endRowIndex": start_index+1,
                                                         "startColumnIndex": 0,
-                                                        "endColumnIndex": 1
+                                                        "endColumnIndex": 5
                                                     }
                                                 ]
                                             }
                                         }
                                     }
                                 ],
-                                "series": [
-                                    {
-                                        "series": {
-                                            "sourceRange": {
-                                                "sources": [
-                                                    {
-                                                        "sheetId": sheetId,
-                                                        "startRowIndex": index+2,
-                                                        "endRowIndex": index+7,
-                                                        "startColumnIndex": 1,
-                                                        "endColumnIndex": 2
-                                                    }
-                                                ]
-                                            }
-                                        },
-                                        "type": "COLUMN"
-                                    },
-                                    {
-                                        "series": {
-                                            "sourceRange": {
-                                                "sources": [
-                                                    {
-                                                        "sheetId": sheetId,
-                                                        "startRowIndex": index+2,
-                                                        "endRowIndex": index+7,
-                                                        "startColumnIndex": 2,
-                                                        "endColumnIndex": 3
-                                                    }
-                                                ]
-                                            }
-                                        },
-                                        "type": "COLUMN"
-                                    },
-                                    {
-                                        "series": {
-                                            "sourceRange": {
-                                                "sources": [
-                                                    {
-                                                        "sheetId": sheetId,
-                                                        "startRowIndex": index+2,
-                                                        "endRowIndex": index+7,
-                                                        "startColumnIndex": 3,
-                                                        "endColumnIndex": 4
-                                                    }
-                                                ]
-                                            }
-                                        },
-                                        "type": "COLUMN"
-                                    },
-                                    {
-                                        "series": {
-                                            "sourceRange": {
-                                                "sources": [
-                                                    {
-                                                        "sheetId": sheetId,
-                                                        "startRowIndex": index+2,
-                                                        "endRowIndex": index+7,
-                                                        "startColumnIndex": 4,
-                                                        "endColumnIndex": 5
-                                                    }
-                                                ]
-                                            }
-                                        },
-                                        "type": "COLUMN"
-                                    }
-                                ],
+                                "series": create_series_range_list_stream(column_count, sheetId, start_index, end_index),
                                 "headerCount": 1
                             }
                         },
@@ -384,16 +355,17 @@ def graph_stream_data(sheet, spreadsheetId, range):
                                 "anchorCell": {
                                     "sheetId": sheetId,
                                     "rowIndex": GRAPH_ROW_INDEX,
-                                    "columnIndex": GRAPH_COL_INDEX}
+                                    "columnIndex": column_count + GRAPH_COL_INDEX
+                                }
                             }
                         }
                     }
                 }
             }
 
-            if GRAPH_COL_INDEX >= 15:
+            if GRAPH_COL_INDEX >= 5:
                 GRAPH_ROW_INDEX += 20
-                GRAPH_COL_INDEX = 5
+                GRAPH_COL_INDEX = 0
             else:
                 GRAPH_COL_INDEX += 6
 
@@ -404,150 +376,141 @@ def graph_stream_data(sheet, spreadsheetId, range):
             sheet.batchUpdate(
                 spreadsheetId=spreadsheetId, body=body).execute()
 
+            # Reset variables
+            start_index, end_index = 0, 0
 
-def series_range_uperf(series_range, sheetId, index, data_index):
-    """
-    """
-    series_list = []
-    GRAPH_TYPE = 'COLUMN'
-    TARGET_AXIS = 'LEFT_AXIS'
 
-    for column in range(series_range[index][0]):
-        if column == 5 and series_range[index][1] > 1:
-            GRAPH_TYPE = 'LINE'
-            TARGET_AXIS = 'RIGHT_AXIS'
+def series_range_uperf(column_count, sheetId, start_index, end_index):
 
-        series_list.append({
+    series = []
+
+    for index in range(column_count):
+
+        series.append({
             "series": {
                 "sourceRange": {
                     "sources": [
                         {
                             "sheetId": sheetId,
-                            "startRowIndex": data_index[0],
-                            "endRowIndex": data_index[1],
-                            "startColumnIndex": column+1,
-                            "endColumnIndex": column+2
+                            "startRowIndex": start_index+1,
+                            "endRowIndex": end_index,
+                            "startColumnIndex": index+1,
+                            "endColumnIndex": index+2
                         }
                     ]
                 }
             },
-            "targetAxis": TARGET_AXIS,
-            "type": GRAPH_TYPE
-        },
-        )
-    return series_list
+            "type": "COLUMN"
+        })
+
+    return series
 
 
-def graph_uperf_data(sheet, spreadsheetId, range):
+def graph_uperf_data(spreadsheetId, range):
     """
     """
-    GRAPH_COL_INDEX = 6
-    GRAPH_ROW_INDEX = 0
+    GRAPH_COL_INDEX, GRAPH_ROW_INDEX = 2, 0
+    start_index, end_index = 0, 0
+    measurement = {
+        'Gb_sec' : 'Bandwidth',
+        'trans_sec': 'Transactions/second',
+        'usec': 'Latency'
+    }
 
-    uperf_result = read_sheet(sheet, spreadsheetId, range)
-    clear_sheet_charts(sheet, spreadsheetId, range)
+    uperf_results = read_sheet(spreadsheetId, range)
+    clear_sheet_charts(spreadsheetId, range)
 
-    loc, test_name, system_name, test_metric, series_range = [], [], [], [], []
-    start_index = None
-    for index, data in enumerate(uperf_result):
-        if data == []:
-            system_name.append(uperf_result[index+1])
-            test_name.append(uperf_result[index+2])
-            if start_index is not None:
-                loc.append([start_index, index])
-                start_index = None
-            continue
+    for index, row in enumerate(uperf_results):
+        if row:
+            if 'tcp_stream16' in row[1] or 'tcp_rr64' in row[1]:
+                start_index = index
 
-        if 'instance count' in data:
-            test_metric.append(set(data[1:]))
+        if start_index:
+            if row == []:
+                end_index = index
+            if index+1 == len(uperf_results):
+                end_index = index + 1
 
-            series_range.append([len(data[1:]), len(test_metric[-1])])
-            start_index = index
-            continue
+        if end_index:
+            graph_data = uperf_results[start_index:end_index]
+            column_count = len(uperf_results[2])
 
-        if index + 2 > len(uperf_result):
-            loc.append([start_index, index+1])
-            start_index = None
+            sheetId = get_sheet(spreadsheetId, range)[
+                'sheets'][0]['properties']['sheetId']
 
-    for index, data_index in enumerate(loc):
-
-        sheetId = get_sheet(sheet, spreadsheetId, range)[
-            'sheets'][0]['properties']['sheetId']
-
-        requests = {
-            "addChart": {
-                "chart": {
-                    "spec": {
-                        "title": "%s , %s" % (test_name[index][0].strip("\n"), system_name[index][0]),
-                        "basicChart": {
-                            "chartType": "COMBO",
-                            "legendPosition": "BOTTOM_LEGEND",
-                            "axis": [
-                                {
-                                    "position": "BOTTOM_AXIS",
-                                    "title": "Packet Size: %s " % (uperf_result[data_index[0]-1][0].split('-')[1])
-                                },
-                                {
-                                    "position": "LEFT_AXIS",
-                                    "title": "%s" % (",".join(test_metric[index]))
-                                }
-                            ],
-                            "domains": [
-                                {
-                                    "domain": {
-                                        "sourceRange": {
-                                            "sources": [
-                                                {
-                                                    "sheetId": sheetId,
-                                                    "startRowIndex": data_index[0],
-                                                    "endRowIndex": data_index[1],
-                                                    "startColumnIndex": 0,
-                                                    "endColumnIndex": 1
-                                                }
-                                            ]
+            requests = {
+                "addChart": {
+                    "chart": {
+                        "spec": {
+                            "title": f"Uperf : {measurement[graph_data[0][2]]} | {graph_data[0][1]}",
+                            "subtitle": f"{graph_data[0][0]}",
+                            "basicChart": {
+                                "chartType": "COLUMN",
+                                "legendPosition": "BOTTOM_LEGEND",
+                                "axis": [
+                                    {
+                                        "position": "BOTTOM_AXIS",
+                                        "title": "Instance count"
+                                    },
+                                    {
+                                        "position": "LEFT_AXIS",
+                                        "title": f"{graph_data[0][2]}"
+                                    }
+                                ],
+                                "domains": [
+                                    {
+                                        "domain": {
+                                            "sourceRange": {
+                                                "sources": [
+                                                    {
+                                                        "sheetId": sheetId,
+                                                        "startRowIndex": start_index+1,
+                                                        "endRowIndex": end_index,
+                                                        "startColumnIndex": 0,
+                                                        "endColumnIndex": 1
+                                                    }
+                                                ]
+                                            }
                                         }
                                     }
-                                },
-                            ],
-                            # TODO: Create a series dict according to number of series
-                            "series": series_range_uperf(series_range, sheetId, index, data_index),
-                            "headerCount": 1
-                        }
-                    },
-                    "position": {
-                        "overlayPosition": {
-                            "anchorCell": {
-                                "sheetId": sheetId,
-                                "rowIndex": GRAPH_ROW_INDEX,
-                                "columnIndex": GRAPH_COL_INDEX
+                                ],
+                                "series": series_range_uperf(column_count, sheetId, start_index, end_index),
+                                "headerCount": 1
+                            }
+                        },
+                        "position": {
+                            "overlayPosition": {
+                                "anchorCell": {
+                                    "sheetId": sheetId,
+                                    "rowIndex": GRAPH_ROW_INDEX,
+                                    "columnIndex": column_count + GRAPH_COL_INDEX
+                                }
                             }
                         }
                     }
                 }
             }
-        }
 
-        if GRAPH_COL_INDEX >= 15:
-            GRAPH_ROW_INDEX += 18
-            GRAPH_COL_INDEX = 6
-        else:
-            GRAPH_COL_INDEX += 6
+            if GRAPH_COL_INDEX >= 5:
+                GRAPH_ROW_INDEX += 20
+                GRAPH_COL_INDEX = 2
+            else:
+                GRAPH_COL_INDEX += 6
 
-        body = {
-            "requests": requests
-        }
+            body = {
+                "requests": requests
+            }
 
-        sheet.batchUpdate(
-            spreadsheetId=spreadsheetId, body=body).execute()
+            sheet.batchUpdate(
+                spreadsheetId=spreadsheetId, body=body).execute()
+
+            # Reset variables
+            start_index, end_index = 0, 0
 
 
 if __name__ == '__main__':
     test_name = 'uperf'
-    cloud_type = 'AWS'
-    creds = authenticate_creds()
-    service = build('sheets', 'v4', credentials=creds)
 
-    sheet = service.spreadsheets()
-    spreadsheetId = '1aUwUL99-FHfH0NdbxfGW886sqSEXVU2yVBOXAJf2RXc'
+    config.spreadsheetId = '1UNt_l3a0LIw1NDyKDFyMRyVmfBc5mplBsUIYI_7jjZ4'
 
-    globals()["graph_%s_data" % (test_name)](sheet, spreadsheetId, test_name)
+    globals()["graph_%s_data" % (test_name)](config.spreadsheetId, test_name)

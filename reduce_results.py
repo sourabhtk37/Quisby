@@ -6,7 +6,7 @@ from sheetapi import sheet
 from stream import extract_stream_data, create_summary_stream_data
 from uperf import extract_uperf_data, create_summary_uperf_data
 from linpack.extract import extract_linpack_summary_data
-from util import create_sheet, append_to_sheet, create_spreadsheet
+from sheet_util import create_sheet, append_to_sheet, create_spreadsheet
 
 
 def process_results(results):
@@ -47,9 +47,9 @@ def data_handler(path):
                 results = process_results(results)
                 test_name = data.split('_')[-1].strip()
                 
-                # if not config.spreadsheetId:
-                #     config.spreadsheetId = create_spreadsheet(
-                #         spreadsheet_name, test_name)
+                if not config.spreadsheetId:
+                    config.spreadsheetId = create_spreadsheet(
+                        spreadsheet_name, test_name)
             else:
                 if data:
                     
@@ -78,7 +78,7 @@ def data_handler(path):
                         system_name = data.split('/')[1].strip()
                         result_name = data.split('/')[-1].strip('\n')
                         test_path = f"linpack_result_{config.OS_RELEASE}/" \
-                                    f"{data}/result_name/summary.csv"
+                                    f"{data}/{result_name}/summary.csv"
 
                         ret_val = extract_linpack_summary_data(
                             test_path, system_name)

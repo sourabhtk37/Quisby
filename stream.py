@@ -98,8 +98,8 @@ def extract_stream_data(path, system_name='System'):
         proccessed_data[pos - 5].append(row[0]+"-"+config.OS_RELEASE)
 
         # append each function data
-        for i in range(1, 5):
-            proccessed_data[pos-i].append(row[data_pos-i])
+        for index in range(1, 5):
+            proccessed_data[pos-index].append(row[data_pos-index])
 
     return proccessed_data
 

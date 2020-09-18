@@ -49,10 +49,10 @@ def get_azure_pricing(system_name, region='US Gov'):
         name, version = system_name.split('_')[1:]
         system_name = str(name+' '+version)
 
-        for x in data['Meters']:
-            if len(x['MeterName']) <= 14 and 'Windows' not in x['MeterSubCategory']:
-                if system_name in str(x['MeterName']) and region == x['MeterRegion']:
-                    return x['MeterRates']['0']
+        for resource in data['Meters']:
+            if len(resource['MeterName']) <= 14 and 'Windows' not in resource['MeterSubCategory']:
+                if system_name in str(resource['MeterName']) and region == resource['MeterRegion']:
+                    return resource['MeterRates']['0']
 
 
 def get_aws_pricing(instance_name, region):

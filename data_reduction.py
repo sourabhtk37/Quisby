@@ -1,15 +1,10 @@
-from googleapiclient.discovery import build
-from google_auth_oauthlib.flow import InstalledAppFlow
-from google.auth.transport.requests import Request
-from googleapiclient.errors import HttpError
-
 import config
 import graph
 import cloud_pricing
 from stream import extract_stream_data
 from uperf import extract_uperf_data
 from sheetapi import sheet
-from util import create_sheet, create_spreadsheet, get_sheet, append_to_sheet
+from sheet_util import create_sheet, create_spreadsheet, get_sheet, append_to_sheet
 
 
 def extract_linpack_data(path, system_name):
@@ -41,10 +36,6 @@ def main(test_name, test_path, system_name):
     """
     sheet_exists = False
 
-    # TODO: Need to apply to config.py afterwards, Need a way to a manage multiple
-    #       spreadsheets.
-    # TODO: Write the created spreadsheetId to config file
-    # Create new spreadsheet if it doesn't exist
     if not config.spreadsheetId:
         config.spreadsheetId = create_spreadsheet(spreadsheet_name, test_name)
 
