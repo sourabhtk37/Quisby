@@ -28,7 +28,9 @@ def uperf_sort_data_by_system_family(results):
 
     group_data = combine_uperf_data(results)
 
-    for _, items in groupby(sorted(group_data), key=lambda x: str(x[1][0].split('.')[0])):
+    group_data.sort(key=lambda x: str(x[1][0].split('.')[0]))
+    
+    for _, items in groupby(group_data, key=lambda x: str(x[1][0].split('.')[0])):
         sorted_results.append(sorted(list(items),
                                      key=lambda x: int(x[1][0].split('.')[1].split('x')[0])))
 

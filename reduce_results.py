@@ -5,6 +5,7 @@ import config
 from sheetapi import sheet
 from stream import extract_stream_data, create_summary_stream_data
 from uperf import extract_uperf_data, create_summary_uperf_data
+from specjbb import extract_specjbb_data, create_summary_specjbb_data
 from linpack.extract import extract_linpack_summary_data
 from sheet_util import create_sheet, append_to_sheet, create_spreadsheet
 
@@ -17,6 +18,8 @@ def process_results(results):
             results = create_summary_stream_data(results)
         elif test_name == 'uperf':
             results = create_summary_uperf_data(results)
+        elif test_name == 'specjbb':
+            results = create_summary_specjbb_data(results)
 
         create_sheet(config.spreadsheetId, test_name)
         append_to_sheet(config.spreadsheetId,
@@ -35,7 +38,7 @@ def data_handler(path):
     """
     global test_name
 
-    spreadsheet_name = f"{config.cloud_type} {config.OS_TYPE}-{config.OS_RELEASE} report"
+    spreadsheet_name = f"{config.cloud_type} {config.OS_TYPE}-{config.OS_RELEASE}"
 
     results = []
 
@@ -46,13 +49,13 @@ def data_handler(path):
             if 'tests' in data:
                 results = process_results(results)
                 test_name = data.split('_')[-1].strip()
-                
+
                 if not config.spreadsheetId:
                     config.spreadsheetId = create_spreadsheet(
                         spreadsheet_name, test_name)
             else:
                 if data:
-                    
+
                     # Strip new line
                     data = data.strip('\n')
 
@@ -84,6 +87,14 @@ def data_handler(path):
                             test_path, system_name)
                         if ret_val:
                             results += ret_val
+
+                    elif test_name == 'specjbb':
+                        system_name = data.split('_')[2].strip('/')
+
+                        test_path = f"specjbb_results_{config.OS_RELEASE}/" \
+                                    f"{data}SPECjbb.001.results"
+
+                        results.append(extract_specjbb_data(test_path, system_name))
 
         results = process_results(results)
 

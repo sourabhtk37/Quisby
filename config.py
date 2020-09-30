@@ -15,4 +15,6 @@ test_path = ''
 system_name = ''
 region = 'US East (N. Virginia)'
 cloud_type = 'AWS'
+
+specjbb_java_version='java-11-openjdk'
 # ================================

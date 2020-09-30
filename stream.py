@@ -11,7 +11,8 @@ def stream_sort_data_by_system_family(results):
     for index in range(0, len(results), 7):
         stream_data.append(results[index:index+7])
 
-    # stream_data.sort(key=lambda x: (x[2][0].split('.')[0])
+    stream_data.sort(key=lambda x: x[2][0].split('.')[0])
+
     for _, items in groupby(stream_data, key=lambda x: x[2][0].split('.')[0]):
         sorted_result += sorted(list(items),
                                 key=lambda x: int(x[2][0].split('.')[1].split('x')[0]))
@@ -19,7 +20,7 @@ def stream_sort_data_by_system_family(results):
     return sorted_result
 
 
-def calc_max_throuput(data):
+def calc_max_throughput(data):
     """
     """
     num_of_socket = data[1][0].split(' ')[0]
@@ -45,7 +46,7 @@ def create_summary_stream_data(stream_data):
         max_calc_result = []
         for item in items:
             results += item
-            max_calc_result.append(calc_max_throuput(item))
+            max_calc_result.append(calc_max_throughput(item))
         results.append([""])
         results.append([
             "Max Througput", f"Copy-{config.OS_RELEASE}", f"Scale-{config.OS_RELEASE}",

@@ -253,10 +253,10 @@ def rearrange_linpack_data(spreadsheetId, range='A:F'):
     return sorted_result
 
 
-def create_series_range_list_stream(column_count, sheetId, start_index, end_index):
+def create_series_range_list_stream(column_index, len_of_func, sheetId, start_index, end_index):
     series = []
 
-    for index in range(end_index - start_index):
+    for index in range(len_of_func):
 
         series.append({
             "series": {
@@ -264,10 +264,10 @@ def create_series_range_list_stream(column_count, sheetId, start_index, end_inde
                     "sources": [
                         {
                             "sheetId": sheetId,
-                            "startRowIndex": start_index+index,
-                            "endRowIndex": start_index+index+1,
-                            "startColumnIndex": 0,
-                            "endColumnIndex": 5
+                            "startRowIndex": start_index,
+                            "endRowIndex": end_index,
+                            "startColumnIndex": column_index,
+                            "endColumnIndex": column_index+1
 
                         }
                     ]
@@ -275,25 +275,26 @@ def create_series_range_list_stream(column_count, sheetId, start_index, end_inde
             },
             "type": "COLUMN"
         })
+        column_index += 1
 
-    return series
+    return series, column_index
 
 
-def graph_stream_data(spreadsheetId, range):
+def graph_stream_data(spreadsheetId, test_name):
     """
     Retreive each streams results and graph them up indvidually
 
     :sheet: sheet API function
     :spreadsheetId
-    :range: range to graph up the data, it will be mostly sheet name
+    :test_name: test_name to graph up the data, it will be mostly sheet name
     """
     GRAPH_COL_INDEX = 0
     GRAPH_ROW_INDEX = 0
     start_index = 0
     end_index = 0
 
-    data = read_sheet(spreadsheetId, range)
-    clear_sheet_charts(spreadsheetId, range)
+    data = read_sheet(spreadsheetId, test_name)
+    clear_sheet_charts(spreadsheetId, test_name)
 
     for index, row in enumerate(data):
         if 'Max Througput' in row:
@@ -309,72 +310,84 @@ def graph_stream_data(spreadsheetId, range):
             graph_data = data[start_index:end_index]
             column_count = len(graph_data[0])
 
-            sheetId = get_sheet(spreadsheetId, range)[
-                'sheets'][0]['properties']['sheetId']
-            requests = {
-                "addChart": {
-                    "chart": {
-                        "spec": {
-                            "title": "Streams : %s and System_Family: %s" % (graph_data[0][0], graph_data[1][0].split('.')[0]),
-                            "basicChart": {
-                                "chartType": "COLUMN",
-                                "legendPosition": "BOTTOM_LEGEND",
-                                "axis": [
-                                    {
-                                        "position": "BOTTOM_AXIS",
-                                        "title": "Function"
-                                    },
-                                    {
-                                        "position": "LEFT_AXIS",
-                                        "title": "Throughput (MB/s)"
-                                    }
-                                ],
-                                "domains": [
-                                    {
-                                        "domain": {
-                                            "sourceRange": {
-                                                "sources": [
-                                                    {
-                                                        "sheetId": sheetId,
-                                                        "startRowIndex": start_index,
-                                                        "endRowIndex": start_index+1,
-                                                        "startColumnIndex": 0,
-                                                        "endColumnIndex": 5
-                                                    }
-                                                ]
+            for _, items in groupby(graph_data[0][1:], key=lambda x: x.split('-')[0]):
+                len_of_func = len(list(items))
+                break
+            column = 1
+            for _ in range(column_count):
+                if column >= column_count:
+                    break
+                sheetId = get_sheet(spreadsheetId, test_name)[
+                    'sheets'][0]['properties']['sheetId']
+                    
+                series, column = create_series_range_list_stream(
+                    column, len_of_func, sheetId, start_index, end_index)
+
+                requests = {
+                    "addChart": {
+                        "chart": {
+                            "spec": {
+                                "title": "%s: %s" % (test_name, graph_data[0][0]),
+                                "subtitle": f"{graph_data[1][0].split('.')[0]}",
+                                "basicChart": {
+                                    "chartType": "COLUMN",
+                                    "legendPosition": "BOTTOM_LEGEND",
+                                    "axis": [
+                                        {
+                                            "position": "BOTTOM_AXIS",
+                                            "title": ""
+                                        },
+                                        {
+                                            "position": "LEFT_AXIS",
+                                            "title": "Throughput (MB/s)"
+                                        }
+                                    ],
+                                    "domains": [
+                                        {
+                                            "domain": {
+                                                "sourceRange": {
+                                                    "sources": [
+                                                        {
+                                                            "sheetId": sheetId,
+                                                            "startRowIndex": start_index,
+                                                            "endRowIndex": end_index,
+                                                            "startColumnIndex": 0,
+                                                            "endColumnIndex": 1
+                                                        }
+                                                    ]
+                                                }
                                             }
                                         }
+                                    ],
+                                    "series": series,
+                                    "headerCount": 1
+                                }
+                            },
+                            "position": {
+                                "overlayPosition": {
+                                    "anchorCell": {
+                                        "sheetId": sheetId,
+                                        "rowIndex": GRAPH_ROW_INDEX,
+                                        "columnIndex": column_count + GRAPH_COL_INDEX
                                     }
-                                ],
-                                "series": create_series_range_list_stream(column_count, sheetId, start_index, end_index),
-                                "headerCount": 1
-                            }
-                        },
-                        "position": {
-                            "overlayPosition": {
-                                "anchorCell": {
-                                    "sheetId": sheetId,
-                                    "rowIndex": GRAPH_ROW_INDEX,
-                                    "columnIndex": column_count + GRAPH_COL_INDEX
                                 }
                             }
                         }
                     }
                 }
-            }
 
-            if GRAPH_COL_INDEX >= 5:
-                GRAPH_ROW_INDEX += 20
-                GRAPH_COL_INDEX = 0
-            else:
-                GRAPH_COL_INDEX += 6
+                if GRAPH_COL_INDEX >= 5:
+                    GRAPH_ROW_INDEX += 20
+                    GRAPH_COL_INDEX = 0
+                else:
+                    GRAPH_COL_INDEX += 6
 
-            body = {
-                "requests": requests
-            }
+                body = {
+                    "requests": requests
+                }
 
-            sheet.batchUpdate(
-                spreadsheetId=spreadsheetId, body=body).execute()
+                sheet.batchUpdate(
+                    spreadsheetId=spreadsheetId, body=body).execute()
 
             # Reset variables
             start_index, end_index = 0, 0
@@ -412,7 +425,7 @@ def graph_uperf_data(spreadsheetId, range):
     GRAPH_COL_INDEX, GRAPH_ROW_INDEX = 2, 0
     start_index, end_index = 0, 0
     measurement = {
-        'Gb_sec' : 'Bandwidth',
+        'Gb_sec': 'Bandwidth',
         'trans_sec': 'Transactions/second',
         'usec': 'Latency'
     }
@@ -508,9 +521,131 @@ def graph_uperf_data(spreadsheetId, range):
             start_index, end_index = 0, 0
 
 
+def create_series_range_list_specjbb(column_count, sheetId, start_index, end_index):
+    series = []
+
+    for index in range(column_count):
+
+        series.append({
+            "series": {
+                "sourceRange": {
+                    "sources": [
+                        {
+                            "sheetId": sheetId,
+                            "startRowIndex": start_index,
+                            "endRowIndex": end_index,
+                            "startColumnIndex": index + 1,
+                            "endColumnIndex": index + 2
+
+                        }
+                    ]
+                }
+            },
+            "type": "COLUMN"
+        })
+
+    return series
+
+
+def graph_specjbb_data(spreadsheetId, range):
+    GRAPH_COL_INDEX = 1
+    GRAPH_ROW_INDEX = 0
+    start_index = 0
+    end_index = 0
+
+    data = read_sheet(spreadsheetId, range)
+    clear_sheet_charts(spreadsheetId, range)
+
+    for index, row in enumerate(data):
+        if 'Peak' in row or 'Peak/$eff' in row:
+            start_index = index
+
+        if start_index:
+            if row == []:
+                end_index = index
+            if index+1 == len(data):
+                end_index = index + 1
+
+        if end_index:
+            graph_data = data[start_index:end_index]
+            column_count = len(graph_data[0])
+
+            sheetId = get_sheet(spreadsheetId, range)[
+                'sheets'][0]['properties']['sheetId']
+
+            requests = {
+                "addChart": {
+                    "chart": {
+                        "spec": {
+                            "title": "%s : %s" % (range, graph_data[0][0]),
+                            "subtitle": f"{graph_data[1][0].split('.')[0]}",
+                            "basicChart": {
+                                "chartType": "COLUMN",
+                                "legendPosition": "BOTTOM_LEGEND",
+                                "axis": [
+                                    {
+                                        "position": "BOTTOM_AXIS",
+                                        "title": ""
+                                    },
+                                    {
+                                        "position": "LEFT_AXIS",
+                                        "title": "Throughput (bops)"
+                                    }
+                                ],
+                                "domains": [
+                                    {
+                                        "domain": {
+                                            "sourceRange": {
+                                                "sources": [
+                                                    {
+                                                        "sheetId": sheetId,
+                                                        "startRowIndex": start_index,
+                                                        "endRowIndex": end_index,
+                                                        "startColumnIndex": 0,
+                                                        "endColumnIndex": 1
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    }
+                                ],
+                                "series": create_series_range_list_specjbb(column_count, sheetId, start_index, end_index),
+                                "headerCount": 1
+                            }
+                        },
+                        "position": {
+                            "overlayPosition": {
+                                "anchorCell": {
+                                    "sheetId": sheetId,
+                                    "rowIndex": GRAPH_ROW_INDEX,
+                                    "columnIndex": column_count + GRAPH_COL_INDEX
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            if GRAPH_COL_INDEX >= 5:
+                GRAPH_ROW_INDEX += 20
+                GRAPH_COL_INDEX = 1
+            else:
+                GRAPH_COL_INDEX += 6
+
+            body = {
+                "requests": requests
+            }
+
+            sheet.batchUpdate(
+                spreadsheetId=spreadsheetId, body=body).execute()
+
+            # Reset variables
+            start_index, end_index = 0, 0
+
+
 if __name__ == '__main__':
     test_name = 'uperf'
 
-    config.spreadsheetId = '1UNt_l3a0LIw1NDyKDFyMRyVmfBc5mplBsUIYI_7jjZ4'
+    config.spreadsheetId = '1J1nWs7TKQyYINYFklX16WQME3Dba3x46sJVxZnCjRfo'
 
     globals()["graph_%s_data" % (test_name)](config.spreadsheetId, test_name)
