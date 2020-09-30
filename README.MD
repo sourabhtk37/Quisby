@@ -9,7 +9,8 @@ Bechmarks currently supported:
 |---|---|
 | Linpack | Benchmark result     |
 | Streams | Summary result |
-| Uperf   | Summary result |
+| Uperf   | Summary csv result|
+| specjbb | Benchmark result |
 
 #### What it does
 It extracts data from benchmark results file or summary results produced by wrapper benchmark programs and move that results to Google Sheet via sheets API V4. 
@@ -56,6 +57,24 @@ This is the main driver program that needs to be called once you have edited `co
 `python reduce_results.py test_locations`
 
 *That's it. It will return a google sheet. Visit the google sheet page and you will see a newly created spreadsheet with the data populated and graphed.*
+
+### Comparison
+
+If you want to compare two different OS release of similar system type then there are scripts that will help you to create a spreadsheet for the same. 
+
+Each of the comparison function are present in individual comparison.py file in each benchmark folder. 
+
+`<benchmark name>/comparison.py`
+
+In `comparison.py`, you need to specify the spreadsheet by remove and adding in the two spreadsheetId you want to compare. 
+
+`spreadsheets = ["<spreadsheetId1>","spreadsheetId2"]`
+
+and then run:
+
+`python3 <benchmark name>/comparison.py` 
+
+and it would return a newly created spreadsheet with the comparison data.
 
 ## Contributing
 Create issues and create a seperate feature branch to work on it. Push the changes to your clone repo and then create a pull request to the master branch of the origin repo.
