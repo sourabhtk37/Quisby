@@ -1,7 +1,6 @@
 from itertools import groupby
 
 import config
-from sheetapi import sheet
 from sheet_util import create_spreadsheet, append_to_sheet, read_sheet, get_sheet
 from util import combine_two_array_alternating
 from graph import graph_specjbb_data
@@ -30,21 +29,22 @@ def compare_specjbb_results(spreadsheets, test_name, table_name=[]):
 
             if value[0][0] in table_name and ele[0][0] in table_name:
                 if value[0][0] == ele[0][0]:
-                    results = combine_two_array_alternating(results, value, ele)
-                    break
+                    if value[1][0].split('.')[0] == ele[1][0].split('.')[0]:
+                        results = combine_two_array_alternating(
+                            results, value, ele)
+                        break
 
             elif value[0][0] == 'Cost/Hr':
                 results += value
                 break
 
             elif value[0][0] == ele[0][0]:
-                
+
                 results.append(value[0])
                 results = combine_two_array_alternating(
                     results, value[1:], ele[1:])
                 break
-    print(results)
-    exit()
+
     spreadsheetId = create_spreadsheet(spreadsheet_name, test_name)
     append_to_sheet(spreadsheetId, results, test_name)
     graph_specjbb_data(spreadsheetId, test_name)

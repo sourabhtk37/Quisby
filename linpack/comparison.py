@@ -1,9 +1,10 @@
-from config import *
-from sheet_util import read_sheet, create_spreadsheet, append_to_sheet
+import config
+from sheetapi import sheet
+from sheet_util import read_sheet, create_spreadsheet, append_to_sheet, clear_sheet_charts, clear_sheet_data, get_sheet
 from graph import graph_linpack_data, rearrange_linpack_data
 
 
-def graph_linpack_comparison(sheet, spreadsheetId, range='A:F'):
+def graph_linpack_comparison(spreadsheetId, range='A:F'):
     """
     Re-arrange data from the sheet into a dict grouped by machine name. 
     The sheet data & charts are then cleared excluding the header row.
@@ -23,26 +24,26 @@ def graph_linpack_comparison(sheet, spreadsheetId, range='A:F'):
     GRAPH_COL_INDEX = 5
     GRAPH_ROW_INDEX = 0
 
-    data_dict = rearrange_linpack_data(sheet, spreadsheetId, range)
+    data_dict = rearrange_linpack_data(spreadsheetId, range)
     header_row = data_dict[0][0]
 
     if data_dict:
-        clear_sheet_data(sheet, spreadsheetId, range)
-        clear_sheet_charts(sheet, spreadsheetId, range)
+        clear_sheet_data(spreadsheetId, range)
+        clear_sheet_charts(spreadsheetId, range)
     else:
         raise Exception("Data sheet empty")
 
     for data in data_dict:
         machine_class = data[0][1].split('.')[0]
 
-        response = append_to_sheet(sheet, spreadsheetId, data, range)
+        response = append_to_sheet(spreadsheetId, data, range)
         updated_range = response['updates']['updatedRange']
         title, sheet_range = updated_range.split('!')
         sheet_range = sheet_range.split(':')
 
         # apply_named_range(sheet, spreadsheetId, machine_class, updated_range)
 
-        sheetId = get_sheet(sheet, spreadsheetId, updated_range)[
+        sheetId = get_sheet(spreadsheetId, updated_range)[
             'sheets'][0]['properties']['sheetId']
 
         # GFlops & GFlops scaling graph
@@ -281,7 +282,7 @@ def compare_linpack_results(spreadsheets):
     test_name = 'linpack_8.2-8.3'
 
     for spreadsheetId in spreadsheets:
-        values.append(read_sheet(sheet, spreadsheetId, range='linpack'))
+        values.append(read_sheet(spreadsheetId, range='linpack'))
 
     for v in values[0]:
         if v[0] == 'System':
@@ -303,13 +304,13 @@ def compare_linpack_results(spreadsheets):
                 results.append([v[0], v[1], y[1], perc_diff, v[2], y[2],
                                 v[3], price_perf[0], price_perf[1], price_perf_diff])
 
-    spreadsheetId = create_spreadsheet(
-        sheet, 'Comparison 8.2 vs 8.3', test_name)
-    append_to_sheet(sheet, spreadsheetId, results, range=test_name)
-    graph_linpack_comparison(sheet, spreadsheetId, range=test_name)
+    spreadsheetId = create_spreadsheet('Comparison 8.2 vs 8.3', test_name)
+    append_to_sheet(spreadsheetId, results, range=test_name)
+    graph_linpack_comparison(spreadsheetId, range=test_name)
 
     print(f'https://docs.google.com/spreadsheets/d/{spreadsheetId}')
-    
-spreadsheets = ['1Hx3LuUVT9gA7lAjfhOPuj3eiT1srzNY19f5XpqOF_tg',
-                '1GUCvkk2Xt2M7-9HWkFbp0uJQXFLmgVtP7ixHjILABC4']
+
+
+spreadsheets = ['1lJUGyD1ca4vsTkUYRpW8CkFq15ABWdhqxyJMGDImKu0',
+                '1Mq6U3hZrKOc-m_8-ufOwX1Md5ooTjPMa30aZSjDUwkA']
 compare_linpack_results(spreadsheets)

@@ -51,10 +51,10 @@ You will be good to go!
 #### config.py 
 `config.py` is the only file you need to edit. Sample example have been provided in the file. 
 
-#### reduce_results.py
+#### quisby.py
 This is the main driver program that needs to be called once you have edited `config.py` file accordingly. It takes in an input file with list of location to the test results.
 
-`python reduce_results.py test_locations`
+`python quisby.py test_locations`
 
 *That's it. It will return a google sheet. Visit the google sheet page and you will see a newly created spreadsheet with the data populated and graphed.*
 

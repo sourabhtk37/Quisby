@@ -94,7 +94,18 @@ def data_handler(path):
                         test_path = f"specjbb_results_{config.OS_RELEASE}/" \
                                     f"{data}SPECjbb.001.results"
 
-                        results.append(extract_specjbb_data(test_path, system_name))
+                        results.append(extract_specjbb_data(
+                            test_path, system_name))
+
+                    elif test_name == 'pig':
+                        system_name = data.split('/')[1].strip()
+
+                        test_path = f"rhel_{config.OS_RELEASE}/" \
+                                    f"{data}/iteration_1.{system_name}"
+
+                        print(system_name, test_path)
+
+                        results += extract_pig_data(test_path, system_name)
 
         results = process_results(results)
 
