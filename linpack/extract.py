@@ -1,6 +1,6 @@
 import csv
 
-import cloud_pricing
+from pricing import cloud_pricing
 from config import cloud_type, region
 
 

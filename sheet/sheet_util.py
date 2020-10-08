@@ -1,5 +1,5 @@
 import config
-from sheetapi import sheet
+from .sheetapi import sheet
 
 LINPACK_HEADER_ROW = ["System", "GFLOPS",
                       "GFLOP Scaling", "Cost/hr", "Price/Perf"]

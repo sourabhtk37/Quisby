@@ -145,3 +145,14 @@ token.pickle
 uperf_result
 old_files/
 azure_prices.json
+pull_down_results.sh
+.vscode/
+rhel_8.2.tar.gz
+rhel_8.2/
+rhel_8.3.tar.gz
+rhel_8.3/
+
+test_loc_8.2
+test_loc_8.3
+test_locations_8.2
+test_locations_8.3

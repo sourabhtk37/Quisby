@@ -27,7 +27,7 @@ def get_azure_pricing(system_name, region='US Gov'):
 
     returnrs: integer pricing in USD
     """
-    
+
     # current_time = datetime.datetime.now()
 
     # file_mod_time = datetime.datetime.fromtimestamp(
@@ -42,7 +42,7 @@ def get_azure_pricing(system_name, region='US Gov'):
     #                                universal_newlines=True)
 
     #     print(process)
-    
+
     with open("azure_prices.json", "r") as read_file:
         data = json.load(read_file)
 

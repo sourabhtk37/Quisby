@@ -24,7 +24,12 @@ One of the foremost thing required is access to Google sheets API V4. Follow the
 
 `https://developers.google.com/sheets/api/quickstart/python`
 
-You will now have a credentials.json file. Copy the file to this project's directory. 
+You will now have a credentials.json file. Copy the file to this project's directory.
+
+#### Sheet sdk installation
+From the shell, run to install sheet python sdk:
+
+`pip install --upgrade google-api-python-client google-auth-httplib2 google-auth-oauthlib`
 
 #### AWS credentials
 Install boto3 to access aws API:

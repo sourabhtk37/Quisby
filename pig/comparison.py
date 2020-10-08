@@ -3,14 +3,15 @@ from itertools import groupby
 import config
 from sheet_util import create_spreadsheet, append_to_sheet, read_sheet, get_sheet
 from util import combine_two_array_alternating
-from graph import graph_uperf_data
+from pig.graph import graph_pig_data
+from specjbb import specjbb_sort_data_by_system_family
 
 
-def compare_uperf_results(spreadsheets):
+def compare_pig_results(spreadsheets):
     spreadsheet_name = []
     values = []
     results = []
-    test_name = 'uperf'
+    test_name = 'pig'
 
     for spreadsheetId in spreadsheets:
         values.append(read_sheet(spreadsheetId, range=test_name))
@@ -32,15 +33,15 @@ def compare_uperf_results(spreadsheets):
 
     spreadsheetId = create_spreadsheet(spreadsheet_name, test_name)
     append_to_sheet(spreadsheetId, results, test_name)
-    graph_uperf_data(spreadsheetId, test_name)
+    graph_pig_data(spreadsheetId, test_name)
 
     print(f'https://docs.google.com/spreadsheets/d/{spreadsheetId}')
 
     return results
 
 
-spreadsheets = ['15jGf5AcKg3oVYT7Lamn4XvPJNdPRuopi44kMVUGDFE4',
-                '1UNt_l3a0LIw1NDyKDFyMRyVmfBc5mplBsUIYI_7jjZ4']
+spreadsheets = ['1WZJb6pGkmrRYD4M6TeRqOSV609702O0i1mj1ksTY4ao',
+                '1NxmzU6yiWzRp3PPys8Cr7kzGLP_vutSDBqCOtSuoJ0A']
 
 
-compare_uperf_results(spreadsheets)
+compare_pig_results(spreadsheets)
