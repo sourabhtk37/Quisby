@@ -1,6 +1,6 @@
 import re
 
-import config
+import config.config as config
 
 
 def extract_pig_data(test_path, system_name):

@@ -1,7 +1,7 @@
 import csv
 from itertools import groupby
 
-import config
+import config.config as config
 
 
 def combine_uperf_data(results):

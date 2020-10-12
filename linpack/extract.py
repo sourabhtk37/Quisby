@@ -1,7 +1,7 @@
 import csv
 
 from pricing import cloud_pricing
-from config import cloud_type, region
+from config.config import cloud_type, region
 
 
 def extract_linpack_summary_data(path, system_name):

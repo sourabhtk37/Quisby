@@ -1,6 +1,6 @@
 from itertools import groupby
 
-import config
+import config.config as config
 from sheet.sheetapi import sheet
 from .uperf import combine_uperf_data
 from sheet.sheet_util import clear_sheet_charts, clear_sheet_data, append_to_sheet, read_sheet, get_sheet

@@ -1,4 +1,4 @@
-import config
+import config.config as config
 from .sheetapi import sheet
 
 LINPACK_HEADER_ROW = ["System", "GFLOPS",

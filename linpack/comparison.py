@@ -1,4 +1,4 @@
-import config
+import config.config as config
 from sheet.sheetapi import sheet
 from sheet.sheet_util import read_sheet, create_spreadsheet, append_to_sheet, clear_sheet_charts, clear_sheet_data, get_sheet
 from graph import graph_linpack_data, rearrange_linpack_data

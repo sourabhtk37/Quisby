@@ -1,6 +1,6 @@
 from itertools import groupby
 
-import config
+import config.config as config
 from pricing.cloud_pricing import get_aws_pricing
 
 

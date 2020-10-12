@@ -1,5 +1,5 @@
 from itertools import groupby
-import config
+import config.config as config
 
 
 def stream_sort_data_by_system_family(results):

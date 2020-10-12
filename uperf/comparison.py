@@ -1,6 +1,6 @@
 from itertools import groupby
 
-import config
+import config.config as config
 from sheet_util import create_spreadsheet, append_to_sheet, read_sheet, get_sheet
 from util import combine_two_array_alternating
 from graph import graph_uperf_data

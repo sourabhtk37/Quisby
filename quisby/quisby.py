@@ -1,6 +1,6 @@
 import sys
 
-import config
+import config.config as config
 from sheet.sheetapi import sheet
 from sheet.sheet_util import create_sheet, append_to_sheet, create_spreadsheet
 from stream.stream import extract_stream_data, create_summary_stream_data
