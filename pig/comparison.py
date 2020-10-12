@@ -1,10 +1,9 @@
 from itertools import groupby
 
 import config.config as config
-from sheet_util import create_spreadsheet, append_to_sheet, read_sheet, get_sheet
+from sheet.sheet_util import create_spreadsheet, append_to_sheet, read_sheet, get_sheet
 from util.util import combine_two_array_alternating
 from pig.graph import graph_pig_data
-from specjbb import specjbb_sort_data_by_system_family
 
 
 def compare_pig_results(spreadsheets):
@@ -40,8 +39,8 @@ def compare_pig_results(spreadsheets):
     return results
 
 
-spreadsheets = ['1WZJb6pGkmrRYD4M6TeRqOSV609702O0i1mj1ksTY4ao',
-                '1NxmzU6yiWzRp3PPys8Cr7kzGLP_vutSDBqCOtSuoJ0A']
+spreadsheets = ['1LwRv981DCe98uqAKbnRhkaE89M6IyIOTIVd9hDs5Eg8',
+                '1MNLb3RTPNQHwNRFNCB71w2ESlYyMjW74pwqNFQuKNQg']
 
 
 compare_pig_results(spreadsheets)

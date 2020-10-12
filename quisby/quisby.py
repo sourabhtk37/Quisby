@@ -16,28 +16,27 @@ from linpack.extract import extract_linpack_summary_data
 from linpack.summary import create_summary_linpack_data
 from linpack.graph import graph_linpack_data
 
+
 def process_results(results):
-    """
-    """
+    """"""
     if results:
 
         results = globals()[f"create_summary_{test_name}_data"](results)
 
         create_sheet(config.spreadsheetId, test_name)
-        append_to_sheet(config.spreadsheetId,
-                        results, test_name)
+        append_to_sheet(config.spreadsheetId, results, test_name)
 
         # Graphing up data
         globals()[f"graph_{test_name}_data"](config.spreadsheetId, test_name)
 
     return []
 
+
 # TODO: simplify functions once data location is exact
 
 
 def data_handler(path):
-    """
-    """
+    """"""
     global test_name
 
     spreadsheet_name = f"{config.cloud_type} {config.OS_TYPE}-{config.OS_RELEASE}"
@@ -48,67 +47,72 @@ def data_handler(path):
         test_result_path = file.readlines()
 
         for data in test_result_path:
-            if 'tests' in data:
+            if "tests" in data:
                 results = process_results(results)
-                test_name = data.split('_')[-1].strip()
+                test_name = data.split("_")[-1].strip()
 
                 if not config.spreadsheetId:
                     config.spreadsheetId = create_spreadsheet(
-                        spreadsheet_name, test_name)
+                        spreadsheet_name, test_name
+                    )
             else:
                 # Create test path
                 if data:
 
                     # Strip new line and "'"
-                    data = data.strip('\n').strip("'")
-                    system_name = data.split('/')[1].strip()
-                    result_name = data.split('/')[-1].strip('\n')
+                    data = data.strip("\n").strip("'")
+                    system_name = data.split("/")[1].strip()
+                    result_name = data.split("/")[-1].strip("\n")
 
-                    if test_name == 'stream':
-                        test_path = f"rhel_{config.OS_RELEASE}/{data}" \
-                                    f"/{result_name}/streams_results/" \
-                                    f"{result_name}/results_streams.csv"
+                    if test_name == "stream":
+                        test_path = (
+                            f"rhel_{config.OS_RELEASE}/{data}"
+                            f"/{result_name}/streams_results/"
+                            f"{result_name}/results_streams.csv"
+                        )
 
                         results += extract_stream_data(test_path, system_name)
 
                     # TODO: support url fetching
-                    elif test_name == 'uperf':
-                        system_name = data.split('_')[3].split(':')[0].strip()
-                        test_path = f"rhel_{config.OS_RELEASE}/uperf_results_{config.OS_RELEASE}/" \
-                                    f"{data}result.csv"
+                    elif test_name == "uperf":
+                        system_name = data.split("_")[3].split(":")[0].strip()
+                        test_path = (
+                            f"rhel_{config.OS_RELEASE}/uperf_results_{config.OS_RELEASE}/"
+                            f"{data}result.csv"
+                        )
 
                         results += extract_uperf_data(test_path, system_name)
 
-                    elif test_name == 'linpack':
-                        test_path = f"rhel_{config.OS_RELEASE}/" \
-                                    f"{data}/summary.csv"
+                    elif test_name == "linpack":
+                        test_path = f"rhel_{config.OS_RELEASE}/" f"{data}/summary.csv"
 
-                        ret_val = extract_linpack_summary_data(
-                            test_path, system_name)
+                        ret_val = extract_linpack_summary_data(test_path, system_name)
                         if ret_val:
                             results += ret_val
 
                     # TODO: support url fetching
-                    elif test_name == 'specjbb':
-                        system_name = data.split('_')[2].strip('/')
+                    elif test_name == "specjbb":
+                        system_name = data.split("_")[2].strip("/")
 
-                        test_path = f"rhel_{config.OS_RELEASE}/specjbb_results_{config.OS_RELEASE}/" \
-                                    f"{data}SPECjbb.001.results"
+                        test_path = (
+                            f"rhel_{config.OS_RELEASE}/specjbb_results_{config.OS_RELEASE}/"
+                            f"{data}SPECjbb.001.results"
+                        )
 
-                        results.append(extract_specjbb_data(
-                            test_path, system_name))
+                        results.append(extract_specjbb_data(test_path, system_name))
 
-                    elif test_name == 'pig':
+                    elif test_name == "pig":
 
-                        test_path = f"rhel_{config.OS_RELEASE}/" \
-                                    f"{data}/iteration_1.{system_name}"
+                        test_path = (
+                            f"rhel_{config.OS_RELEASE}/"
+                            f"{data}/iteration_1.{system_name}"
+                        )
 
-                        results.append(extract_pig_data(
-                            test_path, system_name))
+                        results.append(extract_pig_data(test_path, system_name))
 
         results = process_results(results)
 
-        print(f'https://docs.google.com/spreadsheets/d/{config.spreadsheetId}')
+        print(f"https://docs.google.com/spreadsheets/d/{config.spreadsheetId}")
 
 
 def main():
@@ -118,9 +122,13 @@ def main():
     except IndexError:
         raise SystemExit(f"Usage: {sys.argv[0]} <test results location file>")
 
-    config.OS_RELEASE = arg.split('_')[-1]
+    config.OS_RELEASE = arg.split("_")[-1]
     data_handler(arg)
+    # TODO: Multi-spreadsheet support
+    # config.spreadsheetId = sys.argv[2]
+    # spreadsheets = return dictionary_spreadsheets
+    # comparison_wrapper(spreadsheets)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
