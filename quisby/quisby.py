@@ -1,20 +1,20 @@
 import sys
 
-import config.config as config
-from sheet.sheetapi import sheet
-from sheet.sheet_util import create_sheet, append_to_sheet, create_spreadsheet
-from stream.stream import extract_stream_data, create_summary_stream_data
-from stream.graph import graph_stream_data
-from uperf.uperf import extract_uperf_data, create_summary_uperf_data
-from uperf.graph import graph_uperf_data
-from specjbb.specjbb import extract_specjbb_data, create_summary_specjbb_data
-from specjbb.graph import graph_specjbb_data
-from pig.extract import extract_pig_data
-from pig.graph import graph_pig_data
-from pig.summary import create_summary_pig_data
-from linpack.extract import extract_linpack_summary_data
-from linpack.summary import create_summary_linpack_data
-from linpack.graph import graph_linpack_data
+import quisby.config as config
+from quisby.sheet.sheetapi import sheet
+from quisby.sheet.sheet_util import create_sheet, append_to_sheet, create_spreadsheet
+from quisby.benchmarks.stream.stream import extract_stream_data, create_summary_stream_data
+from quisby.benchmarks.stream.graph import graph_stream_data
+from quisby.benchmarks.uperf.uperf import extract_uperf_data, create_summary_uperf_data
+from quisby.benchmarks.uperf.graph import graph_uperf_data
+from quisby.benchmarks.specjbb.specjbb import extract_specjbb_data, create_summary_specjbb_data
+from quisby.benchmarks.specjbb.graph import graph_specjbb_data
+from quisby.benchmarks.pig.extract import extract_pig_data
+from quisby.benchmarks.pig.graph import graph_pig_data
+from quisby.benchmarks.pig.summary import create_summary_pig_data
+from quisby.benchmarks.linpack.extract import extract_linpack_summary_data
+from quisby.benchmarks.linpack.summary import create_summary_linpack_data
+from quisby.benchmarks.linpack.graph import graph_linpack_data
 
 
 def process_results(results):

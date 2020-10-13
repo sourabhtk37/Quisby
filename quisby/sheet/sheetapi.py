@@ -1,6 +1,6 @@
 from googleapiclient.discovery import build
 
-from credentials.creds import authenticate_creds
+from quisby.credentials.creds import authenticate_creds
 
 
 creds = authenticate_creds()

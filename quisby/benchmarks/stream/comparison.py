@@ -1,9 +1,9 @@
 from itertools import groupby
 
-import config.config as config
-from sheet_util import create_spreadsheet, append_to_sheet, read_sheet, get_sheet
-from util.util import combine_two_array_alternating
-from graph import graph_stream_data
+import quisby.config as config
+from quisby.sheet_util import create_spreadsheet, append_to_sheet, read_sheet, get_sheet
+from quisby.util import combine_two_array_alternating
+from quisby.benchmarks.stream.graph import graph_stream_data
 
 
 def compare_stream_results(spreadsheets, test_name, table_name=['Max Througput']):

@@ -1,16 +1,16 @@
 from itertools import groupby
 
-import config.config as config
-from sheet_util import create_spreadsheet, append_to_sheet, read_sheet, get_sheet
-from util.util import combine_two_array_alternating
-from graph import graph_uperf_data
+import quisby.config as config
+from quisby.sheet.sheet_util import create_spreadsheet, append_to_sheet, read_sheet, get_sheet
+from quisby.util import combine_two_array_alternating
+from quisby.pig.graph import graph_pig_data
 
 
-def compare_uperf_results(spreadsheets):
+def compare_pig_results(spreadsheets):
     spreadsheet_name = []
     values = []
     results = []
-    test_name = 'uperf'
+    test_name = 'pig'
 
     for spreadsheetId in spreadsheets:
         values.append(read_sheet(spreadsheetId, range=test_name))
@@ -32,15 +32,15 @@ def compare_uperf_results(spreadsheets):
 
     spreadsheetId = create_spreadsheet(spreadsheet_name, test_name)
     append_to_sheet(spreadsheetId, results, test_name)
-    graph_uperf_data(spreadsheetId, test_name)
+    graph_pig_data(spreadsheetId, test_name)
 
     print(f'https://docs.google.com/spreadsheets/d/{spreadsheetId}')
 
     return results
 
 
-spreadsheets = ['15jGf5AcKg3oVYT7Lamn4XvPJNdPRuopi44kMVUGDFE4',
-                '1UNt_l3a0LIw1NDyKDFyMRyVmfBc5mplBsUIYI_7jjZ4']
+spreadsheets = ['1LwRv981DCe98uqAKbnRhkaE89M6IyIOTIVd9hDs5Eg8',
+                '1MNLb3RTPNQHwNRFNCB71w2ESlYyMjW74pwqNFQuKNQg']
 
 
-compare_uperf_results(spreadsheets)
+compare_pig_results(spreadsheets)

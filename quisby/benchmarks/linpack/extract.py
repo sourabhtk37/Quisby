@@ -1,7 +1,7 @@
 import csv
 
-from pricing import cloud_pricing
-from config.config import cloud_type, region
+from quisby.pricing import cloud_pricing
+import quisby.config as config
 
 
 def extract_linpack_summary_data(path, system_name):
@@ -20,8 +20,8 @@ def extract_linpack_summary_data(path, system_name):
 
     if gflops:
         get_cloud_pricing = getattr(
-            cloud_pricing, 'get_%s_pricing' % cloud_type.lower())
-        price_per_hour = get_cloud_pricing(system_name, region)
+            cloud_pricing, 'get_%s_pricing' % config.cloud_type.lower())
+        price_per_hour = get_cloud_pricing(system_name, config.region)
 
         results.append(system_name)
         results.append(gflops)

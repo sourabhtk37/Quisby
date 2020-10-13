@@ -1,13 +1,11 @@
 from itertools import groupby
 
-import config.config as config
-from sheet.sheetapi import sheet
-from .uperf import combine_uperf_data
-from sheet.sheet_util import clear_sheet_charts, clear_sheet_data, append_to_sheet, read_sheet, get_sheet
+import quisby.config as config
+from quisby.sheet.sheetapi import sheet
+from quisby.sheet.sheet_util import clear_sheet_charts, append_to_sheet, read_sheet, get_sheet
 
 
-def series_range_uperf(column_count, sheetId, start_index, end_index):
-
+def create_series_range_list_specjbb(column_count, sheetId, start_index, end_index):
     series = []
 
     for index in range(column_count):
@@ -18,10 +16,11 @@ def series_range_uperf(column_count, sheetId, start_index, end_index):
                     "sources": [
                         {
                             "sheetId": sheetId,
-                            "startRowIndex": start_index+1,
+                            "startRowIndex": start_index,
                             "endRowIndex": end_index,
-                            "startColumnIndex": index+1,
-                            "endColumnIndex": index+2
+                            "startColumnIndex": index + 1,
+                            "endColumnIndex": index + 2
+
                         }
                     ]
                 }
@@ -32,34 +31,28 @@ def series_range_uperf(column_count, sheetId, start_index, end_index):
     return series
 
 
-def graph_uperf_data(spreadsheetId, range):
-    """
-    """
-    GRAPH_COL_INDEX, GRAPH_ROW_INDEX = 2, 0
-    start_index, end_index = 0, 0
-    measurement = {
-        'Gb_sec': 'Bandwidth',
-        'trans_sec': 'Transactions/second',
-        'usec': 'Latency'
-    }
+def graph_specjbb_data(spreadsheetId, range):
+    GRAPH_COL_INDEX = 1
+    GRAPH_ROW_INDEX = 0
+    start_index = 0
+    end_index = 0
 
-    uperf_results = read_sheet(spreadsheetId, range)
+    data = read_sheet(spreadsheetId, range)
     clear_sheet_charts(spreadsheetId, range)
 
-    for index, row in enumerate(uperf_results):
-        if row:
-            if 'tcp_stream16' in row[1] or 'tcp_rr64' in row[1]:
-                start_index = index
+    for index, row in enumerate(data):
+        if 'Peak' in row or 'Peak/$eff' in row:
+            start_index = index
 
         if start_index:
             if row == []:
                 end_index = index
-            if index+1 == len(uperf_results):
+            if index+1 == len(data):
                 end_index = index + 1
 
         if end_index:
-            graph_data = uperf_results[start_index:end_index]
-            column_count = len(uperf_results[2])
+            graph_data = data[start_index:end_index]
+            column_count = len(graph_data[0])
 
             sheetId = get_sheet(spreadsheetId, range)[
                 'sheets'][0]['properties']['sheetId']
@@ -68,19 +61,19 @@ def graph_uperf_data(spreadsheetId, range):
                 "addChart": {
                     "chart": {
                         "spec": {
-                            "title": f"Uperf : {measurement[graph_data[0][2]]} | {graph_data[0][1]}",
-                            "subtitle": f"{graph_data[0][0]}",
+                            "title": "%s : %s" % (range, graph_data[0][0]),
+                            "subtitle": f"{graph_data[1][0].split('.')[0]}",
                             "basicChart": {
                                 "chartType": "COLUMN",
                                 "legendPosition": "BOTTOM_LEGEND",
                                 "axis": [
                                     {
                                         "position": "BOTTOM_AXIS",
-                                        "title": "Instance count"
+                                        "title": ""
                                     },
                                     {
                                         "position": "LEFT_AXIS",
-                                        "title": f"{graph_data[0][2]}"
+                                        "title": "Throughput (bops)"
                                     }
                                 ],
                                 "domains": [
@@ -90,7 +83,7 @@ def graph_uperf_data(spreadsheetId, range):
                                                 "sources": [
                                                     {
                                                         "sheetId": sheetId,
-                                                        "startRowIndex": start_index+1,
+                                                        "startRowIndex": start_index,
                                                         "endRowIndex": end_index,
                                                         "startColumnIndex": 0,
                                                         "endColumnIndex": 1
@@ -100,7 +93,7 @@ def graph_uperf_data(spreadsheetId, range):
                                         }
                                     }
                                 ],
-                                "series": series_range_uperf(column_count, sheetId, start_index, end_index),
+                                "series": create_series_range_list_specjbb(column_count, sheetId, start_index, end_index),
                                 "headerCount": 1
                             }
                         },
@@ -119,7 +112,7 @@ def graph_uperf_data(spreadsheetId, range):
 
             if GRAPH_COL_INDEX >= 5:
                 GRAPH_ROW_INDEX += 20
-                GRAPH_COL_INDEX = 2
+                GRAPH_COL_INDEX = 1
             else:
                 GRAPH_COL_INDEX += 6
 

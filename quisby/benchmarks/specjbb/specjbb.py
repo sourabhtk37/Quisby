@@ -1,7 +1,7 @@
 from itertools import groupby
 
-import config.config as config
-from pricing.cloud_pricing import get_aws_pricing
+import quisby.config as config
+from quisby.pricing.cloud_pricing import get_aws_pricing
 
 
 def specjbb_sort_data_by_system_family(results):

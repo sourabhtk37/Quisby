@@ -1,8 +1,8 @@
 from itertools import groupby
 
-import config.config as config
-from sheet.sheetapi import sheet
-from sheet.sheet_util import clear_sheet_charts, clear_sheet_data, append_to_sheet, read_sheet, get_sheet
+import quisby.config as config
+from quisby.sheet.sheetapi import sheet
+from quisby.sheet.sheet_util import clear_sheet_charts, clear_sheet_data, append_to_sheet, read_sheet, get_sheet
 
 
 # TODO: remove mention of range with test_name

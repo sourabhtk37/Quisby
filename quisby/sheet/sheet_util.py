@@ -1,5 +1,5 @@
-import config.config as config
-from .sheetapi import sheet
+import quisby.config as config
+from quisby.sheet.sheetapi import sheet
 
 LINPACK_HEADER_ROW = ["System", "GFLOPS",
                       "GFLOP Scaling", "Cost/hr", "Price/Perf"]

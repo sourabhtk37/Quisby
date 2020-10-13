@@ -1,5 +1,6 @@
 from itertools import groupby
-import config.config as config
+
+import quisby.config as config
 
 
 def stream_sort_data_by_system_family(results):

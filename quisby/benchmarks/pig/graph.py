@@ -1,11 +1,10 @@
-from itertools import groupby
-
-import config.config as config
-from sheet.sheetapi import sheet
-from sheet.sheet_util import clear_sheet_charts, append_to_sheet, read_sheet, get_sheet
+from quisby.sheet.sheetapi import sheet
+from quisby.sheet.sheet_util import read_sheet, clear_sheet_charts, get_sheet
 
 
-def create_series_range_list_specjbb(column_count, sheetId, start_index, end_index):
+def create_series_range_pig(column_count, sheetId, start_index, end_index):
+    """
+    """
     series = []
 
     for index in range(column_count):
@@ -16,7 +15,7 @@ def create_series_range_list_specjbb(column_count, sheetId, start_index, end_ind
                     "sources": [
                         {
                             "sheetId": sheetId,
-                            "startRowIndex": start_index,
+                            "startRowIndex": start_index+2,
                             "endRowIndex": end_index,
                             "startColumnIndex": index + 1,
                             "endColumnIndex": index + 2
@@ -31,49 +30,51 @@ def create_series_range_list_specjbb(column_count, sheetId, start_index, end_ind
     return series
 
 
-def graph_specjbb_data(spreadsheetId, range):
+def graph_pig_data(spreadsheetId, test_name):
+    """
+    """
     GRAPH_COL_INDEX = 1
     GRAPH_ROW_INDEX = 0
-    start_index = 0
-    end_index = 0
+    start_index, end_index = None, None
 
-    data = read_sheet(spreadsheetId, range)
-    clear_sheet_charts(spreadsheetId, range)
+    data = read_sheet(spreadsheetId, test_name)
+    clear_sheet_charts(spreadsheetId, test_name)
 
     for index, row in enumerate(data):
-        if 'Peak' in row or 'Peak/$eff' in row:
+        if row == [] and start_index is None:
             start_index = index
+            continue
 
-        if start_index:
-            if row == []:
-                end_index = index
-            if index+1 == len(data):
+        if start_index is not None:
+            if index + 1 == len(data):
                 end_index = index + 1
+            elif data[index+1] == []:
+                end_index = index
 
         if end_index:
             graph_data = data[start_index:end_index]
-            column_count = len(graph_data[0])
+            column_count = len(graph_data[1])
 
-            sheetId = get_sheet(spreadsheetId, range)[
+            sheetId = get_sheet(spreadsheetId, test_name)[
                 'sheets'][0]['properties']['sheetId']
 
             requests = {
                 "addChart": {
                     "chart": {
                         "spec": {
-                            "title": "%s : %s" % (range, graph_data[0][0]),
-                            "subtitle": f"{graph_data[1][0].split('.')[0]}",
+                            "title": f"{test_name}",
+                            "subtitle": f"{graph_data[1][0]}",
                             "basicChart": {
                                 "chartType": "COLUMN",
                                 "legendPosition": "BOTTOM_LEGEND",
                                 "axis": [
                                     {
                                         "position": "BOTTOM_AXIS",
-                                        "title": ""
+                                        "title": "Threads"
                                     },
                                     {
                                         "position": "LEFT_AXIS",
-                                        "title": "Throughput (bops)"
+                                        "title": "Scheduler Efficiency"
                                     }
                                 ],
                                 "domains": [
@@ -83,7 +84,7 @@ def graph_specjbb_data(spreadsheetId, range):
                                                 "sources": [
                                                     {
                                                         "sheetId": sheetId,
-                                                        "startRowIndex": start_index,
+                                                        "startRowIndex": start_index+2,
                                                         "endRowIndex": end_index,
                                                         "startColumnIndex": 0,
                                                         "endColumnIndex": 1
@@ -93,7 +94,7 @@ def graph_specjbb_data(spreadsheetId, range):
                                         }
                                     }
                                 ],
-                                "series": create_series_range_list_specjbb(column_count, sheetId, start_index, end_index),
+                                "series": create_series_range_pig(column_count, sheetId, start_index, end_index),
                                 "headerCount": 1
                             }
                         },
@@ -109,7 +110,6 @@ def graph_specjbb_data(spreadsheetId, range):
                     }
                 }
             }
-
             if GRAPH_COL_INDEX >= 5:
                 GRAPH_ROW_INDEX += 20
                 GRAPH_COL_INDEX = 1
@@ -123,5 +123,4 @@ def graph_specjbb_data(spreadsheetId, range):
             sheet.batchUpdate(
                 spreadsheetId=spreadsheetId, body=body).execute()
 
-            # Reset variables
-            start_index, end_index = 0, 0
+            start_index, end_index = None, None
