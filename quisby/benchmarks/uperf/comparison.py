@@ -1,16 +1,15 @@
 from itertools import groupby
 
 import quisby.config as config
-from quisby.sheet_util import create_spreadsheet, append_to_sheet, read_sheet, get_sheet
+from quisby.sheet.sheet_util import create_spreadsheet, append_to_sheet, read_sheet, get_sheet
 from quisby.util import combine_two_array_alternating
 from quisby.benchmarks.uperf.graph import graph_uperf_data
 
 
-def compare_uperf_results(spreadsheets):
+def compare_uperf_results(spreadsheets, test_name):
     spreadsheet_name = []
     values = []
     results = []
-    test_name = 'uperf'
 
     for spreadsheetId in spreadsheets:
         values.append(read_sheet(spreadsheetId, range=test_name))

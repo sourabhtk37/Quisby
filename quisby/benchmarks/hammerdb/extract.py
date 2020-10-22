@@ -1,0 +1,25 @@
+import re
+
+import quisby.config as config
+
+
+def extract_hammerdb_data(path_list, system_name, test_name):
+    results = []
+    run_data = []
+
+    for path in path_list:
+        warehouse_count = re.findall(r"(_)(\d+)(.out)", path)[0][1]
+        with open(path) as hdb_out_file:
+            hdb_run_output = hdb_out_file.readlines()
+
+            for line in hdb_run_output:
+                match_list = re.findall(r"(System\sachieved\s)(\d+)", line)
+                if match_list:
+                    run_data.append([warehouse_count, match_list[0][1]])
+
+    run_data.sort(key=lambda x: int(x[0]))
+
+    results.append([f"{test_name}-User count", f"{system_name}-{config.OS_RELEASE}"])
+    results += run_data
+
+    return results

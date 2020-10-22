@@ -59,6 +59,7 @@ def graph_uperf_data(spreadsheetId, range):
 
         if end_index:
             graph_data = uperf_results[start_index:end_index]
+            # TODO: fix column count
             column_count = len(uperf_results[2])
 
             sheetId = get_sheet(spreadsheetId, range)[
