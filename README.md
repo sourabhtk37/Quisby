@@ -12,6 +12,8 @@ Bechmarks currently supported:
 | Streams | Summary result |
 | Uperf   | Summary csv result|
 | specjbb | Benchmark result |
+| pig     | Benchmark  result |
+| hammerDB| Benchmark  result |
 
 #### What it does
 
