@@ -11,12 +11,11 @@ def extract_pig_data(test_path, system_name):
 
         for line in file:
             if "PID" in line:
-                cpu_data, thread_data = re.findall(r'(\w+\:\s\w+)', line)[1:3]
-                efficiency = float(cpu_data.split()[
-                                   1]) / float(thread_data.split()[1])
+                cpu_data, thread_data = re.findall(r"(\w+\:\s\w+)", line)[1:3]
+                efficiency = float(cpu_data.split()[1]) / float(thread_data.split()[1])
                 result_data.append([thread_data.split()[1], efficiency])
             if not cpu_count:
-                match = re.findall(r'(\w+\s\w+\s)(\d+)(\scpus)', line)
+                match = re.findall(r"(\w+\s\w+\s)(\d+)(\scpus)", line)
                 if match:
                     cpu_count = match[0][1]
 

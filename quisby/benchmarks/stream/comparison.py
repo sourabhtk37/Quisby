@@ -53,9 +53,9 @@ def compare_stream_results(spreadsheets, test_name, table_name=["Max Througput"]
 
 if __name__ == "__main__":
     spreadsheets = [
-        "1sOTLWbBGvBdiYS-AYwPd6EjlH9AF47PsVQipCWQmzZE",
-        "1UNt_l3a0LIw1NDyKDFyMRyVmfBc5mplBsUIYI_7jjZ4",
+        "",
+        "",
     ]
-
     test_name = "stream"
+    
     compare_stream_results(spreadsheets, test_name)

@@ -3,7 +3,13 @@ from itertools import groupby
 import quisby.config as config
 from quisby.sheet.sheetapi import sheet
 from quisby.benchmarks.uperf.uperf import combine_uperf_data
-from quisby.sheet.sheet_util import clear_sheet_charts, clear_sheet_data, append_to_sheet, read_sheet, get_sheet
+from quisby.sheet.sheet_util import (
+    clear_sheet_charts,
+    clear_sheet_data,
+    append_to_sheet,
+    read_sheet,
+    get_sheet,
+)
 
 
 def series_range_uperf(column_count, sheetId, start_index, end_index):
@@ -12,35 +18,36 @@ def series_range_uperf(column_count, sheetId, start_index, end_index):
 
     for index in range(column_count):
 
-        series.append({
-            "series": {
-                "sourceRange": {
-                    "sources": [
-                        {
-                            "sheetId": sheetId,
-                            "startRowIndex": start_index+1,
-                            "endRowIndex": end_index,
-                            "startColumnIndex": index+1,
-                            "endColumnIndex": index+2
-                        }
-                    ]
-                }
-            },
-            "type": "COLUMN"
-        })
+        series.append(
+            {
+                "series": {
+                    "sourceRange": {
+                        "sources": [
+                            {
+                                "sheetId": sheetId,
+                                "startRowIndex": start_index + 1,
+                                "endRowIndex": end_index,
+                                "startColumnIndex": index + 1,
+                                "endColumnIndex": index + 2,
+                            }
+                        ]
+                    }
+                },
+                "type": "COLUMN",
+            }
+        )
 
     return series
 
 
 def graph_uperf_data(spreadsheetId, range):
-    """
-    """
+    """"""
     GRAPH_COL_INDEX, GRAPH_ROW_INDEX = 2, 0
     start_index, end_index = 0, 0
     measurement = {
-        'Gb_sec': 'Bandwidth',
-        'trans_sec': 'Transactions/second',
-        'usec': 'Latency'
+        "Gb_sec": "Bandwidth",
+        "trans_sec": "Transactions/second",
+        "usec": "Latency",
     }
 
     uperf_results = read_sheet(spreadsheetId, range)
@@ -48,13 +55,13 @@ def graph_uperf_data(spreadsheetId, range):
 
     for index, row in enumerate(uperf_results):
         if row:
-            if 'tcp_stream16' in row[1] or 'tcp_rr64' in row[1]:
+            if "tcp_stream16" in row[1] or "tcp_rr64" in row[1]:
                 start_index = index
 
         if start_index:
             if row == []:
                 end_index = index
-            if index+1 == len(uperf_results):
+            if index + 1 == len(uperf_results):
                 end_index = index + 1
 
         if end_index:
@@ -62,8 +69,9 @@ def graph_uperf_data(spreadsheetId, range):
             # TODO: fix column count
             column_count = len(uperf_results[2])
 
-            sheetId = get_sheet(spreadsheetId, range)[
-                'sheets'][0]['properties']['sheetId']
+            sheetId = get_sheet(spreadsheetId, range)["sheets"][0]["properties"][
+                "sheetId"
+            ]
 
             requests = {
                 "addChart": {
@@ -77,12 +85,12 @@ def graph_uperf_data(spreadsheetId, range):
                                 "axis": [
                                     {
                                         "position": "BOTTOM_AXIS",
-                                        "title": "Instance count"
+                                        "title": "Instance count",
                                     },
                                     {
                                         "position": "LEFT_AXIS",
-                                        "title": f"{graph_data[0][2]}"
-                                    }
+                                        "title": f"{graph_data[0][2]}",
+                                    },
                                 ],
                                 "domains": [
                                     {
@@ -91,29 +99,32 @@ def graph_uperf_data(spreadsheetId, range):
                                                 "sources": [
                                                     {
                                                         "sheetId": sheetId,
-                                                        "startRowIndex": start_index+1,
+                                                        "startRowIndex": start_index
+                                                        + 1,
                                                         "endRowIndex": end_index,
                                                         "startColumnIndex": 0,
-                                                        "endColumnIndex": 1
+                                                        "endColumnIndex": 1,
                                                     }
                                                 ]
                                             }
                                         }
                                     }
                                 ],
-                                "series": series_range_uperf(column_count, sheetId, start_index, end_index),
-                                "headerCount": 1
-                            }
+                                "series": series_range_uperf(
+                                    column_count, sheetId, start_index, end_index
+                                ),
+                                "headerCount": 1,
+                            },
                         },
                         "position": {
                             "overlayPosition": {
                                 "anchorCell": {
                                     "sheetId": sheetId,
                                     "rowIndex": GRAPH_ROW_INDEX,
-                                    "columnIndex": column_count + GRAPH_COL_INDEX
+                                    "columnIndex": column_count + GRAPH_COL_INDEX,
                                 }
                             }
-                        }
+                        },
                     }
                 }
             }
@@ -124,12 +135,9 @@ def graph_uperf_data(spreadsheetId, range):
             else:
                 GRAPH_COL_INDEX += 6
 
-            body = {
-                "requests": requests
-            }
+            body = {"requests": requests}
 
-            sheet.batchUpdate(
-                spreadsheetId=spreadsheetId, body=body).execute()
+            sheet.batchUpdate(spreadsheetId=spreadsheetId, body=body).execute()
 
             # Reset variables
             start_index, end_index = 0, 0

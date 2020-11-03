@@ -2,31 +2,39 @@ from itertools import groupby
 
 import quisby.config as config
 from quisby.sheet.sheetapi import sheet
-from quisby.sheet.sheet_util import clear_sheet_charts, append_to_sheet, read_sheet, get_sheet
+from quisby.sheet.sheet_util import (
+    clear_sheet_charts,
+    append_to_sheet,
+    read_sheet,
+    get_sheet,
+)
 
 
-def create_series_range_list_stream(column_index, len_of_func, sheetId, start_index, end_index):
+def create_series_range_list_stream(
+    column_index, len_of_func, sheetId, start_index, end_index
+):
     series = []
 
     for index in range(len_of_func):
 
-        series.append({
-            "series": {
-                "sourceRange": {
-                    "sources": [
-                        {
-                            "sheetId": sheetId,
-                            "startRowIndex": start_index,
-                            "endRowIndex": end_index,
-                            "startColumnIndex": column_index,
-                            "endColumnIndex": column_index+1
-
-                        }
-                    ]
-                }
-            },
-            "type": "COLUMN"
-        })
+        series.append(
+            {
+                "series": {
+                    "sourceRange": {
+                        "sources": [
+                            {
+                                "sheetId": sheetId,
+                                "startRowIndex": start_index,
+                                "endRowIndex": end_index,
+                                "startColumnIndex": column_index,
+                                "endColumnIndex": column_index + 1,
+                            }
+                        ]
+                    }
+                },
+                "type": "COLUMN",
+            }
+        )
         column_index += 1
 
     return series, column_index
@@ -49,20 +57,20 @@ def graph_stream_data(spreadsheetId, test_name):
     clear_sheet_charts(spreadsheetId, test_name)
 
     for index, row in enumerate(data):
-        if 'Max Througput' in row:
+        if "Max Througput" in row:
             start_index = index
 
         if start_index:
             if row == []:
                 end_index = index
-            if index+1 == len(data):
+            if index + 1 == len(data):
                 end_index = index + 1
 
         if end_index:
             graph_data = data[start_index:end_index]
             column_count = len(graph_data[0])
 
-            for _, items in groupby(graph_data[0][1:], key=lambda x: x.split('-')[0]):
+            for _, items in groupby(graph_data[0][1:], key=lambda x: x.split("-")[0]):
                 len_of_func = len(list(items))
                 break
             column = 1
@@ -71,11 +79,13 @@ def graph_stream_data(spreadsheetId, test_name):
                 if column >= column_count:
                     break
 
-                sheetId = get_sheet(spreadsheetId, test_name)[
-                    'sheets'][0]['properties']['sheetId']
+                sheetId = get_sheet(spreadsheetId, test_name)["sheets"][0][
+                    "properties"
+                ]["sheetId"]
 
                 series, column = create_series_range_list_stream(
-                    column, len_of_func, sheetId, start_index, end_index)
+                    column, len_of_func, sheetId, start_index, end_index
+                )
 
                 requests = {
                     "addChart": {
@@ -87,14 +97,11 @@ def graph_stream_data(spreadsheetId, test_name):
                                     "chartType": "COLUMN",
                                     "legendPosition": "BOTTOM_LEGEND",
                                     "axis": [
-                                        {
-                                            "position": "BOTTOM_AXIS",
-                                            "title": ""
-                                        },
+                                        {"position": "BOTTOM_AXIS", "title": ""},
                                         {
                                             "position": "LEFT_AXIS",
-                                            "title": "Throughput (MB/s)"
-                                        }
+                                            "title": "Throughput (MB/s)",
+                                        },
                                     ],
                                     "domains": [
                                         {
@@ -106,7 +113,7 @@ def graph_stream_data(spreadsheetId, test_name):
                                                             "startRowIndex": start_index,
                                                             "endRowIndex": end_index,
                                                             "startColumnIndex": 0,
-                                                            "endColumnIndex": 1
+                                                            "endColumnIndex": 1,
                                                         }
                                                     ]
                                                 }
@@ -114,18 +121,18 @@ def graph_stream_data(spreadsheetId, test_name):
                                         }
                                     ],
                                     "series": series,
-                                    "headerCount": 1
-                                }
+                                    "headerCount": 1,
+                                },
                             },
                             "position": {
                                 "overlayPosition": {
                                     "anchorCell": {
                                         "sheetId": sheetId,
                                         "rowIndex": GRAPH_ROW_INDEX,
-                                        "columnIndex": column_count + GRAPH_COL_INDEX
+                                        "columnIndex": column_count + GRAPH_COL_INDEX,
                                     }
                                 }
-                            }
+                            },
                         }
                     }
                 }
@@ -136,12 +143,9 @@ def graph_stream_data(spreadsheetId, test_name):
                 else:
                     GRAPH_COL_INDEX += 6
 
-                body = {
-                    "requests": requests
-                }
+                body = {"requests": requests}
 
-                sheet.batchUpdate(
-                    spreadsheetId=spreadsheetId, body=body).execute()
+                sheet.batchUpdate(spreadsheetId=spreadsheetId, body=body).execute()
 
             # Reset variables
             start_index, end_index = 0, 0

@@ -3,36 +3,35 @@ from quisby.sheet.sheet_util import read_sheet, clear_sheet_charts, get_sheet
 
 
 def create_series_range_pig(column_count, sheetId, start_index, end_index):
-    """
-    """
+    """"""
     series = []
 
     for index in range(column_count):
 
-        series.append({
-            "series": {
-                "sourceRange": {
-                    "sources": [
-                        {
-                            "sheetId": sheetId,
-                            "startRowIndex": start_index+2,
-                            "endRowIndex": end_index,
-                            "startColumnIndex": index + 1,
-                            "endColumnIndex": index + 2
-
-                        }
-                    ]
-                }
-            },
-            "type": "COLUMN"
-        })
+        series.append(
+            {
+                "series": {
+                    "sourceRange": {
+                        "sources": [
+                            {
+                                "sheetId": sheetId,
+                                "startRowIndex": start_index + 2,
+                                "endRowIndex": end_index,
+                                "startColumnIndex": index + 1,
+                                "endColumnIndex": index + 2,
+                            }
+                        ]
+                    }
+                },
+                "type": "COLUMN",
+            }
+        )
 
     return series
 
 
 def graph_pig_data(spreadsheetId, test_name):
-    """
-    """
+    """"""
     GRAPH_COL_INDEX = 1
     GRAPH_ROW_INDEX = 0
     start_index, end_index = None, None
@@ -48,15 +47,16 @@ def graph_pig_data(spreadsheetId, test_name):
         if start_index is not None:
             if index + 1 == len(data):
                 end_index = index + 1
-            elif data[index+1] == []:
+            elif data[index + 1] == []:
                 end_index = index
 
         if end_index:
             graph_data = data[start_index:end_index]
             column_count = len(graph_data[1])
 
-            sheetId = get_sheet(spreadsheetId, test_name)[
-                'sheets'][0]['properties']['sheetId']
+            sheetId = get_sheet(spreadsheetId, test_name)["sheets"][0]["properties"][
+                "sheetId"
+            ]
 
             requests = {
                 "addChart": {
@@ -68,14 +68,11 @@ def graph_pig_data(spreadsheetId, test_name):
                                 "chartType": "COLUMN",
                                 "legendPosition": "BOTTOM_LEGEND",
                                 "axis": [
-                                    {
-                                        "position": "BOTTOM_AXIS",
-                                        "title": "Threads"
-                                    },
+                                    {"position": "BOTTOM_AXIS", "title": "Threads"},
                                     {
                                         "position": "LEFT_AXIS",
-                                        "title": "Scheduler Efficiency"
-                                    }
+                                        "title": "Scheduler Efficiency",
+                                    },
                                 ],
                                 "domains": [
                                     {
@@ -84,29 +81,32 @@ def graph_pig_data(spreadsheetId, test_name):
                                                 "sources": [
                                                     {
                                                         "sheetId": sheetId,
-                                                        "startRowIndex": start_index+2,
+                                                        "startRowIndex": start_index
+                                                        + 2,
                                                         "endRowIndex": end_index,
                                                         "startColumnIndex": 0,
-                                                        "endColumnIndex": 1
+                                                        "endColumnIndex": 1,
                                                     }
                                                 ]
                                             }
                                         }
                                     }
                                 ],
-                                "series": create_series_range_pig(column_count, sheetId, start_index, end_index),
-                                "headerCount": 1
-                            }
+                                "series": create_series_range_pig(
+                                    column_count, sheetId, start_index, end_index
+                                ),
+                                "headerCount": 1,
+                            },
                         },
                         "position": {
                             "overlayPosition": {
                                 "anchorCell": {
                                     "sheetId": sheetId,
                                     "rowIndex": GRAPH_ROW_INDEX,
-                                    "columnIndex": column_count + GRAPH_COL_INDEX
+                                    "columnIndex": column_count + GRAPH_COL_INDEX,
                                 }
                             }
-                        }
+                        },
                     }
                 }
             }
@@ -116,11 +116,8 @@ def graph_pig_data(spreadsheetId, test_name):
             else:
                 GRAPH_COL_INDEX += 6
 
-            body = {
-                "requests": requests
-            }
+            body = {"requests": requests}
 
-            sheet.batchUpdate(
-                spreadsheetId=spreadsheetId, body=body).execute()
+            sheet.batchUpdate(spreadsheetId=spreadsheetId, body=body).execute()
 
             start_index, end_index = None, None

@@ -33,7 +33,7 @@ def compare_hammerdb_results(spreadsheets, test_name):
         # TODO: Maybe check for whole type instead of family
         if value[0][1].split(".")[0] == ele[0][1].split(".")[0]:
             results = combine_two_array_alternating(results, value, ele)
-            
+
     spreadsheetId = create_spreadsheet(spreadsheet_name, test_name)
     append_to_sheet(spreadsheetId, results, test_name)
     graph_hammerdb_data(spreadsheetId, test_name)

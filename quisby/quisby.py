@@ -36,6 +36,7 @@ def check_test_is_hammerdb(test_name):
     else:
         return False
 
+
 def process_results(results):
     """"""
     global test_name

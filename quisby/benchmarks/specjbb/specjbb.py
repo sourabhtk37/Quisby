@@ -8,11 +8,12 @@ def specjbb_sort_data_by_system_family(results):
 
     sorted_result = []
 
-    results.sort(key=lambda x: x[1][0].split('.')[0])
+    results.sort(key=lambda x: x[1][0].split(".")[0])
 
-    for _, items in groupby(results, key=lambda x: x[1][0].split('.')[0]):
+    for _, items in groupby(results, key=lambda x: x[1][0].split(".")[0]):
         sorted_result.append(
-            sorted(list(items), key=lambda x: int(x[1][0].split('.')[1].split('x')[0])))
+            sorted(list(items), key=lambda x: int(x[1][0].split(".")[1].split("x")[0]))
+        )
 
     return sorted_result
 
@@ -26,8 +27,7 @@ def calc_peak_throughput_peak_efficiency(data):
 
 
 def create_summary_specjbb_data(specjbb_data):
-    """
-    """
+    """"""
     results = []
 
     specjbb_data = specjbb_sort_data_by_system_family(specjbb_data)
@@ -56,8 +56,7 @@ def create_summary_specjbb_data(specjbb_data):
 
 
 def extract_specjbb_data(path, system_name):
-    """
-    """
+    """"""
     results = [[""], [system_name]]
 
     # File read
@@ -68,20 +67,20 @@ def extract_specjbb_data(path, system_name):
     start_index, end_index = 0, 0
     for index, row in enumerate(specjbb_results):
 
-        if 'SPEC scores' in row:
+        if "SPEC scores" in row:
             start_index = index + 1
 
         if start_index:
-            if not row.strip('\n'):
+            if not row.strip("\n"):
                 end_index = index - 2
                 break
 
     # Extract data and convert to a list
     for row in specjbb_results[start_index:end_index]:
-        row = row.strip(' ').strip('*').strip(' ').strip('\n').split(' ')
+        row = row.strip(" ").strip("*").strip(" ").strip("\n").split(" ")
 
-        if row[-1] == 'Thrput':
-            row[-1] = row[-1]+f"-{config.OS_RELEASE}"
+        if row[-1] == "Thrput":
+            row[-1] = row[-1] + f"-{config.OS_RELEASE}"
 
         results.append([row[0], row[-1]])
 

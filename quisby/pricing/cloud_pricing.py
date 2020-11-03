@@ -9,7 +9,7 @@ import boto3
 
 
 # ToDo: Timestamp work
-def get_azure_pricing(system_name, region='US Gov'):
+def get_azure_pricing(system_name, region="US Gov"):
     """
     The following call is made before to retreive pricing information:
 
@@ -46,13 +46,19 @@ def get_azure_pricing(system_name, region='US Gov'):
     with open("azure_prices.json", "r") as read_file:
         data = json.load(read_file)
 
-        name, version = system_name.split('_')[1:]
-        system_name = str(name+' '+version)
+        name, version = system_name.split("_")[1:]
+        system_name = str(name + " " + version)
 
-        for resource in data['Meters']:
-            if len(resource['MeterName']) <= 14 and 'Windows' not in resource['MeterSubCategory']:
-                if system_name in str(resource['MeterName']) and region == resource['MeterRegion']:
-                    return resource['MeterRates']['0']
+        for resource in data["Meters"]:
+            if (
+                len(resource["MeterName"]) <= 14
+                and "Windows" not in resource["MeterSubCategory"]
+            ):
+                if (
+                    system_name in str(resource["MeterName"])
+                    and region == resource["MeterRegion"]
+                ):
+                    return resource["MeterRates"]["0"]
 
 
 def get_aws_pricing(instance_name, region):
@@ -65,33 +71,37 @@ def get_aws_pricing(instance_name, region):
 
     returns: integer pricing in USD
     """
-    pricing = boto3.client('pricing')
+    pricing = boto3.client("pricing")
 
-    OPERATING_SYSTEM = 'Linux'
-    OPERATION = 'RunInstances'
-    TENANCY = 'Shared'
-    PRE_INSTALLED_SW = 'NA'
-    CAPACITY_STATUS = 'UnusedCapacityReservation'
+    OPERATING_SYSTEM = "Linux"
+    OPERATION = "RunInstances"
+    TENANCY = "Shared"
+    PRE_INSTALLED_SW = "NA"
+    CAPACITY_STATUS = "UnusedCapacityReservation"
 
     response = pricing.get_products(
-        ServiceCode='AmazonEC2',
+        ServiceCode="AmazonEC2",
         Filters=[
-            {'Type': 'TERM_MATCH', 'Field': 'operatingSystem',
-             'Value': OPERATING_SYSTEM},
-            {'Type': 'TERM_MATCH', 'Field': 'instanceType',
-             'Value': instance_name},
-            {'Type': 'TERM_MATCH', 'Field': 'operation', 'Value': OPERATION},
-            {'Type': 'TERM_MATCH', 'Field': 'tenancy', 'Value': TENANCY},
-            {'Type': 'TERM_MATCH', 'Field': 'preInstalledSw',
-             'Value': PRE_INSTALLED_SW},
-            {'Type': 'TERM_MATCH', 'Field': 'Location', 'Value': region},
-            {'Type': 'TERM_MATCH', 'Field': 'capacitystatus',
-             'Value': CAPACITY_STATUS}
+            {
+                "Type": "TERM_MATCH",
+                "Field": "operatingSystem",
+                "Value": OPERATING_SYSTEM,
+            },
+            {"Type": "TERM_MATCH", "Field": "instanceType", "Value": instance_name},
+            {"Type": "TERM_MATCH", "Field": "operation", "Value": OPERATION},
+            {"Type": "TERM_MATCH", "Field": "tenancy", "Value": TENANCY},
+            {
+                "Type": "TERM_MATCH",
+                "Field": "preInstalledSw",
+                "Value": PRE_INSTALLED_SW,
+            },
+            {"Type": "TERM_MATCH", "Field": "Location", "Value": region},
+            {"Type": "TERM_MATCH", "Field": "capacitystatus", "Value": CAPACITY_STATUS},
         ],
-        MaxResults=100
+        MaxResults=100,
     )
 
-    price_list = response['PriceList']
+    price_list = response["PriceList"]
 
     # Filter pricing details
     if price_list:
@@ -99,17 +109,17 @@ def get_aws_pricing(instance_name, region):
 
         terms = price_item["terms"]
 
-        price_dimension = terms["OnDemand"][iter(
-            terms["OnDemand"]).__next__()]["priceDimensions"]
-        price = price_dimension[iter(
-            price_dimension).__next__()]['pricePerUnit']["USD"]
+        price_dimension = terms["OnDemand"][iter(terms["OnDemand"]).__next__()][
+            "priceDimensions"
+        ]
+        price = price_dimension[iter(price_dimension).__next__()]["pricePerUnit"]["USD"]
 
         return price
     else:
         return None
 
 
-if __name__ == '__main__':
-    region = 'US East 2'
-    print(get_azure_pricing('Standard_D32s_v3', region))
-    print(get_aws_pricing('i3en.24xlarge', 'US East (N. Virginia)'))
+if __name__ == "__main__":
+    region = "US East 2"
+    print(get_azure_pricing("Standard_D32s_v3", region))
+    print(get_aws_pricing("i3en.24xlarge", "US East (N. Virginia)"))

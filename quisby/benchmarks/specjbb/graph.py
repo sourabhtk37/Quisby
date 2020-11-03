@@ -2,7 +2,12 @@ from itertools import groupby
 
 import quisby.config as config
 from quisby.sheet.sheetapi import sheet
-from quisby.sheet.sheet_util import clear_sheet_charts, append_to_sheet, read_sheet, get_sheet
+from quisby.sheet.sheet_util import (
+    clear_sheet_charts,
+    append_to_sheet,
+    read_sheet,
+    get_sheet,
+)
 
 
 def create_series_range_list_specjbb(column_count, sheetId, start_index, end_index):
@@ -10,23 +15,24 @@ def create_series_range_list_specjbb(column_count, sheetId, start_index, end_ind
 
     for index in range(column_count):
 
-        series.append({
-            "series": {
-                "sourceRange": {
-                    "sources": [
-                        {
-                            "sheetId": sheetId,
-                            "startRowIndex": start_index,
-                            "endRowIndex": end_index,
-                            "startColumnIndex": index + 1,
-                            "endColumnIndex": index + 2
-
-                        }
-                    ]
-                }
-            },
-            "type": "COLUMN"
-        })
+        series.append(
+            {
+                "series": {
+                    "sourceRange": {
+                        "sources": [
+                            {
+                                "sheetId": sheetId,
+                                "startRowIndex": start_index,
+                                "endRowIndex": end_index,
+                                "startColumnIndex": index + 1,
+                                "endColumnIndex": index + 2,
+                            }
+                        ]
+                    }
+                },
+                "type": "COLUMN",
+            }
+        )
 
     return series
 
@@ -41,21 +47,22 @@ def graph_specjbb_data(spreadsheetId, range):
     clear_sheet_charts(spreadsheetId, range)
 
     for index, row in enumerate(data):
-        if 'Peak' in row or 'Peak/$eff' in row:
+        if "Peak" in row or "Peak/$eff" in row:
             start_index = index
 
         if start_index:
             if row == []:
                 end_index = index
-            if index+1 == len(data):
+            if index + 1 == len(data):
                 end_index = index + 1
 
         if end_index:
             graph_data = data[start_index:end_index]
             column_count = len(graph_data[0])
 
-            sheetId = get_sheet(spreadsheetId, range)[
-                'sheets'][0]['properties']['sheetId']
+            sheetId = get_sheet(spreadsheetId, range)["sheets"][0]["properties"][
+                "sheetId"
+            ]
 
             requests = {
                 "addChart": {
@@ -67,14 +74,11 @@ def graph_specjbb_data(spreadsheetId, range):
                                 "chartType": "COLUMN",
                                 "legendPosition": "BOTTOM_LEGEND",
                                 "axis": [
-                                    {
-                                        "position": "BOTTOM_AXIS",
-                                        "title": ""
-                                    },
+                                    {"position": "BOTTOM_AXIS", "title": ""},
                                     {
                                         "position": "LEFT_AXIS",
-                                        "title": "Throughput (bops)"
-                                    }
+                                        "title": "Throughput (bops)",
+                                    },
                                 ],
                                 "domains": [
                                     {
@@ -86,26 +90,28 @@ def graph_specjbb_data(spreadsheetId, range):
                                                         "startRowIndex": start_index,
                                                         "endRowIndex": end_index,
                                                         "startColumnIndex": 0,
-                                                        "endColumnIndex": 1
+                                                        "endColumnIndex": 1,
                                                     }
                                                 ]
                                             }
                                         }
                                     }
                                 ],
-                                "series": create_series_range_list_specjbb(column_count, sheetId, start_index, end_index),
-                                "headerCount": 1
-                            }
+                                "series": create_series_range_list_specjbb(
+                                    column_count, sheetId, start_index, end_index
+                                ),
+                                "headerCount": 1,
+                            },
                         },
                         "position": {
                             "overlayPosition": {
                                 "anchorCell": {
                                     "sheetId": sheetId,
                                     "rowIndex": GRAPH_ROW_INDEX,
-                                    "columnIndex": column_count + GRAPH_COL_INDEX
+                                    "columnIndex": column_count + GRAPH_COL_INDEX,
                                 }
                             }
-                        }
+                        },
                     }
                 }
             }
@@ -116,12 +122,9 @@ def graph_specjbb_data(spreadsheetId, range):
             else:
                 GRAPH_COL_INDEX += 6
 
-            body = {
-                "requests": requests
-            }
+            body = {"requests": requests}
 
-            sheet.batchUpdate(
-                spreadsheetId=spreadsheetId, body=body).execute()
+            sheet.batchUpdate(spreadsheetId=spreadsheetId, body=body).execute()
 
             # Reset variables
             start_index, end_index = 0, 0

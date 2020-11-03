@@ -48,10 +48,10 @@ def graph_hammerdb_data(spreadsheetId, range):
     clear_sheet_charts(spreadsheetId, range)
 
     for index, row in enumerate(hammerdb_results):
-        
+
         if row:
             if "User count" in row[0]:
-                header_name = row[0].split('-')[0]
+                header_name = row[0].split("-")[0]
                 start_index = index
 
         if start_index:
