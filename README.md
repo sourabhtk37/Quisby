@@ -69,6 +69,17 @@ Which will install cmd line program, `quisby`
 
 This is the main driver program that will be called once you have edited `config.py` file accordingly. It takes in an input file with list of location to the test results.
 
+The location file will look like:
+
+```
+tests: results_linpack
+</path/to/results>
+...
+tests:pbench_fio
+<http url with results>
+...
+```
+
  `quisby test_locations`
 *That's it. It will return a google sheet. Visit the google sheet page and you will see a newly created spreadsheet with the data populated and graphed.*
 
