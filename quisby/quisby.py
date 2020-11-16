@@ -27,6 +27,9 @@ from quisby.benchmarks.hammerdb.extract import extract_hammerdb_data
 from quisby.benchmarks.hammerdb.summary import create_summary_hammerdb_data
 from quisby.benchmarks.hammerdb.graph import graph_hammerdb_data
 from quisby.benchmarks.hammerdb.comparison import compare_hammerdb_results
+from quisby.benchmarks.fio.fio import process_fio_result
+from quisby.benchmarks.fio.summary import create_summary_fio_data
+from quisby.benchmarks.fio.graph import graph_fio_data
 
 
 def check_test_is_hammerdb(test_name):
@@ -144,6 +147,8 @@ def data_handler(path):
                         results.append(
                             extract_hammerdb_data(path_list, system_name, test_name)
                         )
+                    elif test_name == "fio":
+                        results += process_fio_result(data)
 
         results = process_results(results)
 
