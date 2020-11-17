@@ -20,23 +20,17 @@ Bechmarks currently supported:
 
 It extracts data from benchmark results file or summary results produced by wrapper benchmark programs and move that results to Google Sheet via sheets API V4. 
 
-### Installation
-
-Run the install script as follows:
-
- `source ./install.sh`
-
 ### Using the tool
 
 #### Clone the repo
 
  `git clone git@github.com:sourabhtk37/data-to-sheet.git`
 
-#### Run the setup
+#### Installation
 
- `python setup.py install`
+Run the install script as follows:
 
-Which will install cmd line program, `quisby`
+ `source ./install.sh`
 
 #### config.py 
 
@@ -49,6 +43,7 @@ This is the main driver program that will be called once you have edited `config
 The location file will look like:
 
 ``` 
+
 tests: results_linpack
 </path/to/results>
 ...
