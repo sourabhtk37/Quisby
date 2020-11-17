@@ -49,7 +49,7 @@ def create_summary_fio_data(results):
                     run_data[ele[0]].append(ele[1])
 
         summary_results.append([""])
-        summary_results.append([*key[:2], f"{key[2]}-{run_metric[key[2].split('-')[0]]}"])
+        summary_results.append([*key[:2], f"{key[2]}"])
         summary_results.append(["Iteration Name", *columns])
         for key, value in run_data.items():
             summary_results.append([key, *value])

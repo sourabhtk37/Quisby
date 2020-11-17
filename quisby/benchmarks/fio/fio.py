@@ -4,6 +4,7 @@ from itertools import groupby
 import requests
 from bs4 import BeautifulSoup
 
+import quisby.config as config
 
 # TODO: Maybe we can do away with clat, lat, slat
 HEADER_TO_EXTRACT = [
@@ -44,9 +45,9 @@ def group_data(run_data, system_name):
     for key, items in groupby(sorted(run_data), key=lambda x: x[0].split("-")):
         grouped_data.append([""])
         grouped_data.append([system_name, key[0], f"{key[1]}-{run_metric[key[1]]}"])
-        grouped_data.append(["iteration_name", f"{run_metric[key[1]]}"])
+        grouped_data.append(["iteration_name", f"{run_metric[key[1]]}-{config.OS_RELEASE}"])
         for item in items:
-            row_hash = f"{item[1]}_ndisks" f"-{item[2]}_jobs-{item[3]}_iod"
+            row_hash = f"{item[1]}_d-{item[2]}_j-{item[3]}_iod"
             if "1024KiB" in key[1]:
                 grouped_data.append([row_hash, item[4]])
             elif "4KiB" in key[1]:

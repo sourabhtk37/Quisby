@@ -30,6 +30,7 @@ from quisby.benchmarks.hammerdb.comparison import compare_hammerdb_results
 from quisby.benchmarks.fio.fio import process_fio_result
 from quisby.benchmarks.fio.summary import create_summary_fio_data
 from quisby.benchmarks.fio.graph import graph_fio_data
+from quisby.benchmarks.fio.comparison import compare_fio_results
 
 
 def check_test_is_hammerdb(test_name):

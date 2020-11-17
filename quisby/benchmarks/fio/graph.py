@@ -63,7 +63,7 @@ def graph_fio_data(spreadsheetId, test_name):
                     "chart": {
                         "spec": {
                             "title": f"{graph_data[1][2].split('-')[1]}:{graph_data[1][1]} {graph_data[1][2].split('-')[0]}",
-                            "subtitle": f"{graph_data[1][0]}",
+                            "subtitle": f"{graph_data[1][0]} | d:Disks, j:Jobs, iod:IODepth",
                             "basicChart": {
                                 "chartType": "COLUMN",
                                 "axis": [

@@ -14,40 +14,17 @@ Bechmarks currently supported:
 | specjbb | Benchmark result |
 | pig     | Benchmark  result |
 | hammerDB| Benchmark  result |
+| fio     | pbench results      |
 
 #### What it does
 
 It extracts data from benchmark results file or summary results produced by wrapper benchmark programs and move that results to Google Sheet via sheets API V4. 
 
-## Usage
+### Installation
 
-### Prerequisite
+Run the install script as follows:
 
-#### Sheet credentials
-
-One of the foremost thing required is access to Google sheets API V4. Follow the quickstart guide, till step-1 to get credentials.json file:
-
- `https://developers.google.com/sheets/api/quickstart/python`
-You will now have a credentials.json file. Copy the file to this project's directory.
-
-#### Install requirements
-
-From the shell, run to install sheet python sdk:
-
- `pip install -r requirements.txt`
-
-#### Configure AWS
-
-If you're already using aws cli, you might probably have credentials in `~/.aws/credentials` . If not, please follow the `Configuration` in below link:
-
- `https://boto3.amazonaws.com/v1/documentation/api/latest/guide/quickstart.html`
-
-#### Azure credentials
-
-Install azure cli tool and run:
-
- `az login`
-You will be good to go!
+ `source ./install.sh`
 
 ### Using the tool
 
@@ -57,7 +34,7 @@ You will be good to go!
 
 #### Run the setup
 
-`python setup.py install`
+ `python setup.py install`
 
 Which will install cmd line program, `quisby`
 
@@ -71,7 +48,7 @@ This is the main driver program that will be called once you have edited `config
 
 The location file will look like:
 
-```
+``` 
 tests: results_linpack
 </path/to/results>
 ...
@@ -81,6 +58,7 @@ tests:pbench_fio
 ```
 
  `quisby test_locations`
+
 *That's it. It will return a google sheet. Visit the google sheet page and you will see a newly created spreadsheet with the data populated and graphed.*
 
 ### Comparison
@@ -90,6 +68,7 @@ If you want to compare two different OS release of similar system type then ther
 and then run:
 
  `quisby compare <benchmark-name> <spreadsheet1,spreadsheet2>`
+
 and it would return a newly created spreadsheet with the comparison data.
 
 ## Contributing
