@@ -8,10 +8,9 @@ from quisby.sheet.sheet_util import (
     clear_sheet_data,
     get_sheet,
 )
-from quisby.benchmarks.linpack.graph import rearrange_linpack_data
 
 
-def graph_linpack_comparison(spreadsheetId, range="A:F"):
+def graph_linpack_comparison(spreadsheetId, test_name):
     """
     Re-arrange data from the sheet into a dict grouped by machine name.
     The sheet data & charts are then cleared excluding the header row.
@@ -30,383 +29,319 @@ def graph_linpack_comparison(spreadsheetId, range="A:F"):
     PRICE_PER_PERF_RANGE = "H"
     GRAPH_COL_INDEX = 5
     GRAPH_ROW_INDEX = 0
+    start_index, end_index = None, None
 
-    data_dict = rearrange_linpack_data(spreadsheetId, range)
-    header_row = data_dict[0][0]
+    data = read_sheet(spreadsheetId, test_name)
+    header_row = data[0]
 
-    if data_dict:
-        clear_sheet_data(spreadsheetId, range)
-        clear_sheet_charts(spreadsheetId, range)
-    else:
-        raise Exception("Data sheet empty")
+    for index, row in enumerate(data):
+        if row[0] == "System" and start_index is None:
+            start_index = index
+            continue
 
-    for data in data_dict:
-        machine_class = data[0][1].split(".")[0]
+        if start_index is not None:
+            if index + 1 == len(data):
+                end_index = index + 1
+            elif data[index + 1][0] == "System":
+                end_index = index + 1
 
-        response = append_to_sheet(spreadsheetId, data, range)
-        updated_range = response["updates"]["updatedRange"]
-        title, sheet_range = updated_range.split("!")
-        sheet_range = sheet_range.split(":")
+        if end_index:
+            graph_data = data[start_index:end_index]
+            column_count = len(graph_data[0])
 
-        # apply_named_range(sheet, spreadsheetId, machine_class, updated_range)
+            sheetId = get_sheet(spreadsheetId, test_name)["sheets"][0]["properties"][
+                "sheetId"
+            ]
 
-        sheetId = get_sheet(spreadsheetId, updated_range)["sheets"][0]["properties"][
-            "sheetId"
-        ]
-
-        # GFlops & GFlops scaling graph
-        requests = {
-            "addChart": {
-                "chart": {
-                    "spec": {
-                        "title": "%s : %s and %s"
-                        % (title, header_row[1], header_row[2]),
-                        "basicChart": {
-                            "chartType": "COMBO",
-                            "legendPosition": "BOTTOM_LEGEND",
-                            "axis": [
-                                {
-                                    "position": "BOTTOM_AXIS",
-                                    "title": "%s" % (header_row[0]),
-                                },
-                                {
-                                    "position": "LEFT_AXIS",
-                                    "title": "%s, %s and %s, %s "
-                                    % (
-                                        header_row[1],
-                                        header_row[2],
-                                        header_row[4],
-                                        header_row[5],
-                                    ),
-                                },
-                            ],
-                            "domains": [
-                                {
-                                    "domain": {
-                                        "sourceRange": {
-                                            "sources": [
-                                                {
-                                                    "sheetId": sheetId,
-                                                    "startRowIndex": int(
-                                                        sheet_range[0][1:]
-                                                    )
-                                                    - 1,
-                                                    "endRowIndex": sheet_range[1][1:],
-                                                    "startColumnIndex": 0,
-                                                    "endColumnIndex": 1,
-                                                }
-                                            ]
+            # GFlops & GFlops scaling graph
+            requests = {
+                "addChart": {
+                    "chart": {
+                        "spec": {
+                            "title": "%s and %s" % (header_row[2], header_row[3]),
+                            "basicChart": {
+                                "chartType": "COMBO",
+                                "legendPosition": "BOTTOM_LEGEND",
+                                "axis": [
+                                    {
+                                        "position": "BOTTOM_AXIS",
+                                        "title": "",
+                                    },
+                                    {
+                                        "position": "LEFT_AXIS",
+                                        "title": "%s, %s and %s, %s "
+                                        % (
+                                            header_row[2],
+                                            header_row[3],
+                                            header_row[5],
+                                            header_row[6],
+                                        ),
+                                    },
+                                ],
+                                "domains": [
+                                    {
+                                        "domain": {
+                                            "sourceRange": {
+                                                "sources": [
+                                                    {
+                                                        "sheetId": sheetId,
+                                                        "startRowIndex": start_index,
+                                                        "endRowIndex": end_index,
+                                                        "startColumnIndex": 0,
+                                                        "endColumnIndex": 1,
+                                                    }
+                                                ]
+                                            }
                                         }
                                     }
-                                }
-                            ],
-                            "series": [
-                                {
-                                    "series": {
-                                        "sourceRange": {
-                                            "sources": [
-                                                {
-                                                    "sheetId": sheetId,
-                                                    "startRowIndex": int(
-                                                        sheet_range[0][1:]
-                                                    )
-                                                    - 1,
-                                                    "endRowIndex": sheet_range[1][1:],
-                                                    "startColumnIndex": ord(
-                                                        GFLOPS_PLOT_RANGE
-                                                    )
-                                                    % 65,
-                                                    "endColumnIndex": ord(
-                                                        GFLOPS_PLOT_RANGE
-                                                    )
-                                                    % 65
-                                                    + 1,
-                                                }
-                                            ]
-                                        }
+                                ],
+                                "series": [
+                                    {
+                                        "series": {
+                                            "sourceRange": {
+                                                "sources": [
+                                                    {
+                                                        "sheetId": sheetId,
+                                                        "startRowIndex": start_index,
+                                                        "endRowIndex": end_index,
+                                                        "startColumnIndex": 2,
+                                                        "endColumnIndex": 3,
+                                                    }
+                                                ]
+                                            }
+                                        },
+                                        "targetAxis": "LEFT_AXIS",
+                                        "type": "COLUMN",
                                     },
-                                    "targetAxis": "LEFT_AXIS",
-                                    "type": "COLUMN",
-                                },
-                                {
-                                    "series": {
-                                        "sourceRange": {
-                                            "sources": [
-                                                {
-                                                    "sheetId": sheetId,
-                                                    "startRowIndex": int(
-                                                        sheet_range[0][1:]
-                                                    )
-                                                    - 1,
-                                                    "endRowIndex": sheet_range[1][1:],
-                                                    "startColumnIndex": ord(
-                                                        GFLOPS_PLOT_RANGE
-                                                    )
-                                                    % 65
-                                                    + 1,
-                                                    "endColumnIndex": ord(
-                                                        GFLOPS_PLOT_RANGE
-                                                    )
-                                                    % 65
-                                                    + 2,
-                                                }
-                                            ]
-                                        }
+                                    {
+                                        "series": {
+                                            "sourceRange": {
+                                                "sources": [
+                                                    {
+                                                        "sheetId": sheetId,
+                                                        "startRowIndex": start_index,
+                                                        "endRowIndex": end_index,
+                                                        "startColumnIndex": 3,
+                                                        "endColumnIndex": 4,
+                                                    }
+                                                ]
+                                            }
+                                        },
+                                        "targetAxis": "LEFT_AXIS",
+                                        "type": "COLUMN",
                                     },
-                                    "targetAxis": "LEFT_AXIS",
-                                    "type": "COLUMN",
-                                },
-                                {
-                                    "series": {
-                                        "sourceRange": {
-                                            "sources": [
-                                                {
-                                                    "sheetId": sheetId,
-                                                    "startRowIndex": int(
-                                                        sheet_range[0][1:]
-                                                    )
-                                                    - 1,
-                                                    "endRowIndex": sheet_range[1][1:],
-                                                    "startColumnIndex": ord(
-                                                        GFLOPS_PLOT_RANGE
-                                                    )
-                                                    % 65
-                                                    + 3,
-                                                    "endColumnIndex": ord(
-                                                        GFLOPS_PLOT_RANGE
-                                                    )
-                                                    % 65
-                                                    + 4,
-                                                }
-                                            ]
-                                        }
+                                    {
+                                        "series": {
+                                            "sourceRange": {
+                                                "sources": [
+                                                    {
+                                                        "sheetId": sheetId,
+                                                        "startRowIndex": start_index,
+                                                        "endRowIndex": end_index,
+                                                        "startColumnIndex": 5,
+                                                        "endColumnIndex": 6,
+                                                    }
+                                                ]
+                                            }
+                                        },
+                                        "targetAxis": "RIGHT_AXIS",
+                                        "type": "LINE",
                                     },
-                                    "targetAxis": "RIGHT_AXIS",
-                                    "type": "LINE",
-                                },
-                                {
-                                    "series": {
-                                        "sourceRange": {
-                                            "sources": [
-                                                {
-                                                    "sheetId": sheetId,
-                                                    "startRowIndex": int(
-                                                        sheet_range[0][1:]
-                                                    )
-                                                    - 1,
-                                                    "endRowIndex": sheet_range[1][1:],
-                                                    "startColumnIndex": ord(
-                                                        GFLOPS_PLOT_RANGE
-                                                    )
-                                                    % 65
-                                                    + 4,
-                                                    "endColumnIndex": ord(
-                                                        GFLOPS_PLOT_RANGE
-                                                    )
-                                                    % 65
-                                                    + 5,
-                                                }
-                                            ]
-                                        }
+                                    {
+                                        "series": {
+                                            "sourceRange": {
+                                                "sources": [
+                                                    {
+                                                        "sheetId": sheetId,
+                                                        "startRowIndex": start_index,
+                                                        "endRowIndex": end_index,
+                                                        "startColumnIndex": 6,
+                                                        "endColumnIndex": 7,
+                                                    }
+                                                ]
+                                            }
+                                        },
+                                        "targetAxis": "RIGHT_AXIS",
+                                        "type": "LINE",
                                     },
-                                    "targetAxis": "RIGHT_AXIS",
-                                    "type": "LINE",
-                                },
-                            ],
-                            "headerCount": 1,
+                                ],
+                                "headerCount": 1,
+                            },
                         },
-                    },
-                    "position": {
-                        "overlayPosition": {
-                            "anchorCell": {
-                                "sheetId": sheetId,
-                                "rowIndex": GRAPH_ROW_INDEX,
-                                "columnIndex": ord(sheet_range[1][:1]) % 65 + 2,
+                        "position": {
+                            "overlayPosition": {
+                                "anchorCell": {
+                                    "sheetId": sheetId,
+                                    "rowIndex": GRAPH_ROW_INDEX,
+                                    "columnIndex": column_count + 1,
+                                }
                             }
-                        }
-                    },
+                        },
+                    }
                 }
             }
-        }
 
-        # PRICE/PERF graph
-        body = {"requests": requests}
+            # PRICE/PERF graph
+            body = {"requests": requests}
 
-        sheet.batchUpdate(spreadsheetId=spreadsheetId, body=body).execute()
+            sheet.batchUpdate(spreadsheetId=spreadsheetId, body=body).execute()
 
-        requests = {
-            "addChart": {
-                "chart": {
-                    "spec": {
-                        "title": "%s : Price/Perf " % (title),
-                        "basicChart": {
-                            "chartType": "COLUMN",
-                            "legendPosition": "BOTTOM_LEGEND",
-                            "axis": [
-                                {
-                                    "position": "BOTTOM_AXIS",
-                                    "title": "%s" % (header_row[0]),
-                                },
-                                {"position": "LEFT_AXIS", "title": "GFlops/$/hr "},
-                            ],
-                            "domains": [
-                                {
-                                    "domain": {
-                                        "sourceRange": {
-                                            "sources": [
-                                                {
-                                                    "sheetId": sheetId,
-                                                    "startRowIndex": int(
-                                                        sheet_range[0][1:]
-                                                    )
-                                                    - 1,
-                                                    "endRowIndex": sheet_range[1][1:],
-                                                    "startColumnIndex": 0,
-                                                    "endColumnIndex": 1,
-                                                }
-                                            ]
+            requests = {
+                "addChart": {
+                    "chart": {
+                        "spec": {
+                            "title": "Price/Perf ",
+                            "basicChart": {
+                                "chartType": "COLUMN",
+                                "legendPosition": "BOTTOM_LEGEND",
+                                "axis": [
+                                    {
+                                        "position": "BOTTOM_AXIS",
+                                        "title": "",
+                                    },
+                                    {"position": "LEFT_AXIS", "title": "GFlops/$/hr "},
+                                ],
+                                "domains": [
+                                    {
+                                        "domain": {
+                                            "sourceRange": {
+                                                "sources": [
+                                                    {
+                                                        "sheetId": sheetId,
+                                                        "startRowIndex": start_index,
+                                                        "endRowIndex": end_index,
+                                                        "startColumnIndex": 0,
+                                                        "endColumnIndex": 1,
+                                                    }
+                                                ]
+                                            }
                                         }
                                     }
-                                }
-                            ],
-                            "series": [
-                                {
-                                    "series": {
-                                        "sourceRange": {
-                                            "sources": [
-                                                {
-                                                    "sheetId": sheetId,
-                                                    "startRowIndex": int(
-                                                        sheet_range[0][1:]
-                                                    )
-                                                    - 1,
-                                                    "endRowIndex": sheet_range[1][1:],
-                                                    "startColumnIndex": ord(
-                                                        PRICE_PER_PERF_RANGE
-                                                    )
-                                                    % 65,
-                                                    "endColumnIndex": ord(
-                                                        PRICE_PER_PERF_RANGE
-                                                    )
-                                                    % 65
-                                                    + 1,
-                                                }
-                                            ]
-                                        }
+                                ],
+                                "series": [
+                                    {
+                                        "series": {
+                                            "sourceRange": {
+                                                "sources": [
+                                                    {
+                                                        "sheetId": sheetId,
+                                                        "startRowIndex": start_index,
+                                                        "endRowIndex": end_index,
+                                                        "startColumnIndex": 8,
+                                                        "endColumnIndex": 9,
+                                                    }
+                                                ]
+                                            }
+                                        },
+                                        "targetAxis": "LEFT_AXIS",
+                                        "type": "COLUMN",
                                     },
-                                    "targetAxis": "LEFT_AXIS",
-                                    "type": "COLUMN",
-                                },
-                                {
-                                    "series": {
-                                        "sourceRange": {
-                                            "sources": [
-                                                {
-                                                    "sheetId": sheetId,
-                                                    "startRowIndex": int(
-                                                        sheet_range[0][1:]
-                                                    )
-                                                    - 1,
-                                                    "endRowIndex": sheet_range[1][1:],
-                                                    "startColumnIndex": ord(
-                                                        PRICE_PER_PERF_RANGE
-                                                    )
-                                                    % 65
-                                                    + 1,
-                                                    "endColumnIndex": ord(
-                                                        PRICE_PER_PERF_RANGE
-                                                    )
-                                                    % 65
-                                                    + 2,
-                                                }
-                                            ]
-                                        }
+                                    {
+                                        "series": {
+                                            "sourceRange": {
+                                                "sources": [
+                                                    {
+                                                        "sheetId": sheetId,
+                                                        "startRowIndex": start_index,
+                                                        "endRowIndex": end_index,
+                                                        "startColumnIndex": 9,
+                                                        "endColumnIndex": 10,
+                                                    }
+                                                ]
+                                            }
+                                        },
+                                        "targetAxis": "LEFT_AXIS",
+                                        "type": "COLUMN",
                                     },
-                                    "targetAxis": "LEFT_AXIS",
-                                    "type": "COLUMN",
-                                },
-                            ],
-                            "headerCount": 1,
+                                ],
+                                "headerCount": 1,
+                            },
                         },
-                    },
-                    "position": {
-                        "overlayPosition": {
-                            "anchorCell": {
-                                "sheetId": sheetId,
-                                "rowIndex": GRAPH_ROW_INDEX,
-                                "columnIndex": ord(sheet_range[1][:1]) % 65 + 8,
+                        "position": {
+                            "overlayPosition": {
+                                "anchorCell": {
+                                    "sheetId": sheetId,
+                                    "rowIndex": GRAPH_ROW_INDEX,
+                                    "columnIndex": column_count + 7,
+                                }
                             }
-                        }
-                    },
+                        },
+                    }
                 }
             }
-        }
 
-        body = {"requests": requests}
+            body = {"requests": requests}
 
-        sheet.batchUpdate(spreadsheetId=spreadsheetId, body=body).execute()
+            sheet.batchUpdate(spreadsheetId=spreadsheetId, body=body).execute()
 
-        GRAPH_ROW_INDEX += 20
-
-
-# TODO: Accomodate multiple release comparison
+            GRAPH_ROW_INDEX += 20
+            start_index, end_index = None, None
 
 
-def compare_linpack_results(spreadsheets):
+def compare_linpack_results(spreadsheets, test_name):
     values = []
     results = []
-    test_name = "linpack_8.2-8.3"
+    spreadsheet_name = []
 
     for spreadsheetId in spreadsheets:
-        values.append(read_sheet(spreadsheetId, range="linpack"))
+        values.append(read_sheet(spreadsheetId, test_name))
+        spreadsheet_name.append(
+            get_sheet(spreadsheetId, test_name)["properties"]["title"]
+        )
 
-    for v in values[0]:
-        if v[0] == "System":
-            results.append(
-                [
-                    "System",
-                    "GFLOPS - 8.2",
-                    "GFLOPS - 8.3",
-                    "% Diff",
-                    "GFLOP Scaling - 8.2",
-                    "GFLOP Scaling - 8.3",
-                    "Cost / hr",
-                    "Price/Perf - 8.2",
-                    "Price/Perf - 8.3",
-                    "Price/Perf % Diff",
-                ]
-            )
-        for y in values[1]:
-            if y[0] == "System":
-                continue
-            if v[0] in y[0]:
-                price_perf = []
-                perc_diff = (float(y[1]) - float(v[1])) / float(v[1])
+    spreadsheet_name = " vs ".join(spreadsheet_name)
 
-                price_perf.append(float(v[1]) / float(v[3]))
-                price_perf.append(float(y[1]) / float(y[3]))
-
-                price_perf_diff = (float(price_perf[1]) - float(price_perf[0])) / float(
-                    price_perf[0]
-                )
-
+    for value in values[0]:
+        for ele in values[1]:
+            if value[0] == "System" and ele[0] == "System":
                 results.append(
                     [
-                        v[0],
-                        v[1],
-                        y[1],
-                        perc_diff,
-                        v[2],
-                        y[2],
-                        v[3],
-                        price_perf[0],
-                        price_perf[1],
-                        price_perf_diff,
+                        value[0],
+                        value[1],
+                        value[2],
+                        ele[2],
+                        "% Diff",
+                        value[3],
+                        ele[3],
+                        value[4],
+                        value[5],
+                        ele[5],
+                        "Price/Perf % Diff",
                     ]
                 )
+                break
+            else:
+                if value[0] == ele[0]:
+                    price_perf = []
 
-    spreadsheetId = create_spreadsheet("Comparison 8.2 vs 8.3", test_name)
-    append_to_sheet(spreadsheetId, results, range=test_name)
-    graph_linpack_comparison(spreadsheetId, range=test_name)
+                    price_perf.append(float(value[2]) / float(value[4]))
+                    price_perf.append(float(ele[2]) / float(ele[4]))
+                    price_perf_diff = (
+                        float(price_perf[1]) - float(price_perf[0])
+                    ) / float(price_perf[0])
+
+                    percentage_diff = (float(ele[2]) - float(value[2])) / float(
+                        value[2]
+                    )
+
+                    results.append(
+                        [
+                            value[0],
+                            value[1],
+                            value[2],
+                            ele[2],
+                            percentage_diff,
+                            value[3],
+                            ele[3],
+                            value[4],
+                            price_perf[0],
+                            price_perf[1],
+                            price_perf_diff,
+                        ]
+                    )
+
+    spreadsheetId = create_spreadsheet(spreadsheet_name, test_name)
+    append_to_sheet(spreadsheetId, results, test_name)
+    graph_linpack_comparison(spreadsheetId, test_name)
 
     print(f"https://docs.google.com/spreadsheets/d/{spreadsheetId}")

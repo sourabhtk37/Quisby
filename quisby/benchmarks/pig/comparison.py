@@ -1,6 +1,5 @@
 from itertools import groupby
 
-import quisby.config as config
 from quisby.sheet.sheet_util import (
     create_spreadsheet,
     append_to_sheet,
@@ -39,5 +38,3 @@ def compare_pig_results(spreadsheets):
     graph_pig_data(spreadsheetId, test_name)
 
     print(f"https://docs.google.com/spreadsheets/d/{spreadsheetId}")
-
-    return results

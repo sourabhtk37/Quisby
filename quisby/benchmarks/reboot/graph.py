@@ -1,8 +1,8 @@
 from quisby.sheet.sheetapi import sheet
-from quisby.sheet.sheet_util import read_sheet, clear_sheet_charts, get_sheet
+from quisby.sheet.sheet_util import read_sheet, get_sheet
 
 
-def create_series_range_pig(column_count, sheetId, start_index, end_index):
+def create_series_range_boot(column_count, sheetId, start_index, end_index):
     """"""
     series = []
 
@@ -15,7 +15,7 @@ def create_series_range_pig(column_count, sheetId, start_index, end_index):
                         "sources": [
                             {
                                 "sheetId": sheetId,
-                                "startRowIndex": start_index + 2,
+                                "startRowIndex": start_index,
                                 "endRowIndex": end_index,
                                 "startColumnIndex": index + 1,
                                 "endColumnIndex": index + 2,
@@ -30,48 +30,46 @@ def create_series_range_pig(column_count, sheetId, start_index, end_index):
     return series
 
 
-def graph_pig_data(spreadsheetId, test_name):
-    """"""
+def graph_boot_data(spreadsheetId, test_name):
     GRAPH_COL_INDEX = 1
     GRAPH_ROW_INDEX = 0
     start_index, end_index = None, None
 
     data = read_sheet(spreadsheetId, test_name)
-    clear_sheet_charts(spreadsheetId, test_name)
 
     for index, row in enumerate(data):
-        if row == [] and start_index is None:
+        if row[0] == "System name" and start_index is None:
             start_index = index
             continue
 
         if start_index is not None:
             if index + 1 == len(data):
                 end_index = index + 1
-            elif data[index + 1] == []:
+            elif data[index + 1][0] == "System name":
                 end_index = index + 1
 
         if end_index:
             graph_data = data[start_index:end_index]
-            column_count = len(graph_data[1])
+            column_count = len(graph_data[0])
 
             sheetId = get_sheet(spreadsheetId, test_name)["sheets"][0]["properties"][
                 "sheetId"
             ]
-
+            subtitle = graph_data[1][0].split(".")[0]
             requests = {
                 "addChart": {
                     "chart": {
                         "spec": {
-                            "title": f"{test_name}",
-                            "subtitle": f"{graph_data[1][0]}",
+                            "title": f"Instance {test_name} time",
+                            "subtitle": f"{subtitle}",
                             "basicChart": {
                                 "chartType": "COLUMN",
                                 "legendPosition": "BOTTOM_LEGEND",
                                 "axis": [
-                                    {"position": "BOTTOM_AXIS", "title": "Threads"},
+                                    {"position": "BOTTOM_AXIS", "title": ""},
                                     {
                                         "position": "LEFT_AXIS",
-                                        "title": "Scheduler Efficiency",
+                                        "title": "Time",
                                     },
                                 ],
                                 "domains": [
@@ -81,8 +79,7 @@ def graph_pig_data(spreadsheetId, test_name):
                                                 "sources": [
                                                     {
                                                         "sheetId": sheetId,
-                                                        "startRowIndex": start_index
-                                                        + 2,
+                                                        "startRowIndex": start_index,
                                                         "endRowIndex": end_index,
                                                         "startColumnIndex": 0,
                                                         "endColumnIndex": 1,
@@ -92,7 +89,7 @@ def graph_pig_data(spreadsheetId, test_name):
                                         }
                                     }
                                 ],
-                                "series": create_series_range_pig(
+                                "series": create_series_range_boot(
                                     column_count, sheetId, start_index, end_index
                                 ),
                                 "headerCount": 1,

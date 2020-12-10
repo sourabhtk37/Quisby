@@ -1,7 +1,13 @@
-import quisby.config as config
 from quisby.sheet.sheetapi import sheet
 
-LINPACK_HEADER_ROW = ["System", "GFLOPS", "GFLOP Scaling", "Cost/hr", "Price/Perf"]
+LINPACK_HEADER_ROW = [
+    "System",
+    "Cores",
+    "GFLOPS",
+    "GFLOP Scaling",
+    "Cost/hr",
+    "Price/Perf",
+]
 
 
 def check_sheet_exists(sheet_info, test_name):
@@ -37,18 +43,18 @@ def create_spreadsheet(spreadsheet_name, test_name):
     spreadsheet = sheet.create(body=spreadsheet, fields="spreadsheetId").execute()
     spreadsheetId = spreadsheet["spreadsheetId"]
 
-    if test_name == "linpack":
-        # Add header rows
-        values = [LINPACK_HEADER_ROW]
+    # if test_name == "linpack":
+    #     # Add header rows
+    #     values = [LINPACK_HEADER_ROW]
 
-        body = {"values": values}
+    #     body = {"values": values}
 
-        sheet.values().update(
-            spreadsheetId=spreadsheetId,
-            range=test_name,
-            valueInputOption="USER_ENTERED",
-            body=body,
-        ).execute()
+    #     sheet.values().update(
+    #         spreadsheetId=spreadsheetId,
+    #         range=test_name,
+    #         valueInputOption="USER_ENTERED",
+    #         body=body,
+    #     ).execute()
 
     return spreadsheetId
 

@@ -23,6 +23,7 @@ from quisby.benchmarks.pig.summary import create_summary_pig_data
 from quisby.benchmarks.linpack.extract import extract_linpack_summary_data
 from quisby.benchmarks.linpack.summary import create_summary_linpack_data
 from quisby.benchmarks.linpack.graph import graph_linpack_data
+from quisby.benchmarks.linpack.comparison import compare_linpack_results
 from quisby.benchmarks.hammerdb.extract import extract_hammerdb_data
 from quisby.benchmarks.hammerdb.summary import create_summary_hammerdb_data
 from quisby.benchmarks.hammerdb.graph import graph_hammerdb_data
@@ -31,6 +32,12 @@ from quisby.benchmarks.fio.fio import process_fio_result
 from quisby.benchmarks.fio.summary import create_summary_fio_data
 from quisby.benchmarks.fio.graph import graph_fio_data
 from quisby.benchmarks.fio.comparison import compare_fio_results
+from quisby.benchmarks.reboot.reboot import extract_boot_result
+from quisby.benchmarks.reboot.summary import create_summary_boot_data
+from quisby.benchmarks.reboot.graph import graph_boot_data
+from quisby.benchmarks.aim.extract import extract_aim_result
+from quisby.benchmarks.aim.summary import create_summary_aim_data
+from quisby.benchmarks.aim.graph import graph_aim_data
 
 
 def check_test_is_hammerdb(test_name):
@@ -114,7 +121,7 @@ def data_handler(path):
                         results += extract_uperf_data(test_path, system_name)
 
                     elif test_name == "linpack":
-                        test_path = f"rhel_{config.OS_RELEASE}/" f"{data}/summary.csv"
+                        test_path = f"rhel_{config.OS_RELEASE}/" f"{data}"
 
                         ret_val = extract_linpack_summary_data(test_path, system_name)
                         if ret_val:
@@ -150,6 +157,12 @@ def data_handler(path):
                         )
                     elif test_name == "fio":
                         results += process_fio_result(data)
+
+                    elif test_name == "boot":
+                        results += extract_boot_result(data)
+
+                    elif test_name == "aim":
+                        results += extract_aim_result(data)
 
         results = process_results(results)
 

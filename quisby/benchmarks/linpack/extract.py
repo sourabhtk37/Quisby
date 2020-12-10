@@ -1,4 +1,6 @@
 import csv
+import glob
+import re
 
 from quisby.pricing import cloud_pricing
 import quisby.config as config
@@ -12,22 +14,44 @@ def extract_linpack_summary_data(path, system_name):
 
     results = []
 
-    with open(path) as csv_file:
+    with open(path + "/summary.csv") as csv_file:
         csv_reader = csv.DictReader(csv_file, delimiter=":")
+        last_row = list(csv_reader)[-1]
+        gflops = last_row["MB/sec"]
+        threads = last_row["threads"]
 
-        for row in csv_reader:
-            gflops = row["MB/sec"]
+    for file_path in glob.glob(path + f"/linpack*_threads_{threads}_*"):
+        with open(file_path) as txt_file:
+            data = txt_file.readlines()
+            for row in data:
+                if re.findall(r"Number of cores: (\d+)", row):
+                    no_of_cores = re.findall(r"Number of cores: (\d+)", row)[0]
+                    break
 
     if gflops:
         get_cloud_pricing = getattr(
             cloud_pricing, "get_%s_pricing" % config.cloud_type.lower()
         )
         price_per_hour = get_cloud_pricing(system_name, config.region)
-
-        results.append(system_name)
-        results.append(gflops)
-        results.append(1)
-        results.append(price_per_hour)
-        results.append(float(gflops) / float(price_per_hour))
-
-        return [results]
+        results.append(
+            [
+                "System",
+                "Cores",
+                f"GFLOPS-{config.OS_RELEASE}",
+                f"GFLOP Scaling-{config.OS_RELEASE}",
+                "Cost/hr",
+                f"Price/Perf-{config.OS_RELEASE}",
+            ]
+        )
+        results.append(
+            [
+                system_name,
+                no_of_cores,
+                gflops,
+                1,
+                price_per_hour,
+                float(gflops) / float(price_per_hour),
+            ]
+        )
+        
+        return results
