@@ -155,3 +155,7 @@ test_loc_8.2
 test_loc_8.3
 test_locations_8.2
 test_locations_8.3
+aws_aim_sample.tar.gz
+aws_aim_sample/
+reboot.tar
+reboot/
