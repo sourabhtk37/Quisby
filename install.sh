@@ -18,7 +18,7 @@ while [[ $# -gt 0 ]]; do
         setup_azure
         shift
         ;;
-    *) 
+    *)
         shift
         ;;
 
@@ -74,12 +74,23 @@ setup_azure() {
 # TODO: Add a check for virtual env
 echo "Create virtual environment"
 python -m venv venv
+if python -m venv venv; then
+    echo "Virtual environment configured"
+else
+    echo "python venv module not found. Exiting"
+    exit
+fi
 
 echo "Activate virtual env"
 source venv/bin/activate
 
 # Install dependencies
-pip install -r requirements.txt
+if ! command -v pip &>/dev/null; then
+    echo "Pip not found. Try installing pip"
+else
+    pip install -r requirements.txt
+    echo "Installed dependencies"
+fi
 
 # Run setup.py to install the project
 python setup.py install
