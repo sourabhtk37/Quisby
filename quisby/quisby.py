@@ -75,9 +75,16 @@ def process_results(results):
     return []
 
 
+def get_os_release_from_config_file(path):
+    config_file = glob.glob(path+"*.config")[0]
+
+    with open(config_file) as txt_file:
+        for line in txt_file:
+            if "release:" in line:
+                return line.split(":")[1].strip("\n")
+
+    
 # TODO: simplify functions once data location is exact
-
-
 def data_handler(path):
     """"""
     global test_name
@@ -88,7 +95,7 @@ def data_handler(path):
         test_result_path = file.readlines()
 
         for data in test_result_path:
-            if "tests" in data:
+            if "test" in data:
                 results = process_results(results)
                 test_name = data.split("_")[-1].strip()
 
@@ -100,6 +107,8 @@ def data_handler(path):
                     data = data.strip("\n").strip("'")
                     system_name = data.split("/")[1].strip()
                     result_name = data.split("/")[-1].strip("\n")
+
+                    config.OS_RELEASE = get_os_release_from_config_file(data)
 
                     if test_name == "stream":
                         test_path = (
@@ -121,9 +130,8 @@ def data_handler(path):
                         results += extract_uperf_data(test_path, system_name)
 
                     elif test_name == "linpack":
-                        test_path = f"rhel_{config.OS_RELEASE}/" f"{data}"
-
-                        ret_val = extract_linpack_summary_data(test_path, system_name)
+            
+                        ret_val = extract_linpack_summary_data(data)
                         if ret_val:
                             results += ret_val
 
@@ -175,7 +183,7 @@ def main():
         arg = sys.argv[1]
     except IndexError:
         raise SystemExit(
-            f"Usage: {sys.argv[0]} <test results location file> or compare <spreadsheets>"
+            f"Usage: {sys.argv[0]} <test results location file> or compare test_name <two comma seperated spreadsheets>"
         )
 
     if arg == "compare":
@@ -188,7 +196,6 @@ def main():
             globals()[f"compare_{test_name}_results"](spreadsheets, test_name)
 
     else:
-        config.OS_RELEASE = arg.split("_")[-1]
         data_handler(arg)
     # TODO: Multi-spreadsheet support
     # config.spreadsheetId = sys.argv[2]

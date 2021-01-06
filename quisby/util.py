@@ -6,3 +6,7 @@ def combine_two_array_alternating(results, value, ele):
         results.append([list1[0]] + row)
 
     return results
+
+def mk_int(str):
+    str = str.strip()
+    return int(str) if str else 1

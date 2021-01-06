@@ -1,5 +1,7 @@
 from itertools import groupby
 
+from quisby.util import mk_int
+
 
 def create_summary_linpack_data(results):
 
@@ -10,8 +12,9 @@ def create_summary_linpack_data(results):
     results = [row for row in results if row[0] != "System"]
 
     for _, items in groupby(sorted(results), key=lambda x: x[0].split(".")[0]):
+        items = list(items)
         sorted_data = sorted(
-            list(items), key=lambda x: int(x[0].split(".")[1].split("x")[0])
+            items, key=lambda x: mk_int(x[0].split(".")[1].split("x")[0])
         )
         
         cpu_scale, base_gflops = None, None
@@ -22,8 +25,6 @@ def create_summary_linpack_data(results):
             else:
                 gflops_scaling = float(row[2]) / (int(row[1]) - cpu_scale) / base_gflops
                 sorted_data[index][3] = format(gflops_scaling, ".4f")
-
         sorted_results += header_row + sorted_data
-    print(sorted_results)
 
     return sorted_results

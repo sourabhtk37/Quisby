@@ -1,10 +1,7 @@
 from itertools import groupby
 
 import quisby.config as config
-
-def mk_int(str):
-    str = str.strip()
-    return int(str) if str else 1
+from quisby.util import mk_int
 
 
 def create_summary_aim_data(results):
