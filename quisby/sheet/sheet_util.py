@@ -94,19 +94,6 @@ def create_sheet(spreadsheetId, test_name):
 
         sheet.batchUpdate(spreadsheetId=spreadsheetId, body=body).execute()
 
-        if test_name == "linpack":
-            # Add header rows
-            values = [LINPACK_HEADER_ROW]
-
-            body = {"values": values}
-
-            sheet.values().update(
-                spreadsheetId=spreadsheetId,
-                range=test_name,
-                valueInputOption="USER_ENTERED",
-                body=body,
-            ).execute()
-
 
 def read_sheet(spreadsheet_Id, range="A:F"):
     """"""

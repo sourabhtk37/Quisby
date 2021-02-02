@@ -6,23 +6,22 @@ from quisby.sheet.sheet_util import (
     append_to_sheet,
     read_sheet,
     get_sheet,
+    create_sheet,
 )
 from quisby.util import combine_two_array_alternating
 from quisby.benchmarks.stream.graph import graph_stream_data
 
 
-def compare_stream_results(spreadsheets, test_name, table_name=["Max Througput"]):
+def compare_stream_results(
+    spreadsheets, spreadsheetId, test_name, table_name=["Max Througput"]
+):
     values = []
     results = []
     spreadsheet_name = []
 
-    for spreadsheetId in spreadsheets:
-        values.append(read_sheet(spreadsheetId, range=test_name))
-        spreadsheet_name.append(
-            get_sheet(spreadsheetId, range=[])["properties"]["title"]
-        )
-
-    spreadsheet_name = " vs ".join(spreadsheet_name)
+    for spreadsheet in spreadsheets:
+        values.append(read_sheet(spreadsheet, range=test_name))
+        spreadsheet_name.append(get_sheet(spreadsheet, range=[])["properties"]["title"])
 
     for index, value in enumerate(values):
         values[index] = (list(g) for k, g in groupby(value, key=lambda x: x != []) if k)
@@ -42,13 +41,9 @@ def compare_stream_results(spreadsheets, test_name, table_name=["Max Througput"]
                 results = combine_two_array_alternating(results, value[1:], ele[1:])
                 break
 
-    spreadsheetId = create_spreadsheet(spreadsheet_name, test_name)
+    create_sheet(spreadsheetId, test_name)
     append_to_sheet(spreadsheetId, results, test_name)
     graph_stream_data(spreadsheetId, test_name)
-
-    print(f"https://docs.google.com/spreadsheets/d/{spreadsheetId}")
-
-    return results
 
 
 if __name__ == "__main__":
@@ -57,5 +52,5 @@ if __name__ == "__main__":
         "",
     ]
     test_name = "stream"
-    
+
     compare_stream_results(spreadsheets, test_name)

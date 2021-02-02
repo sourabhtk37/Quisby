@@ -6,7 +6,7 @@
 # Leave empty if you want a new spreadsheet to be created.
 # TODO: user name and time
 spreadsheetId = ""
-OS_TYPE = "RHEL"
+OS_TYPE = ""
 OS_RELEASE = ""
 
 test_name = ""
@@ -14,7 +14,7 @@ test_path = ""
 
 system_name = ""
 region = "US East (N. Virginia)"
-cloud_type = "AWS"
+cloud_type = ""
 
 specjbb_java_version = "java-11-openjdk"
 # ================================

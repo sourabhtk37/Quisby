@@ -2,6 +2,7 @@ from itertools import groupby
 
 import quisby.config as config
 from quisby.pricing.cloud_pricing import get_aws_pricing
+from quisby.util import mk_int
 
 
 def specjbb_sort_data_by_system_family(results):
@@ -12,7 +13,7 @@ def specjbb_sort_data_by_system_family(results):
 
     for _, items in groupby(results, key=lambda x: x[1][0].split(".")[0]):
         sorted_result.append(
-            sorted(list(items), key=lambda x: int(x[1][0].split(".")[1].split("x")[0]))
+            sorted(list(items), key=lambda x: mk_int(x[1][0].split(".")[1].split("x")[0]))
         )
 
     return sorted_result
@@ -37,7 +38,10 @@ def create_summary_specjbb_data(specjbb_data):
 
         for item in items:
             results += item
-            pt, cph, pe = calc_peak_throughput_peak_efficiency(item)
+            try:
+                pt, cph, pe = calc_peak_throughput_peak_efficiency(item)
+            except ValueError:
+                break
             peak_throughput.append([item[1][0], pt])
             cost_per_hour.append([item[1][0], cph])
             peak_efficiency.append([item[1][0], pe])
@@ -55,8 +59,9 @@ def create_summary_specjbb_data(specjbb_data):
     return results
 
 
-def extract_specjbb_data(path, system_name):
+def extract_specjbb_data(path):
     """"""
+    system_name = path.split("/")[4]
     results = [[""], [system_name]]
 
     # File read

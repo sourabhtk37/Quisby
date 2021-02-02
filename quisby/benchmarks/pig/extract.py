@@ -3,11 +3,14 @@ import re
 import quisby.config as config
 
 
-def extract_pig_data(test_path, system_name):
+def extract_pig_data(path):
     results = []
     result_data = []
     cpu_count = 0
-    with open(test_path) as file:
+
+    system_name = path.split("/")[4]
+    path = path + f"/iteration_1.{system_name}"
+    with open(path) as file:
 
         for line in file:
             if "PID" in line:

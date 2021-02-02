@@ -1,6 +1,7 @@
 from itertools import groupby
 
 import quisby.config as config
+from quisby.util import mk_int
 
 
 def stream_sort_data_by_system_family(results):
@@ -15,7 +16,7 @@ def stream_sort_data_by_system_family(results):
 
     for _, items in groupby(stream_data, key=lambda x: x[2][0].split(".")[0]):
         sorted_result += sorted(
-            list(items), key=lambda x: int(x[2][0].split(".")[1].split("x")[0])
+            list(items), key=lambda x: mk_int(x[2][0].split(".")[1].split("x")[0])
         )
 
     return sorted_result
@@ -68,13 +69,15 @@ def create_summary_stream_data(stream_data):
     return results
 
 
-def extract_stream_data(path, system_name="System"):
+def extract_stream_data(path):
     """
     Extracts streams data and appends empty list for each seperate stream runs
 
     :path: stream summary results file from stream_wrapper_benchmark runs
     :system_name: machine name (eg: m5.2xlarge, Standard_D64s_v3)
     """
+    system_name = path.split("/")[4]
+
     with open(path) as file:
         streams_results = file.readlines()
 
@@ -94,6 +97,8 @@ def extract_stream_data(path, system_name="System"):
 
     socket_number = ""
     proccessed_data = []
+    if not streams_results:
+        return None
     for row in streams_results:
         if socket_number != row[2]:
             socket_number = row[2]
@@ -118,7 +123,7 @@ def extract_stream_data(path, system_name="System"):
         # append each function data
         for index in range(1, 5):
             proccessed_data[pos - index].append(row[data_pos - index])
-
+ 
     return proccessed_data
 
 

@@ -7,6 +7,7 @@ from quisby.sheet.sheet_util import (
     clear_sheet_charts,
     clear_sheet_data,
     get_sheet,
+    create_sheet,
 )
 
 
@@ -278,18 +279,16 @@ def graph_linpack_comparison(spreadsheetId, test_name):
             start_index, end_index = None, None
 
 
-def compare_linpack_results(spreadsheets, test_name):
+def compare_linpack_results(spreadsheets, spreadsheetId, test_name):
     values = []
     results = []
     spreadsheet_name = []
 
-    for spreadsheetId in spreadsheets:
-        values.append(read_sheet(spreadsheetId, test_name))
+    for spreadsheet in spreadsheets:
+        values.append(read_sheet(spreadsheet, test_name))
         spreadsheet_name.append(
-            get_sheet(spreadsheetId, test_name)["properties"]["title"]
+            get_sheet(spreadsheet, test_name)["properties"]["title"]
         )
-
-    spreadsheet_name = " vs ".join(spreadsheet_name)
 
     for value in values[0]:
         for ele in values[1]:
@@ -340,8 +339,6 @@ def compare_linpack_results(spreadsheets, test_name):
                         ]
                     )
 
-    spreadsheetId = create_spreadsheet(spreadsheet_name, test_name)
+    create_sheet(spreadsheetId, test_name)
     append_to_sheet(spreadsheetId, results, test_name)
     graph_linpack_comparison(spreadsheetId, test_name)
-
-    print(f"https://docs.google.com/spreadsheets/d/{spreadsheetId}")

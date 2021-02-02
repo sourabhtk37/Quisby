@@ -2,6 +2,7 @@ import csv
 from itertools import groupby
 
 import quisby.config as config
+from quisby.util import mk_int
 
 
 def combine_uperf_data(results):
@@ -31,7 +32,7 @@ def uperf_sort_data_by_system_family(results):
 
     for _, items in groupby(group_data, key=lambda x: str(x[1][0].split(".")[0])):
         sorted_results.append(
-            sorted(list(items), key=lambda x: int(x[1][0].split(".")[1].split("x")[0]))
+            sorted(list(items), key=lambda x: mk_int(x[1][0].split(".")[1].split("x")[0]))
         )
 
     return sorted_results
@@ -76,12 +77,13 @@ def create_summary_uperf_data(results):
     return summary_results
 
 
-def extract_uperf_data(path, system_name):
+def extract_uperf_data(path):
     """"""
-
     results = []
     data_position = {}
+
     tests_supported = ["tcp_stream", "tcp_rr"]
+    system_name = path.split("/")[4]
 
     with open(path) as csv_file:
         csv_reader = list(csv.reader(csv_file))

@@ -1,9 +1,17 @@
 import sys
 import glob
+import argparse
+import fileinput
+import time
 
 import quisby.config as config
 from quisby.sheet.sheetapi import sheet
-from quisby.sheet.sheet_util import create_sheet, append_to_sheet, create_spreadsheet
+from quisby.sheet.sheet_util import (
+    get_sheet,
+    create_sheet,
+    append_to_sheet,
+    create_spreadsheet,
+)
 from quisby.benchmarks.stream.stream import (
     extract_stream_data,
     create_summary_stream_data,
@@ -12,14 +20,17 @@ from quisby.benchmarks.stream.graph import graph_stream_data
 from quisby.benchmarks.stream.comparison import compare_stream_results
 from quisby.benchmarks.uperf.uperf import extract_uperf_data, create_summary_uperf_data
 from quisby.benchmarks.uperf.graph import graph_uperf_data
+from quisby.benchmarks.uperf.comparison import compare_uperf_results
 from quisby.benchmarks.specjbb.specjbb import (
     extract_specjbb_data,
     create_summary_specjbb_data,
 )
+from quisby.benchmarks.specjbb.comparison import compare_specjbb_results
 from quisby.benchmarks.specjbb.graph import graph_specjbb_data
 from quisby.benchmarks.pig.extract import extract_pig_data
 from quisby.benchmarks.pig.graph import graph_pig_data
 from quisby.benchmarks.pig.summary import create_summary_pig_data
+from quisby.benchmarks.pig.comparison import compare_pig_results
 from quisby.benchmarks.linpack.extract import extract_linpack_summary_data
 from quisby.benchmarks.linpack.summary import create_summary_linpack_data
 from quisby.benchmarks.linpack.graph import graph_linpack_data
@@ -52,7 +63,7 @@ def process_results(results):
     """"""
     global test_name
 
-    spreadsheet_name = f"{config.cloud_type} {config.OS_TYPE}-{config.OS_RELEASE}"
+    spreadsheet_name = f"{config.cloud_type}-{config.OS_TYPE}-{config.OS_RELEASE}"
 
     if results:
         if check_test_is_hammerdb(test_name):
@@ -62,7 +73,6 @@ def process_results(results):
 
         if not config.spreadsheetId:
             config.spreadsheetId = create_spreadsheet(spreadsheet_name, test_name)
-
         create_sheet(config.spreadsheetId, test_name)
         append_to_sheet(config.spreadsheetId, results, test_name)
 
@@ -75,21 +85,21 @@ def process_results(results):
     return []
 
 
-def get_os_release_from_config_file(path):
-    config_file = glob.glob(path+"*.config")[0]
-
-    with open(config_file) as txt_file:
-        for line in txt_file:
-            if "release:" in line:
-                return line.split(":")[1].strip("\n")
-
-    
 # TODO: simplify functions once data location is exact
-def data_handler(path):
+def data_handler(args):
     """"""
     global test_name
 
     results = []
+    config.OS_TYPE = args.os_type
+    config.OS_RELEASE = args.os_release
+    config.cloud_type = args.cloud_type
+    path = args.location_file
+
+    # Strip empty lines from location file
+    for line in fileinput.FileInput(path, inplace=1):
+        if line.rstrip():
+            print(line, end="")
 
     with open(path) as file:
         test_result_path = file.readlines()
@@ -105,55 +115,34 @@ def data_handler(path):
 
                     # Strip new line and "'"
                     data = data.strip("\n").strip("'")
-                    system_name = data.split("/")[1].strip()
                     result_name = data.split("/")[-1].strip("\n")
 
-                    config.OS_RELEASE = get_os_release_from_config_file(data)
-
                     if test_name == "stream":
-                        test_path = (
-                            f"rhel_{config.OS_RELEASE}/{data}"
-                            f"/{result_name}/streams_results/"
-                            f"{result_name}/results_streams.csv"
-                        )
-
-                        results += extract_stream_data(test_path, system_name)
+                        ret_val = extract_stream_data(data)
+                        if ret_val:
+                            results += ret_val
 
                     # TODO: support url fetching
                     elif test_name == "uperf":
-                        system_name = data.split("_")[3].split(":")[0].strip()
-                        test_path = (
-                            f"rhel_{config.OS_RELEASE}/uperf_results_{config.OS_RELEASE}/"
-                            f"{data}result.csv"
-                        )
 
-                        results += extract_uperf_data(test_path, system_name)
+                        results += extract_uperf_data(data)
 
                     elif test_name == "linpack":
-            
+
                         ret_val = extract_linpack_summary_data(data)
                         if ret_val:
                             results += ret_val
 
                     # TODO: support url fetching
                     elif test_name == "specjbb":
-                        system_name = data.split("_")[2].strip("/")
 
-                        test_path = (
-                            f"rhel_{config.OS_RELEASE}/specjbb_results_{config.OS_RELEASE}/"
-                            f"{data}SPECjbb.001.results"
-                        )
-
-                        results.append(extract_specjbb_data(test_path, system_name))
+                        results.append(extract_specjbb_data(data))
 
                     elif test_name == "pig":
 
-                        test_path = (
-                            f"rhel_{config.OS_RELEASE}/"
-                            f"{data}/iteration_1.{system_name}"
-                        )
-
-                        results.append(extract_pig_data(test_path, system_name))
+                        ret_val = extract_pig_data(data)
+                        if ret_val:
+                            results += ret_val
 
                     elif check_test_is_hammerdb(test_name):
 
@@ -177,30 +166,112 @@ def data_handler(path):
         print(f"https://docs.google.com/spreadsheets/d/{config.spreadsheetId}")
 
 
-def main():
+def compare_results(args):
 
-    try:
-        arg = sys.argv[1]
-    except IndexError:
-        raise SystemExit(
-            f"Usage: {sys.argv[0]} <test results location file> or compare test_name <two comma seperated spreadsheets>"
-        )
+    sheet_list = []
+    spreadsheet_name = []
+    comparison_list = []
 
-    if arg == "compare":
-        test_name = sys.argv[2]
-        spreadsheets = sys.argv[3].split(",")
+    spreadsheets = args.spreadsheets.split(",")
+    test_name = [args.test_name] if args.test_name else []
 
-        if check_test_is_hammerdb(test_name):
-            compare_hammerdb_results(spreadsheets, test_name)
-        else:
-            globals()[f"compare_{test_name}_results"](spreadsheets, test_name)
+    for spreadsheet in spreadsheets:
+        sheet_names = []
 
+        sheets = get_sheet(spreadsheet, range=test_name)
+        spreadsheet_name.append(get_sheet(spreadsheet, range=[])["properties"]["title"])
+
+        for sheet in sheets.get("sheets"):
+            sheet_names.append(sheet["properties"]["title"])
+        sheet_list.append(sheet_names)
+
+    if test_name:
+        comparison_list = test_name
     else:
-        data_handler(arg)
-    # TODO: Multi-spreadsheet support
-    # config.spreadsheetId = sys.argv[2]
-    # spreadsheets = return dictionary_spreadsheets
-    # comparison_wrapper(spreadsheets)
+        # Find sheets that are present in all spreadsheets i.e intersection
+        comparison_list = set(sheet_list[0])
+        for sheets in sheet_list[1:]:
+            comparison_list.intersection_update(sheets)
+
+        comparison_list = list(comparison_list)
+
+    spreadsheet_name = " and ".join(spreadsheet_name)
+    spreadsheetId = create_spreadsheet(spreadsheet_name, comparison_list[0])
+
+    for index, test_name in enumerate(comparison_list):
+        if check_test_is_hammerdb(test_name):
+            compare_hammerdb_results(spreadsheets, spreadsheetId, test_name)
+        else:
+            globals()[f"compare_{test_name}_results"](
+                spreadsheets, spreadsheetId, test_name
+            )
+        if index + 1 != len(comparison_list):
+            print(
+                "# Sleeping 30 sec to workaround the Google Sheet per minute API limit"
+            )
+            time.sleep(30)
+
+    print(f"https://docs.google.com/spreadsheets/d/{spreadsheetId}")
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    subparsers = parser.add_subparsers(
+        help="""
+        Required commands for processing. 
+        Try '<command> -h' for addtional args to be supplied
+        """
+    )
+
+    location_parser = subparsers.add_parser(
+        "process", help="Process location file and create spreadsheets"
+    )
+    location_parser.add_argument(
+        "location_file",
+        action="store",
+        help="Specify the file containing locations of benchmark results",
+    )
+    location_parser.add_argument(
+        "--os-type",
+        action="store",
+        help="Examples: 'Amazon', 'RHEL', 'Ubuntu'",
+        required=True,
+    )
+    location_parser.add_argument(
+        "--os-release",
+        action="store",
+        help="Examples:8.1, 18.04. Or, you can provide kernel version here",
+        required=True,
+    )
+    location_parser.add_argument(
+        "--cloud-type",
+        action="store",
+        help="Optional: Mention cloud type. default:AWS",
+        default="AWS",
+    )
+    location_parser.set_defaults(func=data_handler)
+
+    compare_parser = subparsers.add_parser(
+        "compare", help="Takes two spreadsheets and creates a comparison spreadsheet"
+    )
+    compare_parser.add_argument(
+        "--test-name",
+        help="""
+        Optional. If specified, it will create a single sheet comparing
+        that benchmark only.
+        """,
+        action="store",
+    )
+    compare_parser.add_argument(
+        "--spreadsheets",
+        help="two comma seperated spreadsheets",
+        action="store",
+        required=True,
+    )
+    compare_parser.set_defaults(func=compare_results)
+
+    args = parser.parse_args()
+    args.func(args)
 
 
 if __name__ == "__main__":

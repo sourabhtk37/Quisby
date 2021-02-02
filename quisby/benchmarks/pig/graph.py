@@ -15,7 +15,7 @@ def create_series_range_pig(column_count, sheetId, start_index, end_index):
                         "sources": [
                             {
                                 "sheetId": sheetId,
-                                "startRowIndex": start_index + 2,
+                                "startRowIndex": start_index + 1,
                                 "endRowIndex": end_index,
                                 "startColumnIndex": index + 1,
                                 "endColumnIndex": index + 2,
@@ -40,14 +40,13 @@ def graph_pig_data(spreadsheetId, test_name):
     clear_sheet_charts(spreadsheetId, test_name)
 
     for index, row in enumerate(data):
-        if row == [] and start_index is None:
-            start_index = index
-            continue
+        if "Threads" in row:
+            start_index = index - 1
 
-        if start_index is not None:
-            if index + 1 == len(data):
-                end_index = index + 1
-            elif data[index + 1] == []:
+        if start_index:
+            if row == []:
+                end_index = index
+            elif index + 1 == len(data):
                 end_index = index + 1
 
         if end_index:
@@ -63,7 +62,7 @@ def graph_pig_data(spreadsheetId, test_name):
                     "chart": {
                         "spec": {
                             "title": f"{test_name}",
-                            "subtitle": f"{graph_data[1][0]}",
+                            "subtitle": f"{graph_data[0][0]}",
                             "basicChart": {
                                 "chartType": "COLUMN",
                                 "legendPosition": "BOTTOM_LEGEND",
@@ -82,7 +81,7 @@ def graph_pig_data(spreadsheetId, test_name):
                                                     {
                                                         "sheetId": sheetId,
                                                         "startRowIndex": start_index
-                                                        + 2,
+                                                        + 1,
                                                         "endRowIndex": end_index,
                                                         "startColumnIndex": 0,
                                                         "endColumnIndex": 1,
