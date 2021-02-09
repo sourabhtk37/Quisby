@@ -8,11 +8,11 @@ from quisby.sheet.sheet_util import (
     get_sheet,
     create_sheet,
 )
-from quisby.util import combine_two_array_alternating
+from quisby.util import combine_two_array_alternating, merge_lists_alternately
 from quisby.benchmarks.specjbb.graph import graph_specjbb_data
 
 
-def compare_specjbb_results(spreadsheets, spreadsheetId, test_name, table_name=[]):
+def compare_specjbb_results(spreadsheets, spreadsheetId, test_name, table_name=["Peak", "Peak/$eff"]):
     values = []
     results = []
     spreadsheet_name = []
@@ -28,21 +28,29 @@ def compare_specjbb_results(spreadsheets, spreadsheetId, test_name, table_name=[
     list_2 = list(values[1])
 
     for value in list_1:
-        results.append([""])
         for ele in list_2:
 
             if value[0][0] in table_name and ele[0][0] in table_name:
                 if value[0][0] == ele[0][0]:
                     if value[1][0].split(".")[0] == ele[1][0].split(".")[0]:
-                        results = combine_two_array_alternating(results, value, ele)
+                        results.append([""])
+                        for item1 in value:
+                            for item2 in ele:
+                                if item1[0] == item2[0]:
+                                    results = merge_lists_alternately(results, item1, item2)
                         break
 
-            elif value[0][0] == "Cost/Hr":
-                results += value
-                break
+            elif value[0][0] == "Cost/Hr" and ele[0][0] == "Cost/Hr":
+                if value[1][0].split(".")[0] == ele[1][0].split(".")[0]:
+                    results.append([""])
+                    for item1 in value:
+                        for item2 in ele:
+                            if item1[0] == item2[0]:
+                                results.append(item1)
+                    break
 
             elif value[0][0] == ele[0][0]:
-
+                results.append([""])
                 results.append(value[0])
                 results = combine_two_array_alternating(results, value[1:], ele[1:])
                 break

@@ -39,7 +39,7 @@ from quisby.benchmarks.hammerdb.extract import extract_hammerdb_data
 from quisby.benchmarks.hammerdb.summary import create_summary_hammerdb_data
 from quisby.benchmarks.hammerdb.graph import graph_hammerdb_data
 from quisby.benchmarks.hammerdb.comparison import compare_hammerdb_results
-from quisby.benchmarks.fio.fio import process_fio_result
+from quisby.benchmarks.fio.fio import process_fio_result, extract_fio_data
 from quisby.benchmarks.fio.summary import create_summary_fio_data
 from quisby.benchmarks.fio.graph import graph_fio_data
 from quisby.benchmarks.fio.comparison import compare_fio_results
@@ -108,6 +108,7 @@ def data_handler(args):
             if "test" in data:
                 results = process_results(results)
                 test_name = data.split("_")[-1].strip()
+                source = data.split()[-1].split("_")[0].strip()
 
             else:
                 # Create test path
@@ -153,7 +154,10 @@ def data_handler(args):
                             extract_hammerdb_data(path_list, system_name, test_name)
                         )
                     elif test_name == "fio":
-                        results += process_fio_result(data)
+                        if source == "results":
+                            results += extract_fio_data(data)
+                        elif source == "pbench":
+                            results += process_fio_result(data)
 
                     elif test_name == "boot":
                         results += extract_boot_result(data)
@@ -199,6 +203,7 @@ def compare_results(args):
     spreadsheetId = create_spreadsheet(spreadsheet_name, comparison_list[0])
 
     for index, test_name in enumerate(comparison_list):
+        config.test_name = test_name
         if check_test_is_hammerdb(test_name):
             compare_hammerdb_results(spreadsheets, spreadsheetId, test_name)
         else:
