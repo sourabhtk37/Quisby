@@ -282,7 +282,11 @@ def main():
     compare_parser.set_defaults(func=compare_results)
 
     args = parser.parse_args()
-    args.func(args)
+    try:
+        func = args.func
+    except AttributeError:
+        parser.error("too few arguments")
+    func(args)
 
 
 if __name__ == "__main__":
