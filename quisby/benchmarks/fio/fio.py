@@ -20,7 +20,7 @@ def extract_csv_data(csv_data, path):
 
     header_row = csv_data.pop(0).split(",")
 
-    io_depth = re.findall(r"iod_(\d+)", path)[0]
+    io_depth = re.findall(r"iod.*?_(\d+)", path)[0]
     ndisks = re.findall(r"ndisks_(\d+)", path)[0]
     njobs = re.findall(r"njobs_(\d+)", path)[0]
 
@@ -94,6 +94,15 @@ def process_fio_result(URL):
     results = retreive_data_from_url(URL, page_content)
 
     return group_data(results, system_name)
+
+def extract_fio_data(path):
+    system_name = path.split("/")[4]
+    ls_dir = os.listdir(path)
+
+    for folder in ls_dir:
+        with open(path +f"/{folder}/result.csv") as csv_file:
+            csv_data =csv_file.readlines()
+            results = extract_csv_data(csv_data, folder)
 
 
 if __name__ == "__main__":

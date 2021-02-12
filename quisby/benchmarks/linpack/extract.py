@@ -6,6 +6,60 @@ import os.path
 from quisby.pricing import cloud_pricing
 import quisby.config as config
 
+
+def linpack_format_data(**kwargs):
+    """
+    Add data into format to be shown in spreadsheets
+    Supports linpack like data. eg: autohpl
+    """
+    results = kwargs["results"] if kwargs["results"] else []
+    system_name = kwargs["system_name"] if kwargs["system_name"] else None
+    if kwargs["gflops"]:
+        gflops = float(kwargs["gflops"])
+    else:
+        return None
+
+    try:
+        get_cloud_pricing = getattr(
+            cloud_pricing, "get_%s_pricing" % config.cloud_type.lower()
+        )
+        price_per_hour = get_cloud_pricing(system_name, config.region)
+    except:
+        price_per_hour = 1
+
+    try:
+        get_cloud_cpu_count = getattr(
+            cloud_pricing, "get_%s_cpucount" % config.cloud_type.lower()
+        )
+
+        no_of_cores = get_cloud_cpu_count(system_name, config.region)
+    except:
+        no_of_cores = 1
+
+    results.append(
+        [
+            "System",
+            "Cores",
+            f"GFLOPS-{config.OS_RELEASE}",
+            f"GFLOP Scaling-{config.OS_RELEASE}",
+            "Cost/hr",
+            f"Price/Perf-{config.OS_RELEASE}",
+        ]
+    )
+    results.append(
+        [
+            system_name,
+            no_of_cores,
+            gflops,
+            1,
+            price_per_hour,
+            float(gflops) / float(price_per_hour),
+        ]
+    )
+
+    return results
+
+
 def extract_linpack_summary_data(path):
     """
     Make shift function to handle linpack summary data
@@ -14,14 +68,14 @@ def extract_linpack_summary_data(path):
 
     results = []
     no_of_cores = None
-    gflops= None
-    
-    system_name = path.split("/")[4]
+    gflops = None
+
+    system_name = path.split("/")[4].split("_")[0]
     summary_file = path + "/summary.csv"
-    
+
     if not os.path.isfile(summary_file):
-        return None    
-    
+        return None
+
     with open(summary_file) as csv_file:
         csv_reader = csv.DictReader(csv_file, delimiter=":")
         last_row = list(csv_reader)[-2]
@@ -37,30 +91,11 @@ def extract_linpack_summary_data(path):
                     break
 
     if gflops:
-        get_cloud_pricing = getattr(
-            cloud_pricing, "get_%s_pricing" % config.cloud_type.lower()
+        results = linpack_format_data(
+            results=results,
+            system_name=system_name,
+            no_of_cores=no_of_cores,
+            gflops=gflops,
         )
-        price_per_hour = get_cloud_pricing(system_name, config.region)
-        
-        results.append(
-            [
-                "System",
-                "Cores",
-                f"GFLOPS-{config.OS_RELEASE}",
-                f"GFLOP Scaling-{config.OS_RELEASE}",
-                "Cost/hr",
-                f"Price/Perf-{config.OS_RELEASE}",
-            ]
-        )
-        results.append(
-            [
-                system_name,
-                no_of_cores,
-                gflops,
-                1,
-                price_per_hour,
-                float(gflops) / float(price_per_hour),
-            ]
-        )
-        
+
         return results

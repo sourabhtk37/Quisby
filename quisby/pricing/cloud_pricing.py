@@ -61,7 +61,7 @@ def get_azure_pricing(system_name, region="US Gov"):
                     return resource["MeterRates"]["0"]
 
 
-def get_aws_pricing(instance_name, region):
+def get_aws_instance_info(instance_name, region):
     """
     AWS pricing is retreived using the aws boto3 client pricing API.
 
@@ -101,7 +101,12 @@ def get_aws_pricing(instance_name, region):
         MaxResults=100,
     )
 
-    price_list = response["PriceList"]
+    return response['PriceList']
+
+
+def get_aws_pricing(instance_name, region):
+
+    price_list = get_aws_instance_info(instance_name, region) 
 
     # Filter pricing details
     if price_list:
@@ -118,8 +123,17 @@ def get_aws_pricing(instance_name, region):
     else:
         return None
 
+def get_aws_cpucount(instance_name, region):
+    price_list = get_aws_instance_info(instance_name, region)
+
+    if price_list:
+        price_item = json.loads(price_list[0])
+
+        cpu_count = price_item["product"]["attributes"]["vcpu"]
+
+    return cpu_count 
 
 if __name__ == "__main__":
     region = "US East 2"
-    print(get_azure_pricing("Standard_D32s_v3", region))
-    print(get_aws_pricing("i3en.24xlarge", "US East (N. Virginia)"))
+    # print(get_azure_pricing("Standard_D32s_v3", region))
+    print(get_aws_cpucount("i3en.24xlarge", "US East (N. Virginia)"))

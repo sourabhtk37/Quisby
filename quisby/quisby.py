@@ -49,7 +49,9 @@ from quisby.benchmarks.reboot.graph import graph_boot_data
 from quisby.benchmarks.aim.extract import extract_aim_result
 from quisby.benchmarks.aim.summary import create_summary_aim_data
 from quisby.benchmarks.aim.graph import graph_aim_data
-
+from quisby.benchmarks.autohpl.extract import extract_autohpl_result
+from quisby.benchmarks.autohpl.summary import create_summary_autohpl_data
+from quisby.benchmarks.autohpl.graph import graph_autohpl_data
 
 def check_test_is_hammerdb(test_name):
 
@@ -165,6 +167,10 @@ def data_handler(args):
                     elif test_name == "aim":
                         results += extract_aim_result(data)
 
+                    elif test_name == "autohpl":
+                        ret_val = extract_autohpl_result(data)
+                        if ret_val:
+                            results += ret_val
         results = process_results(results)
 
         print(f"https://docs.google.com/spreadsheets/d/{config.spreadsheetId}")
