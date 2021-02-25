@@ -1,5 +1,6 @@
 import re
 import os
+import logging
 from itertools import groupby
 
 import requests
@@ -17,7 +18,7 @@ HEADER_TO_EXTRACT = [
 def extract_csv_data(csv_data, path):
     indexof_all = []
     results = []
-
+    logging.info(f"extract csv data: {path}")
     header_row = csv_data.pop(0).split(",")
 
     io_depth = re.findall(r"iod.*?_(\d+)", path)[0]
@@ -96,14 +97,16 @@ def process_fio_result(URL):
     return group_data(results, system_name)
 
 def extract_fio_data(path):
+    results = []
     system_name = path.split("/")[4]
     ls_dir = os.listdir(path)
 
     for folder in ls_dir:
         with open(path +f"/{folder}/result.csv") as csv_file:
             csv_data =csv_file.readlines()
-            results = extract_csv_data(csv_data, folder)
+            results += extract_csv_data(csv_data, folder)
 
+    return group_data(results, system_name)
 
 if __name__ == "__main__":
     URL = "http://pbench.perf.lab.eng.bos.redhat.com/results/EC2::ip-172-31-31-81.us-east-2.compute.internal/user_none_instance_i3en.24xlarge_numb_disks_8_/"

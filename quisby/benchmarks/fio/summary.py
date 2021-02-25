@@ -1,17 +1,32 @@
 from itertools import groupby
 
 import quisby.config as config
+from quisby.util import mk_int
+
+
+def fio_sort_data(results):
+    sorted_result = []
+    # group data
+    results = [list(g) for k, g in groupby(results, key=lambda x: x != [""]) if k]
+
+    # sort results together by operation and operation size
+    results.sort(key=lambda x: (x[0][1], x[0][2], x[0][0].split(".")[0]))
+
+    for _, items in groupby(
+        results, key=lambda x: (x[0][0].split(".")[0], x[0][1], x[0][2])
+    ):
+        sorted_result += sorted(
+            list(items), key=lambda x: mk_int(x[0][0].split(".")[1].split("x")[0])
+        )
+
+    return sorted_result
 
 
 def create_summary_fio_data(results):
     summary_results = []
     run_metric = {"1024KiB": "iops", "4KiB": "lat"}
 
-    # group data
-    results = [list(g) for k, g in groupby(results, key=lambda x: x != [""]) if k]
-
-    # sort results together by operation and operation size
-    results = sorted(results, key=lambda x: (x[0][1], x[0][2]))
+    results = fio_sort_data(results)
 
     for key, items in groupby(
         results, key=lambda x: (x[0][0].split(".")[0], x[0][1], x[0][2])
@@ -20,7 +35,8 @@ def create_summary_fio_data(results):
 
         items = list(items)
         columns = [
-            i[0][0] + f"-{run_metric[i[0][2].split('-')[0]]}-{config.OS_RELEASE}" for i in items
+            i[0][0] + f"-{run_metric[i[0][2].split('-')[0]]}-{config.OS_RELEASE}"
+            for i in items
         ]
 
         for index, item in enumerate(items):
@@ -32,12 +48,15 @@ def create_summary_fio_data(results):
             item = list(
                 filter(
                     lambda x: (
-                        int(x[0].split("-")[0].split("_")[0]) == 1 and
-                        int(x[0].split("-")[1].split("_")[0]) == 1
+                        int(x[0].split("-")[0].split("_")[0]) == 1
+                        and int(x[0].split("-")[1].split("_")[0]) == 1
                     ),
                     item[2:],
                 )
             )
+            # Pick only the first three results, 
+            # since xlarge systems have duplicated data
+            
             for ele in item:
 
                 if ele[0] in run_data:

@@ -3,6 +3,7 @@ import glob
 import argparse
 import fileinput
 import time
+import logging
 
 import quisby.config as config
 from quisby.sheet.sheetapi import sheet
@@ -52,6 +53,10 @@ from quisby.benchmarks.aim.graph import graph_aim_data
 from quisby.benchmarks.autohpl.extract import extract_autohpl_result
 from quisby.benchmarks.autohpl.summary import create_summary_autohpl_data
 from quisby.benchmarks.autohpl.graph import graph_autohpl_data
+
+
+logging.basicConfig(level=logging.INFO)
+
 
 def check_test_is_hammerdb(test_name):
 
@@ -115,7 +120,7 @@ def data_handler(args):
             else:
                 # Create test path
                 if data:
-
+                    logging.info(f"process result: {data}")
                     # Strip new line and "'"
                     data = data.strip("\n").strip("'")
                     result_name = data.split("/")[-1].strip("\n")
@@ -128,8 +133,10 @@ def data_handler(args):
                     # TODO: support url fetching
                     elif test_name == "uperf":
 
-                        results += extract_uperf_data(data)
-
+                        ret_val = extract_uperf_data(data)
+                        if ret_val:
+                            results += ret_val
+                            
                     elif test_name == "linpack":
 
                         ret_val = extract_linpack_summary_data(data)
@@ -157,20 +164,27 @@ def data_handler(args):
                         )
                     elif test_name == "fio":
                         if source == "results":
-                            results += extract_fio_data(data)
+                            ret_val = extract_fio_data(data)
                         elif source == "pbench":
-                            results += process_fio_result(data)
+                            ret_val = process_fio_result(data)
+                        if ret_val:
+                            results += ret_val
 
                     elif test_name == "boot":
-                        results += extract_boot_result(data)
+                        ret_val = extract_boot_result(data)
+                        if ret_val:
+                            results += ret_val
 
                     elif test_name == "aim":
-                        results += extract_aim_result(data)
+                        ret_val = extract_aim_result(data)
+                        if ret_val:
+                            results += ret_val
 
                     elif test_name == "autohpl":
                         ret_val = extract_autohpl_result(data)
                         if ret_val:
                             results += ret_val
+
         results = process_results(results)
 
         print(f"https://docs.google.com/spreadsheets/d/{config.spreadsheetId}")
@@ -280,7 +294,6 @@ def main():
         required=True,
     )
     compare_parser.set_defaults(func=compare_results)
-
     args = parser.parse_args()
     try:
         func = args.func

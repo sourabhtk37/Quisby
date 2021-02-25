@@ -1,14 +1,5 @@
 from quisby.sheet.sheetapi import sheet
 
-LINPACK_HEADER_ROW = [
-    "System",
-    "Cores",
-    "GFLOPS",
-    "GFLOP Scaling",
-    "Cost/hr",
-    "Price/Perf",
-]
-
 
 def check_sheet_exists(sheet_info, test_name):
     """"""
@@ -42,19 +33,6 @@ def create_spreadsheet(spreadsheet_name, test_name):
 
     spreadsheet = sheet.create(body=spreadsheet, fields="spreadsheetId").execute()
     spreadsheetId = spreadsheet["spreadsheetId"]
-
-    # if test_name == "linpack":
-    #     # Add header rows
-    #     values = [LINPACK_HEADER_ROW]
-
-    #     body = {"values": values}
-
-    #     sheet.values().update(
-    #         spreadsheetId=spreadsheetId,
-    #         range=test_name,
-    #         valueInputOption="USER_ENTERED",
-    #         body=body,
-    #     ).execute()
 
     return spreadsheetId
 
@@ -178,4 +156,23 @@ def clear_sheet_charts(spreadsheetId, range="A2:Z1000"):
 def get_named_range(spreadsheetId, range="A:F"):
     spreadsheet = get_sheet(spreadsheetId, range)
 
-    # print(spreadsheet['namedRanges'])
+    return spreadsheet['namedRanges']
+
+def append_empty_row_sheet(spreadsheetId, rows, range="A:F"):
+    
+    sheetId = get_sheet(spreadsheetId, range)["sheets"][0]["properties"]["sheetId"]
+
+
+    body = {
+        "requests": [
+            {
+                "appendDimension":{
+                    "sheetId": sheetId,
+                    "dimension": "ROWS",
+                    "length": rows
+                }
+            }
+        ]
+    }
+
+    sheet.batchUpdate(spreadsheetId=spreadsheetId, body=body).execute()
