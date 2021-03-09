@@ -1,26 +1,26 @@
 from itertools import groupby
 
 import quisby.config as config
-from quisby.pricing.cloud_pricing import get_aws_pricing
-from quisby.util import mk_int
+from quisby.pricing.cloud_pricing import get_cloud_pricing
+from quisby.util import mk_int, process_instance
 
 
 def specjbb_sort_data_by_system_family(results):
 
     sorted_result = []
 
-    results.sort(key=lambda x: x[1][0].split(".")[0])
+    results.sort(key=lambda x: process_instance(x[1][0], "family","version","feature"))
 
-    for _, items in groupby(results, key=lambda x: x[1][0].split(".")[0]):
+    for _, items in groupby(results, key=lambda x: process_instance(x[1][0], "family","version","feature")):
         sorted_result.append(
-            sorted(list(items), key=lambda x: mk_int(x[1][0].split(".")[1].split("x")[0]))
+            sorted(list(items), key=lambda x: mk_int(process_instance(x[1][0], "size")))
         )
 
     return sorted_result
 
 
 def calc_peak_throughput_peak_efficiency(data):
-    cost_per_hour = get_aws_pricing(data[1][0], config.region)
+    cost_per_hour = get_cloud_pricing(data[1][0], config.region, config.cloud_type.lower())
     peak_throughput = max(data[3:], key=lambda x: int(x[1]))[1]
     peak_efficiency = float(peak_throughput) / float(cost_per_hour)
 
@@ -59,9 +59,8 @@ def create_summary_specjbb_data(specjbb_data):
     return results
 
 
-def extract_specjbb_data(path):
+def extract_specjbb_data(path, system_name):
     """"""
-    system_name = path.split("/")[4]
     results = [[""], [system_name]]
 
     # File read

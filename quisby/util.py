@@ -1,6 +1,28 @@
+import re
+
 import quisby.config as config
 
 invalid_compare_list = ["pig"]
+
+
+def process_instance(instance_name, *args):
+    if config.cloud_type == "azure":
+        pattern = r"Standard_(?P<family>\w)(?P<sub_family>\D)?(?P<size>\d+)(?P<feature>\w+)?_(?P<accel_type>\w\d)?_?(?P<version>\w\d)"
+
+    if config.cloud_type == "aws":
+        pattern = r"(?P<family>\w)(?P<version>\d)(?P<feature>\w+)?.(?P<size>\d+)?(?P<bool_xlarge>x)?(?P<machine_type>\w+)"
+
+    regex_match = re.match(pattern, instance_name, flags=re.IGNORECASE)
+
+    return regex_match.group(*args)
+
+
+def mk_int(string):
+    if string:
+        string = string.strip()
+        return int(string) if string else 1
+    else:
+        return 1
 
 
 def merge_lists_alternately(results, list1, list2):
@@ -10,9 +32,8 @@ def merge_lists_alternately(results, list1, list2):
     for item1, item2 in zip(list1[1:], list2[1:]):
         merger_list.append(item1)
         merger_list.append(item2)
-    
+
     results.append(merger_list)
-    
 
     # row = [None] * (len(item1[1:]) + len(item2[1:]))
     # row[::2] = item1[1:]
@@ -43,8 +64,3 @@ def combine_two_array_alternating(results, value, ele):
         results.append(holder_list)
 
     return results
-
-
-def mk_int(str):
-    str = str.strip()
-    return int(str) if str else 1

@@ -1,7 +1,7 @@
 from itertools import groupby
 
 import quisby.config as config
-from quisby.util import mk_int
+from quisby.util import mk_int, process_instance
 
 
 def stream_sort_data_by_system_family(results):
@@ -12,13 +12,19 @@ def stream_sort_data_by_system_family(results):
     for index in range(0, len(results), 7):
         stream_data.append(results[index : index + 7])
 
-    stream_data.sort(key=lambda x: x[2][0].split(".")[0])
+    stream_data.sort(
+        key=lambda x: process_instance(x[2][0], "family", "version", "feature")
+    )
 
-    for _, items in groupby(stream_data, key=lambda x: x[2][0].split(".")[0]):
-        sorted_result += sorted(
-            list(items), key=lambda x: mk_int(x[2][0].split(".")[1].split("x")[0])
+    for _, items in groupby(
+        stream_data,
+        key=lambda x: process_instance(x[2][0], "family", "version", "feature"),
+    ):
+
+        sorted_result.append(
+            sorted(list(items), key=lambda x: mk_int(process_instance(x[2][0], "size")))
         )
-
+        
     return sorted_result
 
 
@@ -48,7 +54,7 @@ def create_summary_stream_data(stream_data):
     stream_data = stream_sort_data_by_system_family(stream_data)
 
     # Group by system family
-    for key, items in groupby(stream_data, key=lambda x: x[2][0].split(".")[0]):
+    for items in stream_data:
         max_calc_result = []
         for item in items:
             results += item
@@ -69,14 +75,13 @@ def create_summary_stream_data(stream_data):
     return results
 
 
-def extract_stream_data(path):
+def extract_stream_data(path, system_name):
     """
     Extracts streams data and appends empty list for each seperate stream runs
 
     :path: stream summary results file from stream_wrapper_benchmark runs
     :system_name: machine name (eg: m5.2xlarge, Standard_D64s_v3)
     """
-    system_name = path.split("/")[4]
 
     with open(path) as file:
         streams_results = file.readlines()
@@ -123,7 +128,7 @@ def extract_stream_data(path):
         # append each function data
         for index in range(1, 5):
             proccessed_data[pos - index].append(row[data_pos - index])
- 
+
     return proccessed_data
 
 

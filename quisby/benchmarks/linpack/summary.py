@@ -1,6 +1,7 @@
 from itertools import groupby
 
-from quisby.util import mk_int
+from quisby.util import mk_int, process_instance
+import quisby.config as config
 
 
 def create_summary_linpack_data(results):
@@ -11,12 +12,11 @@ def create_summary_linpack_data(results):
     header_row = [results[0]]
     results = [row for row in results if row[0] != "System"]
 
-    for _, items in groupby(sorted(results), key=lambda x: x[0].split(".")[0]):
+    results.sort(key=lambda x: process_instance(x[0], "family", "version", "feature"))
+
+    for _, items in groupby(results, key=lambda x: process_instance(x[0], "family", "version", "feature")):
         items = list(items)
-        sorted_data = sorted(
-            items, key=lambda x: mk_int(x[0].split(".")[1].split("x")[0])
-        )
-        
+        sorted_data = sorted(items, key=lambda x: mk_int(process_instance(x[0], "size")))
         cpu_scale, base_gflops = None, None
         for index, row in enumerate(sorted_data):
             if not cpu_scale and not base_gflops:

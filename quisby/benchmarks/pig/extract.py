@@ -3,12 +3,11 @@ import re
 import quisby.config as config
 
 
-def extract_pig_data(path):
+def extract_pig_data(path, system_name):
     results = []
     result_data = []
     cpu_count = 0
 
-    system_name = path.split("/")[4]
     path = path + f"/iteration_1.{system_name}"
     with open(path) as file:
 

@@ -1,6 +1,6 @@
 from itertools import groupby
 
-from quisby.util import mk_int
+from quisby.util import mk_int, process_instance
 
 
 def pig_sort_data_by_system_family(results):
@@ -8,12 +8,12 @@ def pig_sort_data_by_system_family(results):
     
     results = [list(g) for k, g in groupby(results, key=lambda x: x != [""]) if k]
     
-    results.sort(key=lambda x: x[0][0].split(".")[0])
+    results.sort(key=lambda x: process_instance(x[0][0], "family","version","feature"))
 
-    for _, items in groupby(results, key=lambda x: x[0][0].split(".")[0]):
+    for _, items in groupby(results, key=lambda x: process_instance(x[0][0], "family","version","feature")):
         sorted_result.append(
             sorted(                                 
-                list(items), key=lambda x: mk_int(x[0][0].split(".")[1].split("x")[0])
+                list(items), key=lambda x: mk_int(process_instance(x[0][0], "size"))
             )
         )
 

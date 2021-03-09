@@ -2,10 +2,9 @@ import os
 from os.path import isfile
 
 
-def extract_aim_result(path):
+def extract_aim_result(path, system_name):
     results = []
 
-    system_name = path.split("/")[2].split("_")[1]
     ls_dir = os.listdir(path)
 
     for folder in ls_dir:

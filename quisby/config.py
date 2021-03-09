@@ -13,7 +13,7 @@ test_name = ""
 test_path = ""
 
 system_name = ""
-region = "US East (N. Virginia)"
+region = "US East 2"
 cloud_type = ""
 
 specjbb_java_version = "java-11-openjdk"

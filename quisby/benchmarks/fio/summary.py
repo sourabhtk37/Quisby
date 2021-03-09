@@ -1,7 +1,7 @@
 from itertools import groupby
 
 import quisby.config as config
-from quisby.util import mk_int
+from quisby.util import mk_int, process_instance
 
 
 def fio_sort_data(results):
@@ -10,13 +10,13 @@ def fio_sort_data(results):
     results = [list(g) for k, g in groupby(results, key=lambda x: x != [""]) if k]
 
     # sort results together by operation and operation size
-    results.sort(key=lambda x: (x[0][1], x[0][2], x[0][0].split(".")[0]))
+    results.sort(key=lambda x: (x[0][1], x[0][2], process_instance(x[0][0], "family","version", "feature")))
 
     for _, items in groupby(
-        results, key=lambda x: (x[0][0].split(".")[0], x[0][1], x[0][2])
+        results, key=lambda x: (process_instance(x[0][0], "family","version", "feature"), x[0][1], x[0][2])
     ):
         sorted_result += sorted(
-            list(items), key=lambda x: mk_int(x[0][0].split(".")[1].split("x")[0])
+            list(items), key=lambda x: mk_int(process_instance(x[0][0], "size"))
         )
 
     return sorted_result
@@ -29,7 +29,7 @@ def create_summary_fio_data(results):
     results = fio_sort_data(results)
 
     for key, items in groupby(
-        results, key=lambda x: (x[0][0].split(".")[0], x[0][1], x[0][2])
+        results, key=lambda x: (process_instance(x[0][0], "family"), x[0][1], x[0][2])
     ):
         run_data = {}
 

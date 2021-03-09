@@ -3,7 +3,7 @@ import glob
 import re
 import os.path
 
-from quisby.pricing import cloud_pricing
+from quisby.pricing.cloud_pricing import get_cloud_pricing, get_cloud_cpu_count
 import quisby.config as config
 
 
@@ -19,22 +19,13 @@ def linpack_format_data(**kwargs):
     else:
         return None
 
-    try:
-        get_cloud_pricing = getattr(
-            cloud_pricing, "get_%s_pricing" % config.cloud_type.lower()
-        )
-        price_per_hour = get_cloud_pricing(system_name, config.region)
-    except:
-        price_per_hour = 1
+    price_per_hour = get_cloud_pricing(
+        system_name, config.region, config.cloud_type.lower()
+    )
 
-    try:
-        get_cloud_cpu_count = getattr(
-            cloud_pricing, "get_%s_cpucount" % config.cloud_type.lower()
-        )
-
-        no_of_cores = get_cloud_cpu_count(system_name, config.region)
-    except:
-        no_of_cores = 1
+    no_of_cores = get_cloud_cpu_count(
+        system_name, config.region, config.cloud_type.lower()
+    )
 
     results.append(
         [
@@ -60,7 +51,7 @@ def linpack_format_data(**kwargs):
     return results
 
 
-def extract_linpack_summary_data(path):
+def extract_linpack_summary_data(path, system_name):
     """
     Make shift function to handle linpack summary data
     till a resolution is reached
@@ -70,7 +61,6 @@ def extract_linpack_summary_data(path):
     no_of_cores = None
     gflops = None
 
-    system_name = path.split("/")[4].split("_")[0]
     summary_file = path + "/summary.csv"
 
     if not os.path.isfile(summary_file):

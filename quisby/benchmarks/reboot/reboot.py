@@ -2,10 +2,10 @@ import re
 import tarfile
 
 
-def extract_boot_result(path):
+def extract_boot_result(path, system_name):
     results = []
 
-    system_name = path.split("_")[2]
+    # system_name = path.split("_")[2]
     try:
         with open(path + "/cloud_timings") as file:
             data = file.readlines()

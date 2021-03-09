@@ -7,6 +7,8 @@ import subprocess
 
 import boto3
 
+from quisby.util import process_instance
+
 
 # ToDo: Timestamp work
 def get_azure_pricing(system_name, region="US Gov"):
@@ -56,7 +58,7 @@ def get_azure_pricing(system_name, region="US Gov"):
             ):
                 if (
                     system_name in str(resource["MeterName"])
-                    and region == resource["MeterRegion"]
+                    and resource["MeterRegion"] == "US East 2"
                 ):
                     return resource["MeterRates"]["0"]
 
@@ -133,7 +135,22 @@ def get_aws_cpucount(instance_name, region):
 
     return cpu_count 
 
+def get_cloud_pricing(instance_name, region, cloud_type):
+    if cloud_type == "aws":
+        return get_aws_pricing(instance_name, region)
+
+    elif cloud_type == "azure":
+        return get_azure_pricing(instance_name, region)
+
+def get_cloud_cpu_count(instance_name, region, cloud_type):
+    if cloud_type == "aws":
+        return get_aws_cpucount(instance_name, region)
+
+    elif cloud_type == "azure":
+        return int(process_instance(instance_name, "size"))
+
+
 if __name__ == "__main__":
     region = "US East 2"
-    # print(get_azure_pricing("Standard_D32s_v3", region))
-    print(get_aws_cpucount("i3en.24xlarge", "US East (N. Virginia)"))
+    print(get_azure_pricing("Standard_D32s_v3", region))
+    # print(get_aws_cpucount("i3en.24xlarge", "US East (N. Virginia)"))

@@ -96,9 +96,9 @@ def process_fio_result(URL):
 
     return group_data(results, system_name)
 
-def extract_fio_data(path):
+def extract_fio_data(path, system_name):
     results = []
-    system_name = path.split("/")[4]
+    
     ls_dir = os.listdir(path)
 
     for folder in ls_dir:

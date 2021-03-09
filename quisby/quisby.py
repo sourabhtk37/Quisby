@@ -123,34 +123,36 @@ def data_handler(args):
                     logging.info(f"process result: {data}")
                     # Strip new line and "'"
                     data = data.strip("\n").strip("'")
-                    result_name = data.split("/")[-1].strip("\n")
+                    path, system_name = data.split(",")
+                    print(path, system_name)
+                    result_name = path.split("/")[-1].strip("\n")
 
                     if test_name == "stream":
-                        ret_val = extract_stream_data(data)
+                        ret_val = extract_stream_data(path, system_name)
                         if ret_val:
                             results += ret_val
 
                     # TODO: support url fetching
                     elif test_name == "uperf":
 
-                        ret_val = extract_uperf_data(data)
+                        ret_val = extract_uperf_data(path, system_name)
                         if ret_val:
                             results += ret_val
-                            
+
                     elif test_name == "linpack":
 
-                        ret_val = extract_linpack_summary_data(data)
+                        ret_val = extract_linpack_summary_data(path, system_name)
                         if ret_val:
                             results += ret_val
 
                     # TODO: support url fetching
                     elif test_name == "specjbb":
 
-                        results.append(extract_specjbb_data(data))
+                        results.append(extract_specjbb_data(path, system_name))
 
                     elif test_name == "pig":
 
-                        ret_val = extract_pig_data(data)
+                        ret_val = extract_pig_data(path, system_name)
                         if ret_val:
                             results += ret_val
 
@@ -164,24 +166,24 @@ def data_handler(args):
                         )
                     elif test_name == "fio":
                         if source == "results":
-                            ret_val = extract_fio_data(data)
+                            ret_val = extract_fio_data(path, system_name)
                         elif source == "pbench":
-                            ret_val = process_fio_result(data)
+                            ret_val = process_fio_result(path, system_name)
                         if ret_val:
                             results += ret_val
 
                     elif test_name == "boot":
-                        ret_val = extract_boot_result(data)
+                        ret_val = extract_boot_result(path, system_name)
                         if ret_val:
                             results += ret_val
 
                     elif test_name == "aim":
-                        ret_val = extract_aim_result(data)
+                        ret_val = extract_aim_result(path, system_name)
                         if ret_val:
                             results += ret_val
 
                     elif test_name == "autohpl":
-                        ret_val = extract_autohpl_result(data)
+                        ret_val = extract_autohpl_result(path, system_name)
                         if ret_val:
                             results += ret_val
 
@@ -231,7 +233,7 @@ def compare_results(args):
                 spreadsheets, spreadsheetId, test_name
             )
         if index + 1 != len(comparison_list):
-            print(
+            logging.info(
                 "# Sleeping 30 sec to workaround the Google Sheet per minute API limit"
             )
             time.sleep(30)
