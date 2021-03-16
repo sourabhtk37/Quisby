@@ -51,7 +51,7 @@ def linpack_format_data(**kwargs):
     return results
 
 
-def extract_linpack_summary_data(path, system_name):
+def extract_linpack_data(path, system_name):
     """
     Make shift function to handle linpack summary data
     till a resolution is reached

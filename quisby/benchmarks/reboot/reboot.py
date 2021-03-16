@@ -2,7 +2,7 @@ import re
 import tarfile
 
 
-def extract_boot_result(path, system_name):
+def extract_boot_data(path, system_name):
     results = []
 
     # system_name = path.split("_")[2]

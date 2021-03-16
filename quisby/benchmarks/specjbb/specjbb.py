@@ -72,7 +72,7 @@ def extract_specjbb_data(path, system_name):
     for index, row in enumerate(specjbb_results):
 
         if "SPEC scores" in row:
-            start_index = index + 1
+            start_index = index + 2
 
         if start_index:
             if not row.strip("\n"):

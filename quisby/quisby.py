@@ -32,7 +32,7 @@ from quisby.benchmarks.pig.extract import extract_pig_data
 from quisby.benchmarks.pig.graph import graph_pig_data
 from quisby.benchmarks.pig.summary import create_summary_pig_data
 from quisby.benchmarks.pig.comparison import compare_pig_results
-from quisby.benchmarks.linpack.extract import extract_linpack_summary_data
+from quisby.benchmarks.linpack.extract import extract_linpack_data
 from quisby.benchmarks.linpack.summary import create_summary_linpack_data
 from quisby.benchmarks.linpack.graph import graph_linpack_data
 from quisby.benchmarks.linpack.comparison import compare_linpack_results
@@ -44,16 +44,19 @@ from quisby.benchmarks.fio.fio import process_fio_result, extract_fio_data
 from quisby.benchmarks.fio.summary import create_summary_fio_data
 from quisby.benchmarks.fio.graph import graph_fio_data
 from quisby.benchmarks.fio.comparison import compare_fio_results
-from quisby.benchmarks.reboot.reboot import extract_boot_result
+from quisby.benchmarks.reboot.reboot import extract_boot_data
 from quisby.benchmarks.reboot.summary import create_summary_boot_data
 from quisby.benchmarks.reboot.graph import graph_boot_data
-from quisby.benchmarks.aim.extract import extract_aim_result
+from quisby.benchmarks.aim.extract import extract_aim_data
 from quisby.benchmarks.aim.summary import create_summary_aim_data
 from quisby.benchmarks.aim.graph import graph_aim_data
-from quisby.benchmarks.autohpl.extract import extract_autohpl_result
+from quisby.benchmarks.autohpl.extract import extract_autohpl_data
 from quisby.benchmarks.autohpl.summary import create_summary_autohpl_data
 from quisby.benchmarks.autohpl.graph import graph_autohpl_data
-
+from quisby.benchmarks.speccpu.extract import extract_speccpu_data
+from quisby.benchmarks.speccpu.summary import create_summary_speccpu_data
+from quisby.benchmarks.speccpu.graph import graph_speccpu_data
+from quisby.benchmarks.speccpu.comparison import compare_speccpu_results
 
 logging.basicConfig(level=logging.INFO)
 
@@ -124,7 +127,6 @@ def data_handler(args):
                     # Strip new line and "'"
                     data = data.strip("\n").strip("'")
                     path, system_name = data.split(",")
-                    print(path, system_name)
                     result_name = path.split("/")[-1].strip("\n")
 
                     if test_name == "stream":
@@ -141,7 +143,7 @@ def data_handler(args):
 
                     elif test_name == "linpack":
 
-                        ret_val = extract_linpack_summary_data(path, system_name)
+                        ret_val = extract_linpack_data(path, system_name)
                         if ret_val:
                             results += ret_val
 
@@ -173,17 +175,22 @@ def data_handler(args):
                             results += ret_val
 
                     elif test_name == "boot":
-                        ret_val = extract_boot_result(path, system_name)
+                        ret_val = extract_boot_data(path, system_name)
                         if ret_val:
                             results += ret_val
 
                     elif test_name == "aim":
-                        ret_val = extract_aim_result(path, system_name)
+                        ret_val = extract_aim_data(path, system_name)
                         if ret_val:
                             results += ret_val
 
                     elif test_name == "autohpl":
-                        ret_val = extract_autohpl_result(path, system_name)
+                        ret_val = extract_autohpl_data(path, system_name)
+                        if ret_val:
+                            results += ret_val
+
+                    elif test_name == "speccpu":
+                        ret_val = extract_speccpu_data(path, system_name)
                         if ret_val:
                             results += ret_val
 

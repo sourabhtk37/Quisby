@@ -5,7 +5,7 @@ import quisby.config as config
 from quisby.benchmarks.linpack.extract import linpack_format_data
 
 
-def extract_autohpl_result(path, system_name):
+def extract_autohpl_data(path, system_name):
     
     with open(path) as file:
         results = []

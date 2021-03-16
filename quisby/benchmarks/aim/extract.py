@@ -2,7 +2,7 @@ import os
 from os.path import isfile
 
 
-def extract_aim_result(path, system_name):
+def extract_aim_data(path, system_name):
     results = []
 
     ls_dir = os.listdir(path)

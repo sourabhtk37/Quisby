@@ -1,0 +1,43 @@
+import glob
+
+import quisby.config as config
+
+
+def process_speccpu(path, system_name, suite):
+    results = []
+    suite_path = glob.glob(f"{path}/*{suite}.refrate.csv")[0]
+
+    with open(suite_path) as file:
+        speccpu_results = file.readlines()
+
+    start_index, end_index = 0, 0
+    for index, row in enumerate(speccpu_results):
+
+        if "Full Results Table" in row:
+            start_index = index + 2
+
+        if start_index:
+            if "Selected Results Table" in row:
+                end_index = index - 1
+                break
+
+    results.append([""])
+    results.append([system_name, suite])
+    for index, row in enumerate(speccpu_results[start_index:end_index]):
+        row = row.split(",")
+        if index == 0:
+            results.append([row[0], f"Base_Rate-{config.OS_RELEASE}"])
+        else:
+            results.append([row[0], f"{row[3]}"])
+
+    return results
+
+
+
+def extract_speccpu_data(path, system_name):
+    results = []
+    
+    for suite in ["fprate", "intrate"]:
+        results += process_speccpu(path, system_name, suite)
+    
+    return results
