@@ -23,7 +23,11 @@ def create_summary_linpack_data(results):
                 cpu_scale = int(row[1])
                 base_gflops = float(row[2])
             else:
-                gflops_scaling = float(row[2]) / (int(row[1]) - cpu_scale) / base_gflops
+                try:
+                    cpu_scaling = int(row[1]) - cpu_scale
+                except ZeroDivisionError:
+                    cpu_scaling = 0
+                gflops_scaling = float(row[2]) / (int(row[1]) - cpu_scale) / base_gflops if cpu_scaling !=0 else 1
                 sorted_data[index][3] = format(gflops_scaling, ".4f")
         sorted_results += header_row + sorted_data
 

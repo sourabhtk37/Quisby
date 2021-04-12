@@ -142,12 +142,19 @@ def get_cloud_pricing(instance_name, region, cloud_type):
     elif cloud_type == "azure":
         return get_azure_pricing(instance_name, region)
 
+    elif cloud_type == "local":
+        return 1
+
 def get_cloud_cpu_count(instance_name, region, cloud_type):
     if cloud_type == "aws":
         return get_aws_cpucount(instance_name, region)
 
     elif cloud_type == "azure":
         return int(process_instance(instance_name, "size"))
+    
+    elif cloud_type == "local":
+        return 1
+
 
 
 if __name__ == "__main__":
