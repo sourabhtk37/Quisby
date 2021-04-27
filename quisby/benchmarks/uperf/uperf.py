@@ -59,8 +59,7 @@ def create_summary_uperf_data(results):
 
     for key, value in group_by_test_name.items():
         run_data = {}
-
-        test_identifier = key.split("-")
+        test_identifier = key.rsplit("-",2)
 
         summary_results.append([""])
         summary_results.append(test_identifier)

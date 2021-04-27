@@ -12,6 +12,9 @@ def process_instance(instance_name, *args):
     if config.cloud_type == "aws":
         pattern = r"(?P<family>\w)(?P<version>\d)(?P<feature>\w+)?.(?P<size>\d+)?(?P<bool_xlarge>x)?(?P<machine_type>\w+)"
 
+    if config.cloud_type == "gcp":
+        pattern = r"(?P<family>\w)(?P<version>\d)(?P<sub_family>\w)?-(?P<feature>\w+)?-(?P<size>\d+)?"
+
     if config.cloud_type == "local":
         pattern = r"(?P<family>\D+)(?P<size>\d+)"
         regex_match = re.match(pattern, instance_name, flags=re.IGNORECASE)
