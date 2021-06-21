@@ -6,6 +6,7 @@ invalid_compare_list = ["pig"]
 
 
 def process_instance(instance_name, *args):
+
     if config.cloud_type == "azure":
         pattern = r"Standard_(?P<family>\w)(?P<sub_family>\D)?(?P<size>\d+)(?P<feature>\w+)?_(?P<accel_type>\w\d)?_?(?P<version>\w\d)"
 
@@ -22,7 +23,7 @@ def process_instance(instance_name, *args):
             return regex_match.group(2)
         else:
             return regex_match.group(1)
-
+    
     regex_match = re.match(pattern, instance_name, flags=re.IGNORECASE)
 
     return regex_match.group(*args)
@@ -63,7 +64,7 @@ def combine_two_array_alternating(results, value, ele):
                 indexer.append([lindex, rindex])
             elif config.test_name in invalid_compare_list:
                 indexer.append([lindex, rindex])
-
+ 
     for list1, list2 in zip(value, ele):
         holder_list = []
         holder_list.append(list1[0])

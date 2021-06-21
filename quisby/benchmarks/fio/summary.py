@@ -7,13 +7,16 @@ from quisby.util import mk_int, process_instance
 def fio_sort_data(results):
     sorted_result = []
     # group data
-    results = [list(g) for k, g in groupby(results, key=lambda x: x != [""]) if k]
+    results = [list(g) for k, g in groupby(
+        results, key=lambda x: x != [""]) if k]
 
     # sort results together by operation and operation size
-    results.sort(key=lambda x: (x[0][1], x[0][2], process_instance(x[0][0], "family","version", "feature")))
+    results.sort(key=lambda x: (x[0][1], x[0][2], str(
+        process_instance(x[0][0], "family", "version", "feature"))))
 
     for _, items in groupby(
-        results, key=lambda x: (process_instance(x[0][0], "family","version", "feature"), x[0][1], x[0][2])
+        results, key=lambda x: (process_instance(
+            x[0][0], "family", "version", "feature"), x[0][1], x[0][2])
     ):
         sorted_result += sorted(
             list(items), key=lambda x: mk_int(process_instance(x[0][0], "size"))
@@ -24,18 +27,20 @@ def fio_sort_data(results):
 
 def create_summary_fio_data(results):
     summary_results = []
-    run_metric = {"1024KiB": "iops", "4KiB": "lat"}
+    run_metric = {"1024KiB": "iops", "4KiB": "lat", "2300KiB": "iops"}
 
     results = fio_sort_data(results)
 
-    for key, items in groupby(
-        results, key=lambda x: (process_instance(x[0][0], "family"), x[0][1], x[0][2])
+    for header, items in groupby(
+        results, key=lambda x: (process_instance(
+            x[0][0], "family", "version", "feature"), x[0][1], x[0][2])
     ):
         run_data = {}
 
         items = list(items)
         columns = [
-            i[0][0] + f"-{run_metric[i[0][2].split('-')[0]]}-{config.OS_RELEASE}"
+            i[0][0] +
+            f"-{run_metric[i[0][2].split('-')[0]]}-{config.OS_RELEASE}"
             for i in items
         ]
 
@@ -54,9 +59,7 @@ def create_summary_fio_data(results):
                     item[2:],
                 )
             )
-            # Pick only the first three results, 
-            # since xlarge systems have duplicated data
-            
+
             for ele in item:
 
                 if ele[0] in run_data:
@@ -67,9 +70,11 @@ def create_summary_fio_data(results):
                     run_data[ele[0]] = [""] * index
                     run_data[ele[0]].append(ele[1])
 
+        instance_type = ''.join(item for item in header[0] if item)
+
         summary_results.append([""])
-        summary_results.append([*key[:2], f"{key[2]}"])
-        summary_results.append(["Iteration Name", *columns])
+        summary_results.append([instance_type, header[1], header[2]])
+        summary_results.append(["iteration_name", *columns])
         for key, value in run_data.items():
             summary_results.append([key, *value])
 

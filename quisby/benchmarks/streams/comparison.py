@@ -9,10 +9,10 @@ from quisby.sheet.sheet_util import (
     create_sheet,
 )
 from quisby.util import combine_two_array_alternating, merge_lists_alternately
-from quisby.benchmarks.stream.graph import graph_stream_data
+from quisby.benchmarks.streams.graph import graph_streams_data
 
 
-def compare_stream_results(
+def compare_streams_results(
     spreadsheets, spreadsheetId, test_name, table_name=["Max Througput"]
 ):
     values = []
@@ -50,7 +50,7 @@ def compare_stream_results(
 
     create_sheet(spreadsheetId, test_name)
     append_to_sheet(spreadsheetId, results, test_name)
-    graph_stream_data(spreadsheetId, test_name)
+    graph_streams_data(spreadsheetId, test_name)
 
 
 if __name__ == "__main__":
@@ -60,4 +60,4 @@ if __name__ == "__main__":
     ]
     test_name = "stream"
 
-    compare_stream_results(spreadsheets, test_name)
+    compare_streams_results(spreadsheets, test_name)

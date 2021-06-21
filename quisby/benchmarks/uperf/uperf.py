@@ -1,6 +1,8 @@
 import csv
 from itertools import groupby
 
+import requests
+
 import quisby.config as config
 from quisby.util import mk_int, process_instance
 
@@ -29,15 +31,18 @@ def uperf_sort_data_by_system_family(results):
     group_data = combine_uperf_data(results)
 
     group_data.sort(
-        key=lambda x: str(process_instance(x[1][0], "family", "version", "feature"))
+        key=lambda x: str(process_instance(
+            x[1][0], "family", "version", "feature"))
     )
 
     for _, items in groupby(
         group_data,
-        key=lambda x: str(process_instance(x[1][0], "family", "version", "feature")),
+        key=lambda x: str(process_instance(
+            x[1][0], "family", "version", "feature")),
     ):
         sorted_results.append(
-            sorted(list(items), key=lambda x: mk_int(process_instance(x[1][0], "size")))
+            sorted(list(items), key=lambda x: mk_int(
+                process_instance(x[1][0], "size")))
         )
 
     return sorted_results
@@ -59,7 +64,7 @@ def create_summary_uperf_data(results):
 
     for key, value in group_by_test_name.items():
         run_data = {}
-        test_identifier = key.rsplit("-",2)
+        test_identifier = key.rsplit("-", 2)
 
         summary_results.append([""])
         summary_results.append(test_identifier)
@@ -85,69 +90,74 @@ def extract_uperf_data(path, system_name):
     """"""
     results = []
     data_position = {}
-
+    
     tests_supported = ["tcp_stream", "tcp_rr"]
 
-    with open(path) as csv_file:
-        csv_reader = list(csv.reader(csv_file))
+    # Check if path is a URL
+    try:
+        csv_data = requests.get(path)
+        csv_reader = list(csv.reader(csv_data.text.split("\n")))
+    except requests.exceptions.InvalidSchema:
+        with open(path) as csv_file:
+            csv_reader = list(csv.reader(csv_file))
 
-        # find all ports result index in csv row
-        for index, row in enumerate(csv_reader[0]):
-            if "all" in row:
-                data_position[row.split(":")[0]] = index
+    # find all ports result index in csv row
+    for index, row in enumerate(csv_reader[0]):
+        if "all" in row:
+            data_position[row.split(":")[0]] = index
 
-        # Keep only tcp_stream and tcp_rr test results
-        csv_reader = list(filter(None, csv_reader))
-        filtered_result = list(
-            filter(lambda x: x[1].split("-")[0] in tests_supported, csv_reader)
-        )
+    # Keep only tcp_stream and tcp_rr test results
+    csv_reader = list(filter(None, csv_reader))
+    filtered_result = list(
+        filter(lambda x: x[1].split("-")[0] in tests_supported, csv_reader)
+    )
 
-        # Group data by test name and pkt size
-        for test_name, items in groupby(
-            filtered_result, key=lambda x: x[1].split("-")[:2]
-        ):
-            data_dict = {}
+    # Group data by test name and pkt size
+    for test_name, items in groupby(
+        filtered_result, key=lambda x: x[1].split("-")[:2]
+    ):
+        data_dict = {}
 
-            for item in items:
-                instance_count = "-".join(item[1].split("-")[2:])
+        for item in items:
+            instance_count = "-".join(item[1].split("-")[2:])
 
-                # Extract BW, trans_sec & latency data
-                for key in data_position.keys():
+            # Extract BW, trans_sec & latency data
+            for key in data_position.keys():
 
-                    if item[data_position[key]]:
-                        if key in data_dict:
-                            data_dict[key].append(
-                                [instance_count, item[data_position[key]]]
-                            )
-                        else:
-                            data_dict[key] = [
-                                [instance_count, item[data_position[key]]]
-                            ]
+                if item[data_position[key]]:
+                    if key in data_dict:
+                        data_dict[key].append(
+                            [instance_count, item[data_position[key]]]
+                        )
+                    else:
+                        data_dict[key] = [
+                            [instance_count, item[data_position[key]]]
+                        ]
 
-            for key, test_results in data_dict.items():
-                if test_results:
-                    results.append([""])
-                    results.append([system_name])
-                    results.append(["".join(test_name)])
-                    results.append(["Instance Count", key])
-                    for instance_count, items in groupby(
-                        test_results, key=lambda x: x[0].split("-")[0]
-                    ):
-                        items = list(items)
+        for key, test_results in data_dict.items():
+            if test_results:
+                results.append([""])
+                results.append([system_name])
+                results.append(["".join(test_name)])
+                results.append(["Instance Count", key])
+                for instance_count, items in groupby(
+                    test_results, key=lambda x: x[0].split("-")[0]
+                ):
+                    items = list(items)
 
-                        if len(items) > 1:
-                            failed_run = True
-                            for item in items:
-                                if "fail" not in item[0]:
-                                    results.append(item)
-                                    failed_run = False
-                                    break
-                            if failed_run:
-                                results.append([instance_count, "fail"])
-                        else:
-                            results.append(*items)
+                    if len(items) > 1:
+                        failed_run = True
+                        for item in items:
+                            if "fail" not in item[0]:
+                                results.append(item)
+                                failed_run = False
+                                break
+                        if failed_run:
+                            results.append([instance_count, "fail"])
+                    else:
+                        results.append(*items)
 
-        return results
+    return results
 
 
 if __name__ == "__main__":

@@ -126,8 +126,9 @@ def get_aws_pricing(instance_name, region):
         return None
 
 def get_aws_cpucount(instance_name, region):
+    cpu_count = 1
     price_list = get_aws_instance_info(instance_name, region)
-
+ 
     if price_list:
         price_item = json.loads(price_list[0])
 

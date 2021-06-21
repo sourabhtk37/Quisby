@@ -7,7 +7,7 @@ def create_summary_speccpu_data(results):
     sorted_result = []
     results = [list(g) for k, g in groupby(results, key=lambda x: x != [""]) if k]
     results.sort(
-        key=lambda x: process_instance(x[0][0], "family", "version", "feature")
+        key=lambda x: str(process_instance(x[0][0], "family", "version", "feature"))
     )
 
     for _, items in groupby(

@@ -32,6 +32,7 @@ def compare_hammerdb_results(spreadsheets, spreadsheetId, test_name):
     for value in list_1:
         results.append([""])
         for ele in list_2:
+
             if value[0][1].split(".")[0] == ele[0][1].split(".")[0]:
                 results = combine_two_array_alternating(results, value, ele)
 

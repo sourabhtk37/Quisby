@@ -40,7 +40,7 @@ def create_series_range_list_stream(
     return series, column_index
 
 
-def graph_stream_data(spreadsheetId, test_name):
+def graph_streams_data(spreadsheetId, test_name):
     """
     Retreive each streams results and graph them up indvidually
 

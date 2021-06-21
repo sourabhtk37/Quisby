@@ -13,12 +13,12 @@ from quisby.sheet.sheet_util import (
     append_to_sheet,
     create_spreadsheet,
 )
-from quisby.benchmarks.stream.stream import (
-    extract_stream_data,
-    create_summary_stream_data,
+from quisby.benchmarks.streams.streams import (
+    extract_streams_data,
+    create_summary_streams_data,
 )
-from quisby.benchmarks.stream.graph import graph_stream_data
-from quisby.benchmarks.stream.comparison import compare_stream_results
+from quisby.benchmarks.streams.graph import graph_streams_data
+from quisby.benchmarks.streams.comparison import compare_streams_results
 from quisby.benchmarks.uperf.uperf import extract_uperf_data, create_summary_uperf_data
 from quisby.benchmarks.uperf.graph import graph_uperf_data
 from quisby.benchmarks.uperf.comparison import compare_uperf_results
@@ -57,6 +57,9 @@ from quisby.benchmarks.speccpu.extract import extract_speccpu_data
 from quisby.benchmarks.speccpu.summary import create_summary_speccpu_data
 from quisby.benchmarks.speccpu.graph import graph_speccpu_data
 from quisby.benchmarks.speccpu.comparison import compare_speccpu_results
+from quisby.benchmarks.etcd.etcd import (
+    extract_etcd_data, create_summary_etcd_data, graph_etcd_data, compare_etcd_results)
+
 
 logging.basicConfig(level=logging.INFO)
 
@@ -73,8 +76,8 @@ def process_results(results):
     """"""
     global test_name
 
-    spreadsheet_name = f"{config.cloud_type}-{config.OS_TYPE}-{config.OS_RELEASE}"
-
+    spreadsheet_name = f"{config.cloud_type}-{config.OS_TYPE}-{config.OS_RELEASE}-{config.spreadsheet_name}"
+    # TODO: remove if check
     if results:
         if check_test_is_hammerdb(test_name):
             results = create_summary_hammerdb_data(results)
@@ -82,7 +85,8 @@ def process_results(results):
             results = globals()[f"create_summary_{test_name}_data"](results)
 
         if not config.spreadsheetId:
-            config.spreadsheetId = create_spreadsheet(spreadsheet_name, test_name)
+            config.spreadsheetId = create_spreadsheet(
+                spreadsheet_name, test_name)
         create_sheet(config.spreadsheetId, test_name)
         append_to_sheet(config.spreadsheetId, results, test_name)
 
@@ -90,7 +94,8 @@ def process_results(results):
         if check_test_is_hammerdb(test_name):
             graph_hammerdb_data(config.spreadsheetId, test_name)
         else:
-            globals()[f"graph_{test_name}_data"](config.spreadsheetId, test_name)
+            globals()[f"graph_{test_name}_data"](
+                config.spreadsheetId, test_name)
 
     return []
 
@@ -115,10 +120,14 @@ def data_handler(args):
         test_result_path = file.readlines()
 
         for data in test_result_path:
-            if "test" in data:
-                results = process_results(results)
+            if "test:" in data:
+                if results:
+                    results = process_results(results)
                 test_name = data.split("_")[-1].strip()
                 source = data.split()[-1].split("_")[0].strip()
+
+            elif "new_series" in data:
+                continue
 
             else:
                 # Create test path
@@ -126,17 +135,21 @@ def data_handler(args):
                     logging.info(f"process result: {data}")
                     # Strip new line and "'"
                     data = data.strip("\n").strip("'")
-                    path, system_name = data.split(",")
-                    result_name = path.split("/")[-1].strip("\n")
+                    try:
+                        path, system_name = data.split(",")
+                        path = path.strip()
+                    except ValueError:
+                        continue
 
-                    if test_name == "stream":
-                        ret_val = extract_stream_data(path, system_name)
+                    # result_name = path.split("/")[-1].strip("\n")
+
+                    if test_name == "streams":
+                        ret_val = extract_streams_data(path, system_name)
                         if ret_val:
                             results += ret_val
 
                     # TODO: support url fetching
                     elif test_name == "uperf":
-
                         ret_val = extract_uperf_data(path, system_name)
                         if ret_val:
                             results += ret_val
@@ -160,12 +173,17 @@ def data_handler(args):
 
                     elif check_test_is_hammerdb(test_name):
 
-                        prefix_path = f"rhel_{config.OS_RELEASE}/" f"{data}/"
-                        path_list = glob.glob(f"{prefix_path}test_*.out")
+                        # prefix_path = f"rhel_{config.OS_RELEASE}/" f"{data}/"
+                        # path_list = glob.glob(f"{prefix_path}test_*.out")
 
-                        results.append(
-                            extract_hammerdb_data(path_list, system_name, test_name)
-                        )
+                        # results.append(
+                        #     extract_hammerdb_data(path_list, system_name, test_name)
+                        # )
+                        ret_val = extract_hammerdb_data(
+                            path, system_name, test_name)
+                        if ret_val:
+                            results += ret_val
+
                     elif test_name == "fio":
                         if source == "results":
                             ret_val = extract_fio_data(path, system_name)
@@ -193,7 +211,11 @@ def data_handler(args):
                         ret_val = extract_speccpu_data(path, system_name)
                         if ret_val:
                             results += ret_val
-
+                    elif test_name == "etcd":
+                        ret_val = extract_etcd_data(path, system_name)
+                        if ret_val:
+                            results += ret_val
+                            
         results = process_results(results)
 
         print(f"https://docs.google.com/spreadsheets/d/{config.spreadsheetId}")
@@ -212,7 +234,8 @@ def compare_results(args):
         sheet_names = []
 
         sheets = get_sheet(spreadsheet, range=test_name)
-        spreadsheet_name.append(get_sheet(spreadsheet, range=[])["properties"]["title"])
+        spreadsheet_name.append(get_sheet(spreadsheet, range=[])[
+                                "properties"]["title"])
 
         for sheet in sheets.get("sheets"):
             sheet_names.append(sheet["properties"]["title"])
@@ -241,9 +264,9 @@ def compare_results(args):
             )
         if index + 1 != len(comparison_list):
             logging.info(
-                "# Sleeping 30 sec to workaround the Google Sheet per minute API limit"
+                "# Sleeping 10 sec to workaround the Google Sheet per minute API limit"
             )
-            time.sleep(30)
+            time.sleep(10)
 
     print(f"https://docs.google.com/spreadsheets/d/{spreadsheetId}")
 

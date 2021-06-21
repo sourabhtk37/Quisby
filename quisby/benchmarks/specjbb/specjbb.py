@@ -1,3 +1,4 @@
+import csv
 from itertools import groupby
 
 import quisby.config as config
@@ -9,18 +10,21 @@ def specjbb_sort_data_by_system_family(results):
 
     sorted_result = []
 
-    results.sort(key=lambda x: process_instance(x[1][0], "family","version","feature"))
+    results.sort(key=lambda x: str(process_instance(
+        x[1][0], "family", "version", "feature")))
 
-    for _, items in groupby(results, key=lambda x: process_instance(x[1][0], "family","version","feature")):
+    for _, items in groupby(results, key=lambda x: process_instance(x[1][0], "family", "version", "feature")):
         sorted_result.append(
-            sorted(list(items), key=lambda x: mk_int(process_instance(x[1][0], "size")))
+            sorted(list(items), key=lambda x: mk_int(
+                process_instance(x[1][0], "size")))
         )
 
     return sorted_result
 
 
 def calc_peak_throughput_peak_efficiency(data):
-    cost_per_hour = get_cloud_pricing(data[1][0], config.region, config.cloud_type.lower())
+    cost_per_hour = get_cloud_pricing(
+        data[1][0], config.region, config.cloud_type.lower())
     peak_throughput = max(data[3:], key=lambda x: int(x[1]))[1]
     peak_efficiency = float(peak_throughput) / float(cost_per_hour)
 
@@ -64,28 +68,30 @@ def extract_specjbb_data(path, system_name):
     results = [[""], [system_name]]
 
     # File read
-    with open(path) as file:
-        specjbb_results = file.readlines()
+    with open(path) as csv_file:
+        specjbb_results = list(csv.DictReader(csv_file, delimiter=":"))
 
     # Find position of SPEC Scores
-    start_index, end_index = 0, 0
-    for index, row in enumerate(specjbb_results):
+    # start_index, end_index = 0, 0
+    # for index, row in enumerate(specjbb_results):
 
-        if "SPEC scores" in row:
-            start_index = index + 2
+    #     if "SPEC scores" in row:
+    #         start_index = index + 2
 
-        if start_index:
-            if not row.strip("\n"):
-                end_index = index - 2
-                break
+    #     if start_index:
+    #         if not row.strip("\n"):
+    #             end_index = index - 2
+    #             break
+    results.append(["Warehouses", f"Thrput-{config.OS_RELEASE}"])
+    for data_dict in specjbb_results[1:]:
+        results.append([data_dict["Warehouses"], data_dict["Bops"]])
+    # # Extract data and convert to a list
+    # for row in specjbb_results[start_index:end_index]:
+    #     row = row.strip(" ").strip("*").strip(" ").strip("\n").split(" ")
 
-    # Extract data and convert to a list
-    for row in specjbb_results[start_index:end_index]:
-        row = row.strip(" ").strip("*").strip(" ").strip("\n").split(" ")
+    #     if row[-1] == "Thrput":
+    #         row[-1] = row[-1] + f"-{config.OS_RELEASE}"
 
-        if row[-1] == "Thrput":
-            row[-1] = row[-1] + f"-{config.OS_RELEASE}"
-
-        results.append([row[0], row[-1]])
-
+    #     results.append([row[0], row[-1]])
+   
     return results

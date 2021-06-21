@@ -25,36 +25,43 @@ def extract_csv_data(csv_data, path):
     ndisks = re.findall(r"ndisks_(\d+)", path)[0]
     njobs = re.findall(r"njobs_(\d+)", path)[0]
 
-    for header in HEADER_TO_EXTRACT:
-        indexof_all.append(header_row.index(header))
+    try:
+        for header in HEADER_TO_EXTRACT:
+            indexof_all.append(header_row.index(header))
 
-    for row in csv_data:
-        run_data = []
-        if row:
-            csv_row = row.split(",")
-            for index in indexof_all:
-                run_data.append(csv_row[index])
-            results.append([csv_row[1], ndisks, njobs, io_depth, *run_data])
-
+        for row in csv_data:
+            run_data = []
+            if row:
+                csv_row = row.split(",")
+                for index in indexof_all:
+                    run_data.append(csv_row[index])
+                results.append([csv_row[1], ndisks, njobs, io_depth, *run_data])
+    except ValueError:
+        logging.error("Data format incorrect. Skipping data") 
+    
     return results
 
 
 def group_data(run_data, system_name):
 
-    run_metric = {"1024KiB": "iops", "4KiB": "lat"}
+    run_metric = {"1024KiB": "iops", "4KiB": "lat", "2300KiB": "iops"}
 
     grouped_data = []
     for key, items in groupby(sorted(run_data), key=lambda x: x[0].split("-")):
+
         grouped_data.append([""])
-        grouped_data.append([system_name, key[0], f"{key[1]}-{run_metric[key[1]]}"])
-        grouped_data.append(["iteration_name", f"{run_metric[key[1]]}-{config.OS_RELEASE}"])
+        grouped_data.append(
+            [system_name, key[0], f"{key[1]}-{run_metric[key[1]]}"])
+        grouped_data.append(
+            ["iteration_name", f"{run_metric[key[1]]}-{config.OS_RELEASE}"])
         for item in items:
+            
             row_hash = f"{item[1]}_d-{item[2]}_j-{item[3]}_iod"
-            if "1024KiB" in key[1]:
+            if "1024KiB" in key[1] or "2300KiB" in key[1]:
                 grouped_data.append([row_hash, item[4]])
             elif "4KiB" in key[1]:
                 grouped_data.append([row_hash, item[5]])
-
+    
     return grouped_data
 
 
@@ -89,25 +96,24 @@ def get_system_name_from_url(URL):
     return re.findall(r"instance_(\w+.\w+)_numb", URL)[0]
 
 
-def process_fio_result(URL):
-    system_name = get_system_name_from_url(URL)
+def process_fio_result(URL, system_name):
+    # system_name = get_system_name_from_url(URL)
     page_content = scrape_page(URL)
     results = retreive_data_from_url(URL, page_content)
 
     return group_data(results, system_name)
 
+
 def extract_fio_data(path, system_name):
     results = []
-    
+
     ls_dir = os.listdir(path)
 
     for folder in ls_dir:
-        with open(path +f"/{folder}/result.csv") as csv_file:
-            csv_data =csv_file.readlines()
+        with open(path + f"/{folder}/result_fio.csv") as csv_file:
+            csv_data = csv_file.readlines()
+            csv_data[-1] = csv_data[-1].strip()
+
             results += extract_csv_data(csv_data, folder)
 
     return group_data(results, system_name)
-
-if __name__ == "__main__":
-    URL = "http://pbench.perf.lab.eng.bos.redhat.com/results/EC2::ip-172-31-31-81.us-east-2.compute.internal/user_none_instance_i3en.24xlarge_numb_disks_8_/"
-    process_fio_result(URL)

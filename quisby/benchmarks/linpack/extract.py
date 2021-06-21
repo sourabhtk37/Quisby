@@ -61,7 +61,7 @@ def extract_linpack_data(path, system_name):
     no_of_cores = None
     gflops = None
 
-    summary_file = path + "/summary.csv"
+    summary_file = path
 
     if not os.path.isfile(summary_file):
         return None

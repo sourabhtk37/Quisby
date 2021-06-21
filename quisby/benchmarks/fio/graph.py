@@ -23,7 +23,7 @@ def create_series_range_fio(column_count, sheetId, start_index, end_index):
                         "sources": [
                             {
                                 "sheetId": sheetId,
-                                "startRowIndex": start_index + 2,
+                                "startRowIndex": start_index + 1,
                                 "endRowIndex": end_index,
                                 "startColumnIndex": index + 1,
                                 "endColumnIndex": index + 2,
@@ -51,22 +51,27 @@ def graph_fio_data(spreadsheetId, test_name):
         append_empty_row_sheet(spreadsheetId, 500, test_name)
 
     for index, row in enumerate(data):
-        if row == [] and start_index is None:
-            start_index = index
+        if "iteration_name" in row:
+            start_index = index - 1
             continue
 
-        if start_index is not None:
+        if start_index:
             if index + 1 == len(data):
                 end_index = index + 1
-            elif data[index + 1] == []:
+            elif row == []:
                 end_index = index
 
         if end_index:
             logging.info(
                 f"Creating graph for table index {start_index}-{end_index} in sheet"
             )
-            graph_data = data[start_index:end_index]
-            column_count = len(graph_data[2])
+            try:
+                graph_data = data[start_index:end_index]
+
+                column_count = len(graph_data[2])
+            except IndexError:
+                logging.error(f"{test_name}: Data inconsistency at {start_index}-{end_index}. Skipping to next data")
+                continue
 
             sheetId = get_sheet(spreadsheetId, test_name)["sheets"][0]["properties"][
                 "sheetId"
@@ -76,14 +81,14 @@ def graph_fio_data(spreadsheetId, test_name):
                 "addChart": {
                     "chart": {
                         "spec": {
-                            "title": f"{graph_data[1][2].split('-')[1]}:{graph_data[1][1]} {graph_data[1][2].split('-')[0]}",
-                            "subtitle": f"{graph_data[1][0]} | d:Disks, j:Jobs, iod:IODepth",
+                            "title": f"{graph_data[0][2].split('-')[1]}:{graph_data[0][1]} {graph_data[0][2].split('-')[0]}",
+                            "subtitle": f"{graph_data[0][0]} | d:Disks, j:Jobs, iod:IODepth",
                             "basicChart": {
                                 "chartType": "COLUMN",
                                 "axis": [
                                     {
                                         "position": "LEFT_AXIS",
-                                        "title": "msec",
+                                        "title": "Mb/sec",
                                     },
                                 ],
                                 "domains": [
@@ -93,8 +98,7 @@ def graph_fio_data(spreadsheetId, test_name):
                                                 "sources": [
                                                     {
                                                         "sheetId": sheetId,
-                                                        "startRowIndex": start_index
-                                                        + 2,
+                                                        "startRowIndex": start_index + 1,
                                                         "endRowIndex": end_index + 1,
                                                         "startColumnIndex": 0,
                                                         "endColumnIndex": 1,

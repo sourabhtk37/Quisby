@@ -12,7 +12,7 @@ def create_summary_linpack_data(results):
     header_row = [results[0]]
     results = [row for row in results if row[0] != "System"]
 
-    results.sort(key=lambda x: process_instance(x[0], "family", "version", "feature"))
+    results.sort(key=lambda x: str(process_instance(x[0], "family", "version", "feature")))
 
     for _, items in groupby(results, key=lambda x: process_instance(x[0], "family", "version", "feature")):
         items = list(items)

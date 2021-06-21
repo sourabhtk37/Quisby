@@ -1,16 +1,18 @@
 from itertools import groupby
 
-# TODO: Add support for azure systems
+from quisby.util import mk_int, process_instance
+
 def hammerdb_sort_data_by_system_family(results):
     sorted_result = []
 
-    results.sort(key=lambda x: x[0][1].split(".")[0])
+    results = [list(g) for k, g in groupby(results, key=lambda x: x != [""]) if k]
 
-    # if cloud_type == 'AWS':
-    for _, items in groupby(results, key=lambda x: x[0][1].split(".")[0]):
+    results.sort(key=lambda x: str(process_instance(x[0][1], "family","version","feature")))
+
+    for _, items in groupby(results, key=lambda x: process_instance(x[0][1], "family","version","feature")):
 
         sorted_result.append(
-            sorted(list(items), key=lambda x: int(x[0][1].split(".")[1].split("x")[0]))
+            sorted(list(items), key=lambda x: mk_int(process_instance(x[0][1], "size")))
         )
 
     return sorted_result
