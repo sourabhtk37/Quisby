@@ -8,6 +8,7 @@
 spreadsheetId = ""
 OS_TYPE = ""
 OS_RELEASE = ""
+spreadsheet_name = ""
 
 test_name = ""
 test_path = ""
