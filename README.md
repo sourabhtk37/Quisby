@@ -8,30 +8,33 @@ Bechmarks currently supported:
 
 |   Benchmark   |   Source data  |
 |---|---|
-| Linpack | Benchmark result     |
-| Streams | Summary result |
-| Uperf   | Summary csv result|
-| specjbb | Benchmark result |
-| pig     | Benchmark  result |
-| hammerDB| Benchmark  result |
-| fio     | pbench results      |
+| linpack | Benchmark result     |
+| streams | Summary result       |
+| uperf   | Summary csv result   |
+| specjbb | Benchmark result     |
+| pig     | Benchmark  result    |
+| hammerDB| Benchmark  result    |
+| fio     | pbench result        |
+| autohpl | Summary  result      |
+| aim     | Benchmark  result    |
+| etcd    | pbench  result       |
+| reboot  | Benchmark  result    |
+| speccpu | Benchmark  result    |
 
-#### What it does
+
+### What it does
 
 It extracts data from benchmark results file or summary results produced by wrapper benchmark programs and move that results to Google Sheet via sheets API V4. 
 
 ### Using the tool
 
-#### Clone the repo
+```bash
+#Clone the repo
+git clone git@github.com:sourabhtk37/data-to-sheet.git
 
- `git clone git@github.com:sourabhtk37/data-to-sheet.git`
-
-#### Installation
-
-Run the install script as follows:
-
- `source ./install.sh`
-
+# Installation
+source ./install.sh
+```
 #### config.py 
 
 `config.py` is the only file you need to edit. Sample example have been provided in the file. 
@@ -43,16 +46,20 @@ This is the main driver program that will be called once you have edited `config
 The location file will look like:
 
 ``` 
-
-tests: results_linpack
+test: results_linpack
 </path/to/results>
 ...
-tests:pbench_fio
+test: pbench_fio
 <http url with results>
 ...
 ```
 
- `quisby test_locations`
+```bash
+quisby process --os-type <add-here> --os-release <add-here> --cloud-type <add-here>  location_file`
+```
+For more information on options, run:
+
+    `quisby -h`
 
 *That's it. It will return a google sheet. Visit the google sheet page and you will see a newly created spreadsheet with the data populated and graphed.*
 
@@ -62,8 +69,9 @@ If you want to compare two different OS release of similar system type then ther
 
 and then run:
 
- `quisby compare <benchmark-name> <spreadsheet1,spreadsheet2>`
-
+```bash
+quisby compare --test-name <benchmark-name-(optional)>  --spreadsheets <spreadsheet1,spreadsheet2>
+```
 and it would return a newly created spreadsheet with the comparison data.
 
 ## Contributing
