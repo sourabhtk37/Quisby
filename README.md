@@ -1,4 +1,4 @@
-## Quisby 
+# Quisby 
 
 ###### (Unoffical name) Quisby: An idler; one who does not or will not work. (noun)
 
@@ -26,23 +26,13 @@ Bechmarks currently supported:
 
 It extracts data from benchmark results file or summary results produced by wrapper benchmark programs and move that results to Google Sheet via sheets API V4. 
 
-### Using the tool
-
+## Usage
+Run
 ```bash
-#Clone the repo
-git clone git@github.com:sourabhtk37/data-to-sheet.git
-
-# Installation
-source ./install.sh
+$ pip install quisby
 ```
-#### config.py 
 
-`config.py` is the only file you need to edit. Sample example have been provided in the file. 
-
-#### quisby.py
-
-This is the main driver program that will be called once you have edited `config.py` file accordingly. It takes in an input file with list of location to the test results.
-
+It takes in an input file with list of location to the test results.
 The location file will look like:
 
 ``` 
@@ -54,12 +44,15 @@ test: pbench_fio
 ...
 ```
 
+Then you can run
 ```bash
-quisby process --os-type <add-here> --os-release <add-here> --cloud-type <add-here>  location_file`
+$ quisby process --os-type <add-here> --os-release <add-here> --cloud-type <add-here>  location_file`
 ```
 For more information on options, run:
 
-    `quisby -h`
+```bash
+$ quisby -h
+```
 
 *That's it. It will return a google sheet. Visit the google sheet page and you will see a newly created spreadsheet with the data populated and graphed.*
 
@@ -73,6 +66,23 @@ and then run:
 quisby compare --test-name <benchmark-name-(optional)>  --spreadsheets <spreadsheet1,spreadsheet2>
 ```
 and it would return a newly created spreadsheet with the comparison data.
+
+## Development 
+
+```bash
+#Clone the repo
+git clone git@github.com:sourabhtk37/data-to-sheet.git
+
+# Installation
+source ./install.sh
+(optional, for configuring aws and/or azure cli)
+source ./install -aws -azure
+```
+quisby is now configured for local development, to run it:
+
+```bash
+$ poetry run quisby [options] <location_file>
+```
 
 ## Contributing
 

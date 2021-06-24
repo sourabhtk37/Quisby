@@ -1,29 +1,21 @@
 #! /usr/bin/bash
 
+dev_flag='false'
+
 echo "Checking for python"
 if ! command -v python &>/dev/null; then
     echo "python required. Exiting"
     exit
 fi
 
-while [[ $# -gt 0 ]]; do
-    key="$1"
-
-    case $key in
-    -aws)
-        setup_aws
-        shift
-        ;;
-    -azure)
-        setup_azure
-        shift
-        ;;
-    *)
-        shift
-        ;;
-
-    esac
-done
+usage () {
+  echo -e "\nInstall and configures necessary packages and software required for quisby"
+  echo -e "\n Usage: $0 [-aws] [-azure] [-dev]"
+  echo -e "optional args:"
+  echo -e "\t -aws: setup aws"
+  echo -e "\t -azure: setup azure"
+  echo -e "\t -dev: setup development env"
+}
 
 # Configure aws creds
 setup_aws() {
@@ -51,7 +43,6 @@ setup_aws() {
             fi
         fi
     fi
-
 }
 
 setup_azure() {
@@ -71,35 +62,84 @@ setup_azure() {
 
 }
 
-# TODO: Add a check for virtual env
-echo "Create virtual environment"
-python -m venv venv
-if python -m venv venv; then
-    echo "Virtual environment configured"
-else
-    echo "python venv module not found. Exiting"
-    exit
-fi
-
-echo "Activate virtual env"
-source venv/bin/activate
+# Check for google sheet creds
+setup_gcp_credentials() {
+  
+  if ! command -v gcloud &>/dev/null; then
+    curl -O https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-345.0.0-linux-x86_64.tar.gz
+    tar -xf google-cloud-sdk-345.0.0-linux-x86_64.tar.gz
+    ./google-cloud-sdk/install.sh
+    rm -rf google-cloud-sdk-345.0.0-linux-x86_64.tar.gz google-cloud-sdk/
+  else
+    if [ ! -f ~/.config/gcloud/application_default_credentials.json ]; then
+      gcloud init
+      if gcloud auth application-default login; then
+        echo "credentials configured"
+      else
+        echo "Google sheet credentials file not found!"
+        echo "Visit the URL: https://console.cloud.google.com/apis/credentials"
+        echo "Click on 'Create credentials' -> 'OAuth client ID' -> Provide name and select 'Desktop app' as application type"
+        echo "Download the 'credentials.json' from credentials page to the working directory"
+      fi
+    fi
+  fi
+}
 
 # Install dependencies
-if ! command -v pip &>/dev/null; then
-    echo "Pip not found. Try installing pip"
-else
+setup_development_env() {
+  setup_gcp_credentials
+
+  if ! command -v pip &>/dev/null; then
+      echo "Pip not found. Try installing pip"
+      exit
+  else
+    if ! command -v poetry &>/dev/null; then
+      curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
+      
+    fi
+  fi
+  if poetry install; then
+    echo "Dependencies installed via poetry"
+  else
     pip install -r requirements.txt
-    echo "Installed dependencies"
-fi
+  fi
+  echo -e "\n\nQuisby successfully configure. You can now invoke 'poetry quisby [OPTIONS] <test location file>'"
+}
 
-# Run setup.py to install the project
-python setup.py install
+install_quisby_package() {
+  setup_gcp_credentials
+  pip install quisby
 
-echo -e "\n\nQuisby successfully configure. You can now invoke 'quisby <test location file>'"
+  echo -e "\n\nQuisby successfully configure. You can now invoke 'quisby [OPTIONS] <test location file>'"
+}
 
-# Check for google sheet creds
-if [ ! -f credentials.json ]; then
-    echo "Google sheet credentials file not found!"
-    echo "Visit the URL and click on 'Enable the Google Sheet API' button: https://developers.google.com/sheets/api/quickstart/python"
-    echo "Provide a Project name and save the 'credentials.json' file in the working directory of this project"
+while [[ $# -gt 0 ]]; do
+    key="$1"
+
+    case $key in
+    -aws)
+        setup_aws
+        shift
+        ;;
+    -azure)
+        setup_azure
+        shift
+        ;;
+    -dev)
+        dev_flag='true'
+        setup_development_env
+        shift
+        ;;
+    -h)
+        usage
+        shift
+        ;;
+    *)
+        shift
+        ;;
+    esac
+done
+
+if [ "$dev_flag" == "false" ]; then
+  install_quisby_package
 fi
