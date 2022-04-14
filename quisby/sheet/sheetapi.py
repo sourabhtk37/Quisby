@@ -1,8 +1,9 @@
 from googleapiclient.discovery import build
+from google.oauth2 import service_account
 
-from quisby.credentials.creds import authenticate_creds
+SCOPES=['https://www.googleapis.com/auth/spreadsheets']
+SERVICE_ACCOUNT_FILE = 'credentials.json'
 
-
-creds = authenticate_creds()
+creds = service_account.Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
 service = build("sheets", "v4", credentials=creds)
 sheet = service.spreadsheets()
