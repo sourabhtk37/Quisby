@@ -67,7 +67,7 @@ logging.basicConfig(level=logging.INFO)
 
 def check_test_is_hammerdb(test_name):
 
-    if test_name in ["postgres", "maria", "mssql"]:
+    if test_name in ["hammerdb_pg", "hammerdb_maria", "hammerdb_mssql"]:
         return True
     else:
         return False
@@ -166,13 +166,6 @@ def data_handler(args):
                             results += ret_val
 
                     elif check_test_is_hammerdb(test_name):
-
-                        # prefix_path = f"rhel_{config.OS_RELEASE}/" f"{data}/"
-                        # path_list = glob.glob(f"{prefix_path}test_*.out")
-
-                        # results.append(
-                        #     extract_hammerdb_data(path_list, system_name, test_name)
-                        # )
                         ret_val = extract_hammerdb_data(
                             path, system_name, test_name)
                         if ret_val:
