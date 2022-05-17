@@ -37,9 +37,13 @@ def create_spreadsheet(spreadsheet_name, test_name):
     return spreadsheetId
 
 
-def get_sheet(spreadsheetId, range="A:Z"):
+def get_sheet(spreadsheetId, test_name,range="!a:z"):
 
-    return sheet.get(spreadsheetId=spreadsheetId).execute()
+    if test_name== []:
+        #create sheet
+        return sheet.get(spreadsheetId=spreadsheetId).execute()
+    else:
+        return sheet.get(spreadsheetId=spreadsheetId,ranges=test_name+range).execute()
 
 
 def create_sheet(spreadsheetId, test_name):

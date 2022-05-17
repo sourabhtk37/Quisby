@@ -73,9 +73,8 @@ def check_test_is_hammerdb(test_name):
         return False
 
 
-def process_results(results):
+def process_results(results,test_name):
     """"""
-    global test_name
 
     spreadsheet_name = f"{config.cloud_type}-{config.OS_TYPE}-{config.OS_RELEASE}-{config.spreadsheet_name}"
     # TODO: remove if check
@@ -121,7 +120,7 @@ def data_handler(args):
         for data in test_result_path:
             if "test " in data:
                 if results:
-                    results = process_results(results)
+                    results = process_results(results,test_name)
                 test_name = data.replace("test ","").replace("results_","").replace(".csv","").strip()
                 source = data.split()[-1].split("_")[0].strip()
             elif "new_series" in data:
@@ -218,7 +217,7 @@ def data_handler(args):
                     logging.error(str(exc))
                     continue
         try:
-            results = process_results(results)
+            results = process_results(results,test_name)
         except Exception as exc:
             logging.error(str(exc))
 
