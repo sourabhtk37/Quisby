@@ -144,9 +144,10 @@ def data_handler(args):
 
                     # TODO: support url fetching
                     elif test_name == "uperf":
-                        ret_val = extract_uperf_data(path, system_name)
-                        if ret_val:
-                            results += ret_val
+                        # ret_val = extract_uperf_data(path, system_name)
+                        # if ret_val:
+                        #     results += ret_val
+                        pass
 
                     elif test_name == "linpack":
 
