@@ -41,9 +41,9 @@ from quisby.benchmarks.hammerdb.extract import extract_hammerdb_data
 from quisby.benchmarks.hammerdb.summary import create_summary_hammerdb_data
 from quisby.benchmarks.hammerdb.graph import graph_hammerdb_data
 from quisby.benchmarks.hammerdb.comparison import compare_hammerdb_results
-from quisby.benchmarks.fio.fio import process_fio_result, extract_fio_data
-from quisby.benchmarks.fio.summary import create_summary_fio_run_data
-from quisby.benchmarks.fio.graph import graph_fio_run_data
+#from quisby.benchmarks.fio.fio import process_fio_result, extract_fio_data
+#from quisby.benchmarks.fio.summary import create_summary_fio_run_data
+#from quisby.benchmarks.fio.graph import graph_fio_run_data
 from quisby.benchmarks.fio.comparison import compare_fio_results
 from quisby.benchmarks.reboot.reboot import extract_boot_data
 from quisby.benchmarks.reboot.summary import create_summary_boot_data
@@ -172,13 +172,14 @@ def data_handler(args):
                             results += ret_val
 
                     elif test_name == "fio_run":
-                        ret_val=None
-                        if source == "results":
-                             ret_val = extract_fio_data(path, system_name)
-                        elif source == "pbench":
-                             ret_val = process_fio_result(path, system_name)
-                        if ret_val:
-                             results += ret_val
+                        # ret_val=None
+                        # if source == "results":
+                        #      ret_val = extract_fio_data(path, system_name)
+                        # elif source == "pbench":
+                        #      ret_val = process_fio_result(path, system_name)
+                        # if ret_val:
+                        #      results += ret_val
+                        pass
 
                     elif test_name == "boot":
                         ret_val = extract_boot_data(path, system_name)
@@ -207,12 +208,13 @@ def data_handler(args):
                         continue
 
                 except ValueError as exc:
-                    logging.error(str(exc))
+                    #logging.error(str(exc))
                     continue
         try:
             results = process_results(results,test_name)
         except Exception as exc:
-            logging.error(str(exc))
+            #logging.error(str(exc))
+            pass
 
         print(f"https://docs.google.com/spreadsheets/d/{config.spreadsheetId}")
 

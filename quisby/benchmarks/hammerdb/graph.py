@@ -135,3 +135,4 @@ def graph_hammerdb_data(spreadsheetId, range):
 
             # Reset variables
             start_index, end_index = 0, 0
+            time.sleep(1)
