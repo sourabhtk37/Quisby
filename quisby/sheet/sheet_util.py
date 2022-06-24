@@ -37,9 +37,13 @@ def create_spreadsheet(spreadsheet_name, test_name):
     return spreadsheetId
 
 
-def get_sheet(spreadsheetId, range="A:F"):
+def get_sheet(spreadsheetId, test_name,range="!a:z"):
 
-    return sheet.get(spreadsheetId=spreadsheetId, ranges=range).execute()
+    if test_name== []:
+        #create sheet
+        return sheet.get(spreadsheetId=spreadsheetId).execute()
+    else:
+        return sheet.get(spreadsheetId=spreadsheetId,ranges=test_name+range).execute()
 
 
 def create_sheet(spreadsheetId, test_name):
@@ -73,11 +77,11 @@ def create_sheet(spreadsheetId, test_name):
         sheet.batchUpdate(spreadsheetId=spreadsheetId, body=body).execute()
 
 
-def read_sheet(spreadsheet_Id, range="A:F"):
-    """"""
-    result = sheet.values().get(spreadsheetId=spreadsheet_Id, range=range).execute()
-    values = result.get("values", [])
-
+def read_sheet(spreadsheet_Id, range="A:Z"):
+    # TODO : check for the previous api
+    request=sheet.values().batchGet(spreadsheetId=spreadsheet_Id, ranges=range)
+    result=request.execute()
+    values = result.get("valueRanges", [])[0].get('values',[])
     return values
 
 
@@ -99,7 +103,7 @@ def append_to_sheet(spreadsheet_Id, results, range="A:F"):
     return response
 
 
-def apply_named_range(spreadsheetId, name, range="A:F"):
+def apply_named_range(spreadsheetId, name, range="A:Z"):
 
     sheetId = get_sheet(spreadsheetId, range)["sheets"][0]["properties"]["sheetId"]
 
@@ -134,7 +138,7 @@ def apply_named_range(spreadsheetId, name, range="A:F"):
     print(response)
 
 
-def clear_sheet_data(spreadsheetId, range="A2:Z1000"):
+def clear_sheet_data(spreadsheetId, range="A1:Z1000"):
     # Clear values
     sheet.values().clear(spreadsheetId=spreadsheetId, range=range, body={}).execute()
 
