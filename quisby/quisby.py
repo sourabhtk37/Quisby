@@ -76,16 +76,21 @@ def check_test_is_hammerdb(test_name):
 def process_results(results,test_name):
     """"""
 
+
+
     spreadsheet_name = f"{config.cloud_type}-{config.OS_TYPE}-{config.OS_RELEASE}-{config.spreadsheet_name}"
+
+    if not config.spreadsheetId:
+        config.spreadsheetId = create_spreadsheet(
+            spreadsheet_name, test_name)
+
+
     # TODO: remove if check
     if check_test_is_hammerdb(test_name):
         results = create_summary_hammerdb_data(results)
     else:
         results = globals()[f"create_summary_{test_name}_data"](results)
 
-    if not config.spreadsheetId:
-        config.spreadsheetId = create_spreadsheet(
-            spreadsheet_name, test_name)
     create_sheet(config.spreadsheetId, test_name)
     append_to_sheet(config.spreadsheetId, results, test_name)
     # Graphing up data
@@ -232,14 +237,13 @@ def compare_results(args):
     for spreadsheet in spreadsheets:
         sheet_names = []
 
-        sheets = get_sheet(spreadsheet, range=test_name)
-        spreadsheet_name.append(get_sheet(spreadsheet, range=[])[
-                                "properties"]["title"])
+        sheets = get_sheet(spreadsheet, test_name=test_name)
+        spreadsheet_name.append(get_sheet(spreadsheet, test_name=[])[
+                                "properties"]["title"].strip())
 
         for sheet in sheets.get("sheets"):
-            sheet_names.append(sheet["properties"]["title"])
+            sheet_names.append(sheet["properties"]["title"].strip())
         sheet_list.append(sheet_names)
-
     if test_name:
         comparison_list = test_name
     else:
