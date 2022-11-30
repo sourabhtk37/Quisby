@@ -75,15 +75,11 @@ def check_test_is_hammerdb(test_name):
 
 def process_results(results,test_name):
     """"""
-
-
-
     spreadsheet_name = f"{config.cloud_type}-{config.OS_TYPE}-{config.OS_RELEASE}-{config.spreadsheet_name}"
 
     if not config.spreadsheetId:
         config.spreadsheetId = create_spreadsheet(
             spreadsheet_name, test_name)
-
 
     # TODO: remove if check
     if check_test_is_hammerdb(test_name):
@@ -130,7 +126,6 @@ def data_handler(args):
                 source = data.split()[-1].split("_")[0].strip()
             elif "new_series" in data:
                 continue
-
             else:
                 try:
                     if test_name == "fio_run":
@@ -140,43 +135,33 @@ def data_handler(args):
                     else:
                         data = data.strip("\n").strip("'")
                         path, system_name = data.split(",")
-
                     path = config.test_path+"/"+path.strip()
                     if test_name == "streams":
                         ret_val = extract_streams_data(path, system_name)
                         if ret_val:
                             results += ret_val
-
                     # TODO: support url fetching
                     elif test_name == "uperf":
                         # ret_val = extract_uperf_data(path, system_name)
                         # if ret_val:
                         #     results += ret_val
                         pass
-
                     elif test_name == "linpack":
-
                         ret_val = extract_linpack_data(path, system_name)
                         if ret_val:
                             results += ret_val
-
                     # TODO: support url fetching
                     elif test_name == "specjbb":
-
                         results.append(extract_specjbb_data(path, system_name))
-
                     elif test_name == "pig":
-
                         ret_val = extract_pig_data(path, system_name)
                         if ret_val:
                             results += ret_val
-
                     elif check_test_is_hammerdb(test_name):
                         ret_val = extract_hammerdb_data(
                             path, system_name, test_name)
                         if ret_val:
                             results += ret_val
-
                     elif test_name == "fio_run":
                         # ret_val=None
                         # if source == "results":
@@ -186,22 +171,18 @@ def data_handler(args):
                         # if ret_val:
                         #      results += ret_val
                         pass
-
                     elif test_name == "boot":
                         ret_val = extract_boot_data(path, system_name)
                         if ret_val:
                             results += ret_val
-
                     elif test_name == "aim":
                         ret_val = extract_aim_data(path, system_name)
                         if ret_val:
                             results += ret_val
-
                     elif test_name == "autohpl":
                         ret_val = extract_autohpl_data(path, system_name)
                         if ret_val:
                             results += ret_val
-
                     elif test_name == "speccpu":
                         ret_val = extract_speccpu_data(path, system_name)
                         if ret_val:
@@ -221,7 +202,6 @@ def data_handler(args):
         except Exception as exc:
             #logging.error(str(exc))
             pass
-
         print(f"https://docs.google.com/spreadsheets/d/{config.spreadsheetId}")
 
 
