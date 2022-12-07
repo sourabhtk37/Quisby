@@ -8,10 +8,10 @@ from quisby.sheet.sheet_util import (
     create_sheet
 )
 from quisby.util import combine_two_array_alternating
-from quisby.benchmarks.fio.graph import graph_fio_data
+from quisby.benchmarks.fio.graph import graph_fio_run_data
 
 
-def compare_fio_results(spreadsheets, spreadsheetId, test_name="fio"):
+def compare_fio_run_results(spreadsheets, spreadsheetId, test_name="fio"):
     spreadsheet_name = []
     values = []
     results = []
@@ -35,5 +35,5 @@ def compare_fio_results(spreadsheets, spreadsheetId, test_name="fio"):
 
     create_sheet(spreadsheetId, test_name)
     append_to_sheet(spreadsheetId, results, test_name)
-    graph_fio_data(spreadsheetId, test_name)
+    graph_fio_run_data(spreadsheetId, test_name)
 

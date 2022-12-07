@@ -1,9 +1,9 @@
 import os
 
-from quisby.benchmarks.fio.fio import extract_fio_data, extract_csv_data, group_data
-from quisby.benchmarks.fio.summary import create_summary_fio_data
-from quisby.benchmarks.fio.graph import graph_fio_data
-from quisby.benchmarks.fio.comparison import compare_fio_results
+from quisby.benchmarks.fio.fio import extract_fio_run_data, extract_csv_data, group_data
+from quisby.benchmarks.fio.summary import create_summary_fio_run_data
+from quisby.benchmarks.fio.graph import graph_fio_run_data
+from quisby.benchmarks.fio.comparison import compare_fio_run_results
 
 
 def extract_etcd_data(path, system_name):
@@ -22,12 +22,12 @@ def extract_etcd_data(path, system_name):
 
 
 def create_summary_etcd_data(results):
-    return create_summary_fio_data(results)
+    return create_summary_fio_run_data(results)
 
 
 def graph_etcd_data(spreadsheetId, test_name):
-    return graph_fio_data(spreadsheetId, test_name)
+    return graph_fio_run_data(spreadsheetId, test_name)
 
 
 def compare_etcd_results(spreadsheets, spreadsheetId, test_name):
-    return compare_fio_results(spreadsheets, spreadsheetId, test_name)
+    return compare_fio_run_results(spreadsheets, spreadsheetId, test_name)

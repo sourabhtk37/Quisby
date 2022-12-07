@@ -41,10 +41,10 @@ from quisby.benchmarks.hammerdb.extract import extract_hammerdb_data
 from quisby.benchmarks.hammerdb.summary import create_summary_hammerdb_data
 from quisby.benchmarks.hammerdb.graph import graph_hammerdb_data
 from quisby.benchmarks.hammerdb.comparison import compare_hammerdb_results
-#from quisby.benchmarks.fio.fio import process_fio_result, extract_fio_data
-#from quisby.benchmarks.fio.summary import create_summary_fio_run_data
-#from quisby.benchmarks.fio.graph import graph_fio_run_data
-from quisby.benchmarks.fio.comparison import compare_fio_results
+from quisby.benchmarks.fio.fio import process_fio_run_result, extract_fio_run_data
+from quisby.benchmarks.fio.summary import create_summary_fio_run_data
+from quisby.benchmarks.fio.graph import graph_fio_run_data
+from quisby.benchmarks.fio.comparison import compare_fio_run_results
 from quisby.benchmarks.reboot.reboot import extract_boot_data
 from quisby.benchmarks.reboot.summary import create_summary_boot_data
 from quisby.benchmarks.reboot.graph import graph_boot_data
@@ -82,19 +82,31 @@ def process_results(results,test_name):
             spreadsheet_name, test_name)
 
     # TODO: remove if check
-    if check_test_is_hammerdb(test_name):
-        results = create_summary_hammerdb_data(results)
-    else:
-        results = globals()[f"create_summary_{test_name}_data"](results)
-
-    create_sheet(config.spreadsheetId, test_name)
-    append_to_sheet(config.spreadsheetId, results, test_name)
+    try:
+        if check_test_is_hammerdb(test_name):
+            results = create_summary_hammerdb_data(results)
+        else:
+            results = globals()[f"create_summary_{test_name}_data"](results)
+    except Exception as exc:
+        logging.error("Error summarising "+str(test_name)+" data")
+        return
+    try:
+        create_sheet(config.spreadsheetId, test_name)
+        append_to_sheet(config.spreadsheetId, results, test_name)
+    except Exception as exc:
+        logging.error("Error appending "+str(test_name)+" data to sheet")
+        return
     # Graphing up data
-    if check_test_is_hammerdb(test_name):
-        graph_hammerdb_data(config.spreadsheetId, test_name)
-    else:
-        globals()[f"graph_{test_name}_data"](
-            config.spreadsheetId, test_name)
+    try:
+        if check_test_is_hammerdb(test_name):
+            graph_hammerdb_data(config.spreadsheetId, test_name)
+        else:
+            globals()[f"graph_{test_name}_data"](
+                config.spreadsheetId, test_name)
+    except Exception as exc:
+        logging.error("Error graphing "+str(test_name)+" data")
+        return
+
     return []
 
 
@@ -131,7 +143,7 @@ def data_handler(args):
                     if test_name == "fio_run":
                         data = data.strip("\n").strip("'").strip()
                         path,system_name=(data.split(",")[0]+","+data.split(",")[1]),data.split(",")[-1]
-                        path=path.replace(os.path.basename(path),"")
+                        path=path.replace("/"+os.path.basename(path),"")
                     else:
                         data = data.strip("\n").strip("'")
                         path, system_name = data.split(",")
@@ -142,17 +154,19 @@ def data_handler(args):
                             results += ret_val
                     # TODO: support url fetching
                     elif test_name == "uperf":
-                        # ret_val = extract_uperf_data(path, system_name)
-                        # if ret_val:
-                        #     results += ret_val
-                        pass
+                        ret_val = extract_uperf_data(path, system_name)
+                        if ret_val:
+                            results += ret_val
+
                     elif test_name == "linpack":
                         ret_val = extract_linpack_data(path, system_name)
                         if ret_val:
                             results += ret_val
                     # TODO: support url fetching
                     elif test_name == "specjbb":
-                        results.append(extract_specjbb_data(path, system_name))
+                        ret_value = extract_specjbb_data(path, system_name)
+                        if ret_value != None:
+                            results.append(ret_value)
                     elif test_name == "pig":
                         ret_val = extract_pig_data(path, system_name)
                         if ret_val:
@@ -163,13 +177,13 @@ def data_handler(args):
                         if ret_val:
                             results += ret_val
                     elif test_name == "fio_run":
-                        # ret_val=None
-                        # if source == "results":
-                        #      ret_val = extract_fio_data(path, system_name)
-                        # elif source == "pbench":
-                        #      ret_val = process_fio_result(path, system_name)
-                        # if ret_val:
-                        #      results += ret_val
+                        ret_val=None
+                        if source == "results":
+                             ret_val = extract_fio_run_data(path, system_name)
+                        elif source == "pbench":
+                             ret_val = process_fio_run_result(path, system_name)
+                        if ret_val:
+                             results += ret_val
                         pass
                     elif test_name == "boot":
                         ret_val = extract_boot_data(path, system_name)
@@ -195,12 +209,12 @@ def data_handler(args):
                         continue
 
                 except ValueError as exc:
-                    #logging.error(str(exc))
+                    logging.error(str(exc))
                     continue
         try:
             results = process_results(results,test_name)
         except Exception as exc:
-            #logging.error(str(exc))
+            logging.error(str(exc))
             pass
         print(f"https://docs.google.com/spreadsheets/d/{config.spreadsheetId}")
 

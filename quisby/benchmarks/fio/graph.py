@@ -38,7 +38,7 @@ def create_series_range_fio(column_count, sheetId, start_index, end_index):
     return series
 
 
-def graph_fio_data(spreadsheetId, test_name):
+def graph_fio_run_data(spreadsheetId, test_name):
     """"""
     GRAPH_COL_INDEX = 5
     GRAPH_ROW_INDEX = 1

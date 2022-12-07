@@ -1,4 +1,5 @@
 import csv
+import logging
 from itertools import groupby
 
 import quisby.config as config
@@ -23,11 +24,14 @@ def specjbb_sort_data_by_system_family(results):
 
 
 def calc_peak_throughput_peak_efficiency(data):
-    cost_per_hour = get_cloud_pricing(
-        data[1][0], config.region, config.cloud_type.lower())
-    peak_throughput = max(data[3:], key=lambda x: int(x[1]))[1]
-    peak_efficiency = float(peak_throughput) / float(cost_per_hour)
-
+    cost_per_hour, peak_throughput, peak_efficiency = None, None, None
+    try:
+        cost_per_hour = get_cloud_pricing(
+            data[1][0], config.region, config.cloud_type.lower())
+        peak_throughput = max(data[3:], key=lambda x: int(x[1]))[1]
+        peak_efficiency = float(peak_throughput) / float(cost_per_hour)
+    except Exception as exc:
+        logging.ERROR("Error calculating value !")
     return peak_throughput, cost_per_hour, peak_efficiency
 
 
@@ -44,7 +48,7 @@ def create_summary_specjbb_data(specjbb_data):
             results += item
             try:
                 pt, cph, pe = calc_peak_throughput_peak_efficiency(item)
-            except ValueError:
+            except Exception as exc:
                 break
             peak_throughput.append([item[1][0], pt])
             cost_per_hour.append([item[1][0], cph])
@@ -68,8 +72,11 @@ def extract_specjbb_data(path, system_name):
     results = [[""], [system_name]]
 
     # File read
-    with open(path) as csv_file:
-        specjbb_results = list(csv.DictReader(csv_file, delimiter=":"))
+    try:
+        with open(path) as csv_file:
+            specjbb_results = list(csv.DictReader(csv_file, delimiter=":"))
+    except Exception as exc:
+        return None
 
     # Find position of SPEC Scores
     # start_index, end_index = 0, 0
@@ -84,7 +91,10 @@ def extract_specjbb_data(path, system_name):
     #             break
     results.append(["Warehouses", f"Thrput-{config.OS_RELEASE}"])
     for data_dict in specjbb_results[1:]:
-        results.append([data_dict["Warehouses"], data_dict["Bops"]])
+        if data_dict["Warehouses"] == "Warehouses" or data_dict["Bops"] == "Bops":
+            pass
+        else:
+            results.append([data_dict["Warehouses"], data_dict["Bops"]])
     # # Extract data and convert to a list
     # for row in specjbb_results[start_index:end_index]:
     #     row = row.strip(" ").strip("*").strip(" ").strip("\n").split(" ")

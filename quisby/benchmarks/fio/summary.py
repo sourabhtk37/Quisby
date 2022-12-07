@@ -4,7 +4,7 @@ import quisby.config as config
 from quisby.util import mk_int, process_instance
 
 
-def fio_sort_data(results):
+def fio_run_sort_data(results):
     sorted_result = []
     # group data
     results = [list(g) for k, g in groupby(
@@ -25,11 +25,11 @@ def fio_sort_data(results):
     return sorted_result
 
 
-def create_summary_fio_data(results):
+def create_summary_fio_run_data(results):
     summary_results = []
     run_metric = {"1024KiB": "iops", "4KiB": "lat", "2300KiB": "iops"}
 
-    results = fio_sort_data(results)
+    results = fio_sort_run_data(results)
 
     for header, items in groupby(
         results, key=lambda x: (process_instance(
