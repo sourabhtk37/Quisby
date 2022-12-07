@@ -97,6 +97,7 @@ def extract_streams_data(path, system_name):
     proccessed_data = []
     length = len(streams_results)
     pos = 7
+    memory=""
     if not streams_results:
         return None
     for i in range(0, length):
