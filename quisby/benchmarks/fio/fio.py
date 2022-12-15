@@ -96,7 +96,7 @@ def get_system_name_from_url(URL):
     return re.findall(r"instance_(\w+.\w+)_numb", URL)[0]
 
 
-def process_fio_result(URL, system_name):
+def process_fio_run_result(URL, system_name):
     # system_name = get_system_name_from_url(URL)
     page_content = scrape_page(URL)
     results = retreive_data_from_url(URL, page_content)
@@ -104,16 +104,15 @@ def process_fio_result(URL, system_name):
     return group_data(results, system_name)
 
 
-def extract_fio_data(path, system_name):
+def extract_fio_run_data(path, system_name):
     results = []
 
     ls_dir = os.listdir(path)
 
-    for folder in ls_dir:
-        with open(path + f"/{folder}/result_fio.csv") as csv_file:
-            csv_data = csv_file.readlines()
-            csv_data[-1] = csv_data[-1].strip()
+    with open(path + "/result.csv") as csv_file:
+        csv_data = csv_file.readlines()
+        csv_data[-1] = csv_data[-1].strip()
 
-            results += extract_csv_data(csv_data, folder)
+        results += extract_csv_data(csv_data, os.path.basename(path))
 
     return group_data(results, system_name)

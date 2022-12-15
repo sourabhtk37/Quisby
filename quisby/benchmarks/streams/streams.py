@@ -91,15 +91,21 @@ def extract_streams_data(path, system_name):
             data_index = index
         streams_results[index] = data.strip("\n").split(":")
 
-    streams_results = sorted(streams_results[data_index + 1 :], key=lambda x: x[2])
+    # streams_results = sorted(streams_results[data_index + 1 :], key=lambda x: x[2])
 
     socket_number = ""
     proccessed_data = []
+    length = len(streams_results)
+    pos = 7
+    memory=""
     if not streams_results:
         return None
-    for row in streams_results:
-        if socket_number != row[2]:
-            socket_number = row[2]
+    for i in range(0, length):
+        row = streams_results[i]
+        if "memory" in row[0]:
+            memory = row[0].split(" ")[-1]
+        elif " Socket" in row[0] and "% Socket" not in row[0]:
+            socket_number = row[0].split(" ")[0]
             proccessed_data += (
                 [""],
                 [f"{socket_number} socket"],
@@ -109,15 +115,22 @@ def extract_streams_data(path, system_name):
                 ["add"],
                 ["triad"],
             )
+            pos = len(proccessed_data)
+        elif row == [""]:
+            pass
+        elif row[0] in ("Copy", "Scale", "Add", "Triad"):
 
-        pos = len(proccessed_data)
-        data_pos = len(row)
-
-        proccessed_data[pos - 5].append(row[0] + "-" + config.OS_RELEASE)
-
-        for index in range(1, 5):
-            proccessed_data[pos - index].append(row[data_pos - index])
-
+            if row[0] == "Copy":
+                data_pos = pos - 4
+            if row[0] == "Scale":
+                data_pos = pos - 3
+            if row[0] == "Add":
+                data_pos = pos - 2
+            if row[0] == "Triad":
+                data_pos = pos - 1
+            proccessed_data[pos - 5].append(memory + "-" + config.OS_RELEASE)
+            proccessed_data[data_pos].extend(row[1:])
+    print(proccessed_data)
     return proccessed_data
 
 

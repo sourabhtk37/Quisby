@@ -18,4 +18,6 @@ region = "us-east-1"
 cloud_type = "aws"
 
 specjbb_java_version = "java-11-openjdk"
+
+users=[""]
 # ================================
