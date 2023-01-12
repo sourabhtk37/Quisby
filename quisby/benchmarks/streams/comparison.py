@@ -1,6 +1,5 @@
 from itertools import groupby
 
-import quisby.config as config
 from quisby.sheet.sheet_util import (
     create_spreadsheet,
     append_to_sheet,

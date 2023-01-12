@@ -6,7 +6,6 @@ from itertools import groupby
 import requests
 from bs4 import BeautifulSoup
 
-import quisby.config as config
 
 # TODO: Maybe we can do away with clat, lat, slat
 HEADER_TO_EXTRACT = [
@@ -42,7 +41,7 @@ def extract_csv_data(csv_data, path):
     return results
 
 
-def group_data(run_data, system_name):
+def group_data(run_data, system_name,OS_RELEASE):
 
     run_metric = {"1024KiB": "iops", "4KiB": "lat", "2300KiB": "iops"}
 
@@ -53,7 +52,7 @@ def group_data(run_data, system_name):
         grouped_data.append(
             [system_name, key[0], f"{key[1]}-{run_metric[key[1]]}"])
         grouped_data.append(
-            ["iteration_name", f"{run_metric[key[1]]}-{config.OS_RELEASE}"])
+            ["iteration_name", f"{run_metric[key[1]]}-{OS_RELEASE}"])
         for item in items:
             
             row_hash = f"{item[1]}_d-{item[2]}_j-{item[3]}_iod"
@@ -104,7 +103,7 @@ def process_fio_run_result(URL, system_name):
     return group_data(results, system_name)
 
 
-def extract_fio_run_data(path, system_name):
+def extract_fio_run_data(path, system_name,OS_RELEASE):
     results = []
 
     ls_dir = os.listdir(path)
@@ -115,4 +114,4 @@ def extract_fio_run_data(path, system_name):
 
         results += extract_csv_data(csv_data, os.path.basename(path))
 
-    return group_data(results, system_name)
+    return group_data(results, system_name,OS_RELEASE)

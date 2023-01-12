@@ -1,9 +1,6 @@
 import glob
 import csv
 
-import quisby.config as config
-
-
 # def process_speccpu(path, system_name, suite):
 #     results = []
 #     suite_path = glob.glob(f"{path}/*{suite}.refrate.results.csv")[0]
@@ -33,7 +30,7 @@ import quisby.config as config
 
 #     return results
 
-def process_speccpu(path, system_name, suite):
+def process_speccpu(path, system_name, suite,OS_RELEASE):
     results = []
     suite_path = glob.glob(f"{path}/*{suite}.refrate.results.csv")[0]
 
@@ -42,17 +39,17 @@ def process_speccpu(path, system_name, suite):
 
     results.append([""])
     results.append([system_name, suite])
-    results.append(["Benchmark", f"Base_Rate-{config.OS_RELEASE}"])
+    results.append(["Benchmark", f"Base_Rate-{OS_RELEASE}"])
     for data_row in speccpu_results:
         results.append([data_row['Benchmarks'], data_row['Base Rate']])
     print(results)
     return results
     
 
-def extract_speccpu_data(path, system_name):
+def extract_speccpu_data(path, system_name,OS_RELEASE):
     results = []
 
     for suite in ["fprate", "intrate"]:
-        results += process_speccpu(path, system_name, suite)
+        results += process_speccpu(path, system_name, suite,OS_RELEASE)
 
     return results
