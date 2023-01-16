@@ -5,8 +5,6 @@ import argparse
 import fileinput
 import time
 import logging
-
-import quisby.config as config
 from quisby.sheet.sheetapi import sheet
 from quisby.sheet.sheet_util import (
     get_sheet,
@@ -60,7 +58,7 @@ from quisby.benchmarks.speccpu.graph import graph_speccpu_data
 from quisby.benchmarks.speccpu.comparison import compare_speccpu_results
 from quisby.benchmarks.etcd.etcd import (
     extract_etcd_data, create_summary_etcd_data, graph_etcd_data, compare_etcd_results)
-
+from quisby.util import read_config,write_config
 
 logging.basicConfig(level=logging.INFO)
 
@@ -73,12 +71,13 @@ def check_test_is_hammerdb(test_name):
         return False
 
 
-def process_results(results,test_name):
-    """"""
-    spreadsheet_name = f"{config.cloud_type}-{config.OS_TYPE}-{config.OS_RELEASE}-{config.spreadsheet_name}"
+def process_results(results,test_name,cloud_type,OS_TYPE,OS_RELEASE,spreadsheet_name,spreadsheetId):
 
-    if not config.spreadsheetId:
-        config.spreadsheetId = create_spreadsheet(
+    """"""
+    spreadsheet_name = f"{cloud_type}-{OS_TYPE}-{OS_RELEASE}-{spreadsheet_name}"
+
+    if not spreadsheetId:
+        spreadsheetId = create_spreadsheet(
             spreadsheet_name, test_name)
 
     # TODO: remove if check
@@ -86,23 +85,24 @@ def process_results(results,test_name):
         if check_test_is_hammerdb(test_name):
             results = create_summary_hammerdb_data(results)
         else:
-            results = globals()[f"create_summary_{test_name}_data"](results)
+            results = globals()[f"create_summary_{test_name}_data"](results,OS_RELEASE)
     except Exception as exc:
         logging.error("Error summarising "+str(test_name)+" data")
+        print(str(exc))
         return
     try:
-        create_sheet(config.spreadsheetId, test_name)
-        append_to_sheet(config.spreadsheetId, results, test_name)
+        create_sheet(spreadsheetId, test_name)
+        append_to_sheet(spreadsheetId, results, test_name)
     except Exception as exc:
         logging.error("Error appending "+str(test_name)+" data to sheet")
         return
     # Graphing up data
     try:
         if check_test_is_hammerdb(test_name):
-            graph_hammerdb_data(config.spreadsheetId, test_name)
+            graph_hammerdb_data(spreadsheetId, test_name)
         else:
             globals()[f"graph_{test_name}_data"](
-                config.spreadsheetId, test_name)
+                spreadsheetId, test_name)
     except Exception as exc:
         logging.error("Error graphing "+str(test_name)+" data")
         return
@@ -111,29 +111,32 @@ def process_results(results,test_name):
 
 
 # TODO: simplify functions once data location is exact
-def data_handler(args):
+def data_handler():
     """"""
     global test_name
     global source
     global count
     results = []
-    config.OS_TYPE = args.os_type
-    config.OS_RELEASE = args.os_release
-    config.cloud_type = args.cloud_type
-    path = args.location_file
+    cloud_type = read_config('cloud', 'cloud_type')
+    OS_TYPE = read_config('test', 'OS_TYPE')
+    OS_RELEASE = read_config('test', 'OS_RELEASE')
+    spreadsheet_name = read_config('spreadsheet', 'spreadsheet_name')
+    spreadsheetId = read_config('spreadsheet', 'spreadsheetId')
+    test_path = read_config('test','test_path')
+    results_path = read_config('test','results_location')
 
     # Strip empty lines from location file
-    for line in fileinput.FileInput(path, inplace=1):
+    for line in fileinput.FileInput(results_path, inplace=1):
         if line.rstrip():
             print(line, end="")
 
-    with open(path) as file:
+    with open(results_path) as file:
         test_result_path = file.readlines()
 
         for data in test_result_path:
             if "test " in data:
                 if results:
-                    results = process_results(results,test_name)
+                    results = process_results(results,test_name,cloud_type,OS_TYPE,OS_RELEASE,spreadsheet_name,spreadsheetId)
                 test_name = data.replace("test ","").replace("results_","").replace(".csv","").strip()
                 source = data.split()[-1].split("_")[0].strip()
             elif "new_series" in data:
@@ -147,9 +150,9 @@ def data_handler(args):
                     else:
                         data = data.strip("\n").strip("'")
                         path, system_name = data.split(",")
-                    path = config.test_path+"/"+path.strip()
+                    path = test_path+"/"+path.strip()
                     if test_name == "streams":
-                        ret_val = extract_streams_data(path, system_name)
+                        ret_val = extract_streams_data(path, system_name,OS_RELEASE)
                         if ret_val:
                             results += ret_val
                     # TODO: support url fetching
@@ -164,11 +167,11 @@ def data_handler(args):
                             results += ret_val
                     # TODO: support url fetching
                     elif test_name == "specjbb":
-                        ret_value = extract_specjbb_data(path, system_name)
+                        ret_value = extract_specjbb_data(path, system_name,OS_RELEASE)
                         if ret_value != None:
                             results.append(ret_value)
                     elif test_name == "pig":
-                        ret_val = extract_pig_data(path, system_name)
+                        ret_val = extract_pig_data(path, system_name,OS_RELEASE)
                         if ret_val:
                             results += ret_val
                     elif check_test_is_hammerdb(test_name):
@@ -179,7 +182,7 @@ def data_handler(args):
                     elif test_name == "fio_run":
                         ret_val=None
                         if source == "results":
-                             ret_val = extract_fio_run_data(path, system_name)
+                             ret_val = extract_fio_run_data(path, system_name,OS_RELEASE)
                         elif source == "pbench":
                              ret_val = process_fio_run_result(path, system_name)
                         if ret_val:
@@ -198,7 +201,7 @@ def data_handler(args):
                         if ret_val:
                             results += ret_val
                     elif test_name == "speccpu":
-                        ret_val = extract_speccpu_data(path, system_name)
+                        ret_val = extract_speccpu_data(path, system_name,OS_RELEASE)
                         if ret_val:
                             results += ret_val
                     elif test_name == "etcd":
@@ -212,11 +215,11 @@ def data_handler(args):
                     logging.error(str(exc))
                     continue
         try:
-            results = process_results(results,test_name)
+            results = process_results(results,test_name,cloud_type,OS_TYPE,OS_RELEASE,spreadsheet_name,spreadsheetId)
         except Exception as exc:
             logging.error(str(exc))
             pass
-        print(f"https://docs.google.com/spreadsheets/d/{config.spreadsheetId}")
+        print(f"https://docs.google.com/spreadsheets/d/{spreadsheetId}")
 
 
 def compare_results(args):
@@ -252,7 +255,7 @@ def compare_results(args):
     spreadsheetId = create_spreadsheet(spreadsheet_name, comparison_list[0])
 
     for index, test_name in enumerate(comparison_list):
-        config.test_name = test_name
+        write_config("test","test_name",test_name)
         if check_test_is_hammerdb(test_name):
             compare_hammerdb_results(spreadsheets, spreadsheetId, test_name)
         else:
@@ -268,68 +271,8 @@ def compare_results(args):
     print(f"https://docs.google.com/spreadsheets/d/{spreadsheetId}")
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    subparsers = parser.add_subparsers(
-        help="""
-        Required commands for processing. 
-        Try '<command> -h' for addtional args to be supplied
-        """
-    )
-
-    location_parser = subparsers.add_parser(
-        "process", help="Process location file and create spreadsheets"
-    )
-    location_parser.add_argument(
-        "location_file",
-        action="store",
-        help="Specify the file containing locations of benchmark results",
-    )
-    location_parser.add_argument(
-        "--os-type",
-        action="store",
-        help="Examples: 'Amazon', 'RHEL', 'Ubuntu'",
-        required=True,
-    )
-    location_parser.add_argument(
-        "--os-release",
-        action="store",
-        help="Examples:8.1, 18.04. Or, you can provide kernel version here",
-        required=True,
-    )
-    location_parser.add_argument(
-        "--cloud-type",
-        action="store",
-        help="Optional: Mention cloud type. default:AWS",
-        default="AWS",
-    )
-    location_parser.set_defaults(func=data_handler)
-
-    compare_parser = subparsers.add_parser(
-        "compare", help="Takes two spreadsheets and creates a comparison spreadsheet"
-    )
-    compare_parser.add_argument(
-        "--test-name",
-        help="""
-        Optional. If specified, it will create a single sheet comparing
-        that benchmark only.
-        """,
-        action="store",
-    )
-    compare_parser.add_argument(
-        "--spreadsheets",
-        help="two comma seperated spreadsheets",
-        action="store",
-        required=True,
-    )
-    compare_parser.set_defaults(func=compare_results)
-    args = parser.parse_args()
-    try:
-        func = args.func
-    except AttributeError:
-        parser.error("too few arguments")
-    func(args)
-
+def reduce_data():
+    data_handler()
 
 if __name__ == "__main__":
-    main()
+    reduce_data()

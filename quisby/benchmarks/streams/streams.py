@@ -1,6 +1,5 @@
 from itertools import groupby
 
-import quisby.config as config
 from quisby.util import mk_int, process_instance
 
 
@@ -46,7 +45,7 @@ def calc_max_throughput(data):
     ]
 
 
-def create_summary_streams_data(stream_data):
+def create_summary_streams_data(stream_data,OS_RELEASE):
     """
     Create summary data for Max throughput and Scaling
     """
@@ -63,10 +62,10 @@ def create_summary_streams_data(stream_data):
         results.append(
             [
                 "Max Througput",
-                f"Copy-{config.OS_RELEASE}",
-                f"Scale-{config.OS_RELEASE}",
-                f"Add-{config.OS_RELEASE}",
-                f"Triad-{config.OS_RELEASE}",
+                f"Copy-{OS_RELEASE}",
+                f"Scale-{OS_RELEASE}",
+                f"Add-{OS_RELEASE}",
+                f"Triad-{OS_RELEASE}",
             ]
         )
 
@@ -75,7 +74,7 @@ def create_summary_streams_data(stream_data):
     return results
 
 
-def extract_streams_data(path, system_name):
+def extract_streams_data(path, system_name,OS_RELEASE):
     """
     Extracts streams data and appends empty list for each seperate stream runs
 
@@ -128,9 +127,8 @@ def extract_streams_data(path, system_name):
                 data_pos = pos - 2
             if row[0] == "Triad":
                 data_pos = pos - 1
-            proccessed_data[pos - 5].append(memory + "-" + config.OS_RELEASE)
+            proccessed_data[pos - 5].append(memory + "-" + OS_RELEASE)
             proccessed_data[data_pos].extend(row[1:])
-    print(proccessed_data)
     return proccessed_data
 
 

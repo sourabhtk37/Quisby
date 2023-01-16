@@ -1,31 +1,47 @@
 import re
+from configparser import ConfigParser
 
-import quisby.config as config
 
 invalid_compare_list = ["pig"]
 
+def create_parser():
+    configur = ConfigParser()
+    configur.read('config.ini')
+    return configur
+
+
+def read_config(section,key):
+    configur=create_parser()
+    if configur.get(section,key) is not None:
+        return configur.get(section,key)
+    else:
+        return None
+
+def write_config(section,key,value):
+    configur=create_parser()
+    configur.set(section,key,value)
+
 
 def process_instance(instance_name, *args):
-
-    if config.cloud_type == "azure":
+    cloud_type = read_config("cloud","cloud_type")
+    if cloud_type == "azure":
         pattern = r"Standard_(?P<family>\w)(?P<sub_family>\D)?(?P<size>\d+)(?P<feature>\w+)?_(?P<accel_type>\w\d)?_?(?P<version>\w\d)"
 
-    if config.cloud_type == "aws":
+    if cloud_type == "aws":
         pattern = r"(?P<family>\w)(?P<version>\d)(?P<feature>\w+)?.(?P<size>\d+)?(?P<bool_xlarge>x)?(?P<machine_type>\w+)"
 
-    if config.cloud_type == "gcp":
+    if cloud_type == "gcp":
         pattern = r"(?P<family>\w)(?P<version>\d)(?P<sub_family>\w)?-(?P<feature>\w+)?-(?P<size>\d+)?"
 
-    if config.cloud_type == "local":
+    if cloud_type == "local":
         pattern = r"(?P<family>\D+)(?P<size>\d+)"
         regex_match = re.match(pattern, instance_name, flags=re.IGNORECASE)
         if "size" in args:
             return regex_match.group(2)
         else:
             return regex_match.group(1)
-    
-    regex_match = re.match(pattern, instance_name, flags=re.IGNORECASE)
 
+    regex_match = re.match(pattern, instance_name, flags=re.IGNORECASE)
     return regex_match.group(*args)
 
 
@@ -57,12 +73,13 @@ def merge_lists_alternately(results, list1, list2):
 
 def combine_two_array_alternating(results, value, ele):
     indexer = []
+    test_name=read_config("test","test_name")
 
     for lindex, item1 in enumerate(value[0][1:]):
         for rindex, item2 in enumerate(ele[0][1:]):
             if item1.split("-", 1)[0] == item2.split("-", 1)[0]:
                 indexer.append([lindex, rindex])
-            elif config.test_name in invalid_compare_list:
+            elif test_name in invalid_compare_list:
                 indexer.append([lindex, rindex])
  
     for list1, list2 in zip(value, ele):

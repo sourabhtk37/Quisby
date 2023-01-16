@@ -1,10 +1,9 @@
 from itertools import groupby
 
-import quisby.config as config
 from quisby.util import mk_int
 
 
-def create_summary_aim_data(results):
+def create_summary_aim_data(results,OS_RELEASE):
     summary_results = []
     # group data
     results = [list(g) for k, g in groupby(results, key=lambda x: x != [""]) if k]
@@ -17,7 +16,7 @@ def create_summary_aim_data(results):
         run_data = {}
 
         items = list(items)
-        columns = [i[0][0] + f"-{config.OS_RELEASE}" for i in items]
+        columns = [i[0][0] + f"-{OS_RELEASE}" for i in items]
         for index, item in enumerate(items):
 
             for ele in item[1:]:

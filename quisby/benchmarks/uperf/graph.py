@@ -2,7 +2,6 @@ import logging
 import time
 from itertools import groupby
 
-import quisby.config as config
 from quisby.sheet.sheetapi import sheet
 from quisby.benchmarks.uperf.uperf import combine_uperf_data
 from quisby.sheet.sheet_util import (

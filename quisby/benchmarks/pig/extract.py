@@ -1,14 +1,15 @@
 import re
 
-import quisby.config as config
 from quisby.pricing.cloud_pricing import get_cloud_cpu_count
+from quisby.util import read_config
 
 
-def extract_pig_data(path, system_name):
+def extract_pig_data(path, system_name,OS_RELEASE):
     results = []
     result_data = []
     cpu_count = 0
-
+    region = read_config("cloud","region")
+    cloud_type = read_config("cloud","cloud_type")
     # path = path + f"/iteration_1.{system_name}"
     with open(path) as file:
         for line in file:
@@ -18,7 +19,7 @@ def extract_pig_data(path, system_name):
                 result_data.append(line.strip("\n").split(":"))
     
     cpu_count = get_cloud_cpu_count(
-        system_name, config.region, config.cloud_type.lower()
+        system_name, region, cloud_type.lower()
     )
         # for line in file:
         #     if "PID" in line:
@@ -32,7 +33,7 @@ def extract_pig_data(path, system_name):
 
     results.append([""])
     results.append([system_name, f"CpuCount: {cpu_count}"])
-    results.append(["Threads", f"{config.OS_RELEASE}"])
+    results.append(["Threads", f"{OS_RELEASE}"])
     results += result_data
 
     return results

@@ -2,9 +2,8 @@ import csv
 import logging
 from itertools import groupby
 
-import quisby.config as config
 from quisby.pricing.cloud_pricing import get_cloud_pricing
-from quisby.util import mk_int, process_instance
+from quisby.util import mk_int, process_instance, read_config
 
 
 def specjbb_sort_data_by_system_family(results):
@@ -24,10 +23,12 @@ def specjbb_sort_data_by_system_family(results):
 
 
 def calc_peak_throughput_peak_efficiency(data):
+    region = read_config("cloud","region")
+    cloud_type = read_config("cloud","cloud_type")
     cost_per_hour, peak_throughput, peak_efficiency = None, None, None
     try:
         cost_per_hour = get_cloud_pricing(
-            data[1][0], config.region, config.cloud_type.lower())
+            data[1][0], region, cloud_type.lower())
         peak_throughput = max(data[3:], key=lambda x: int(x[1]))[1]
         peak_efficiency = float(peak_throughput) / float(cost_per_hour)
     except Exception as exc:
@@ -35,7 +36,7 @@ def calc_peak_throughput_peak_efficiency(data):
     return peak_throughput, cost_per_hour, peak_efficiency
 
 
-def create_summary_specjbb_data(specjbb_data):
+def create_summary_specjbb_data(specjbb_data,OS_RELEASE):
     """"""
     results = []
 
@@ -55,19 +56,19 @@ def create_summary_specjbb_data(specjbb_data):
             peak_efficiency.append([item[1][0], pe])
 
         results.append([""])
-        results.append(["Peak", f"Thrput-{config.OS_RELEASE}"])
+        results.append(["Peak", f"Thrput-{OS_RELEASE}"])
         results += peak_throughput
         results.append([""])
         results.append(["Cost/Hr"])
         results += cost_per_hour
         results.append([""])
-        results.append(["Peak/$eff", f"Price/perf-{config.OS_RELEASE}"])
+        results.append(["Peak/$eff", f"Price/perf-{OS_RELEASE}"])
         results += peak_efficiency
 
     return results
 
 
-def extract_specjbb_data(path, system_name):
+def extract_specjbb_data(path, system_name,OS_RELEASE):
     """"""
     results = [[""], [system_name]]
 
@@ -89,7 +90,7 @@ def extract_specjbb_data(path, system_name):
     #         if not row.strip("\n"):
     #             end_index = index - 2
     #             break
-    results.append(["Warehouses", f"Thrput-{config.OS_RELEASE}"])
+    results.append(["Warehouses", f"Thrput-{OS_RELEASE}"])
     for data_dict in specjbb_results[1:]:
         if data_dict["Warehouses"] == "Warehouses" or data_dict["Bops"] == "Bops":
             pass

@@ -1,17 +1,34 @@
 import logging
 from googleapiclient.discovery import build
-from quisby import config
 from quisby.sheet.sheetapi import sheet, creds
-
+from quisby.util import read_config
 
 def check_sheet_exists(sheet_info, test_name):
     """"""
-
     for sheet_prop in sheet_info:
         if test_name == sheet_prop["properties"]["title"]:
             return True
 
     return False
+
+
+def permit_users():
+    users = read_config("access","users")
+    spreadsheetId=read_config("spreadsheet","spreadsheetId")
+    drive_api = build('drive', 'v3', credentials=creds)
+    domain_permission = {
+        'type': 'user',
+        'role': 'writer',
+        # Magic almost undocumented variable which makes files appear in your Google Drive
+        'emailAddress': users
+    }
+    req = drive_api.permissions().create(
+        fileId=spreadsheetId,
+        body=domain_permission,
+        fields="id"
+    )
+
+    req.execute()
 
 
 def create_spreadsheet(spreadsheet_name, test_name):
@@ -36,22 +53,7 @@ def create_spreadsheet(spreadsheet_name, test_name):
 
     spreadsheet = sheet.create(body=spreadsheet).execute()
     spreadsheetId = spreadsheet["spreadsheetId"]
-    drive_api = build('drive', 'v3', credentials=creds)
-    domain_permission = {
-        'type': 'user',
-        'role': 'writer',
-        # Magic almost undocumented variable which makes files appear in your Google Drive
-        'emailAddress':config.users
-    }
-
-    req = drive_api.permissions().create(
-        fileId=spreadsheetId,
-        body=domain_permission,
-        fields="id"
-    )
-
-    req.execute()
-
+    permit_users()
     return spreadsheetId
 
 

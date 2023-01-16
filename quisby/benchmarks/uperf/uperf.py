@@ -4,7 +4,6 @@ from itertools import groupby
 
 import requests
 
-import quisby.config as config
 from quisby.util import mk_int, process_instance
 
 
@@ -24,11 +23,11 @@ def combine_uperf_data(results):
     return group_data
 
 
-def create_summary_uperf_data(results):
+def create_summary_uperf_data(results,OS_RELEASE):
     summary_results = []
     group_by_test_name = {}
 
-    sorted_results = uperf_sort_data_by_system_family(results)
+    sorted_results = combine_uperf_data(results)
 
     for result in sorted_results:
         for row in result:
@@ -47,7 +46,7 @@ def create_summary_uperf_data(results):
         summary_results.append(["Instance Count"])
 
         for ele in value:
-            summary_results[-1].append(ele[1][0] + "-" + config.OS_RELEASE)
+            summary_results[-1].append(ele[1][0] + "-" + OS_RELEASE)
             for index in ele[4:]:
                 if index[0] in run_data:
                     run_data[index[0]].append(index[1].strip())

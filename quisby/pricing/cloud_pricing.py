@@ -6,8 +6,7 @@ import datetime
 import subprocess
 
 import boto3
-import quisby.config as config
-from quisby.util import process_instance
+from quisby.util import process_instance, read_config
 
 
 # ToDo: Timestamp work
@@ -73,7 +72,7 @@ def get_aws_instance_info(instance_name, region):
 
     returns: integer pricing in USD
     """
-    region=config.region
+    region = read_config("cloud","region")
     pricing = boto3.client("pricing",region_name=region)
 
     OPERATING_SYSTEM = "AmazonEC2"

@@ -1,8 +1,5 @@
 import re
 
-import quisby.config as config
-
-
 # def extract_hammerdb_data(path_list, system_name, test_name):
 #     results = []
 #     run_data = []
@@ -24,7 +21,7 @@ import quisby.config as config
 
 #     return results
 
-def extract_hammerdb_data(path, system_name, test_name):
+def extract_hammerdb_data(path, system_name, test_name,OS_RELEASE):
     results = []
     result_data = []
 
@@ -37,7 +34,7 @@ def extract_hammerdb_data(path, system_name, test_name):
 
     results.append([""])
     results.append([f"{test_name}-User Count",
-                   f"{system_name}-{config.OS_RELEASE}"])
+                   f"{system_name}-{OS_RELEASE}"])
     results += result_data
 
     return results
