@@ -1,7 +1,6 @@
 from itertools import groupby
 
-import config as config
-from util import mk_int, process_instance
+from quisby.util import mk_int, process_instance
 
 
 def fio_run_sort_data(results):
@@ -25,7 +24,7 @@ def fio_run_sort_data(results):
     return sorted_result
 
 
-def create_summary_fio_run_data(results):
+def create_summary_fio_run_data(results,OS_RELEASE):
     summary_results = []
     run_metric = {"1024KiB": "iops", "4KiB": "lat", "2300KiB": "iops"}
 
@@ -41,7 +40,7 @@ def create_summary_fio_run_data(results):
             items = list(items)
             columns = [
                 i[0][0] +
-                f"-{run_metric[i[0][2].split('-')[0]]}-{config.OS_RELEASE}"
+                f"-{run_metric[i[0][2].split('-')[0]]}-{OS_RELEASE}"
                 for i in items
             ]
             summary_results.append([""])
