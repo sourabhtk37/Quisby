@@ -28,53 +28,27 @@ def create_summary_fio_run_data(results,OS_RELEASE):
     summary_results = []
     run_metric = {"1024KiB": "iops", "4KiB": "lat", "2300KiB": "iops"}
 
-    results = fio_run_sort_data(results)
+    try:
+        results = fio_run_sort_data(results)
+    except Exception as exc:
+        print(str(exc))
 
-    for header, items in groupby(
-        results, key=lambda x: (process_instance(
-            x[0][0], "family", "version", "feature"), x[0][1], x[0][2])
-    ):
-        run_data = {}
+    for header, items in groupby(results, key=lambda x: [x[0][0],x[0][1],x[0][2]]):
+        try:
+            run_data = {}
 
-        items = list(items)
-        columns = [
-            i[0][0] +
-            f"-{run_metric[i[0][2].split('-')[0]]}-{OS_RELEASE}"
-            for i in items
-        ]
-
-        for index, item in enumerate(items):
-            # Add individual data tables
+            items = list(items)
+            columns = [
+                i[0][0] +
+                f"-{run_metric[i[0][2].split('-')[0]]}-{OS_RELEASE}"
+                for i in items
+            ]
             summary_results.append([""])
-            summary_results += item
-
-            # Create and filter summary on 1 disk & 1 job
-            item = list(
-                filter(
-                    lambda x: (
-                        int(x[0].split("-")[0].split("_")[0]) == 1
-                        and int(x[0].split("-")[1].split("_")[0]) == 1
-                    ),
-                    item[2:],
-                )
-            )
-
-            for ele in item:
-
-                if ele[0] in run_data:
-                    for _ in range(index - len(run_data[ele[0]])):
-                        run_data[ele[0]].append("")
-                    run_data[ele[0]].append(ele[1])
-                else:
-                    run_data[ele[0]] = [""] * index
-                    run_data[ele[0]].append(ele[1])
-
-        instance_type = ''.join(item for item in header[0] if item)
-
-        summary_results.append([""])
-        summary_results.append([instance_type, header[1], header[2]])
-        summary_results.append(["iteration_name", *columns])
-        for key, value in run_data.items():
-            summary_results.append([key, *value])
-
+            summary_results.append([header[0], header[1], header[2]])
+            summary_results.append(["iteration_name", items[0][1][1]])
+            for index, item in enumerate(items):
+                # Add individual data tables
+                summary_results.append(item[2])
+        except Exception as exc:
+            pass
     return summary_results
