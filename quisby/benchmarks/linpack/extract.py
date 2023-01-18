@@ -4,7 +4,7 @@ import re
 import os.path
 
 from quisby.pricing.cloud_pricing import get_cloud_pricing, get_cloud_cpu_count
-import quisby.config as config
+from quisby.util import read_config
 
 
 def linpack_format_data(**kwargs):
@@ -12,6 +12,9 @@ def linpack_format_data(**kwargs):
     Add data into format to be shown in spreadsheets
     Supports linpack like data. eg: autohpl
     """
+    region = read_config("cloud","region")
+    cloud_type = read_config("cloud","cloud_type")
+    os_release =read_config("test","OS_RELEASE")
     results = kwargs["results"] if kwargs["results"] else []
     system_name = kwargs["system_name"] if kwargs["system_name"] else None
     if kwargs["gflops"]:
@@ -20,21 +23,21 @@ def linpack_format_data(**kwargs):
         return None
 
     price_per_hour = get_cloud_pricing(
-        system_name, config.region, config.cloud_type.lower()
+        system_name, region, cloud_type.lower()
     )
 
     no_of_cores = get_cloud_cpu_count(
-        system_name, config.region, config.cloud_type.lower()
+        system_name, region, cloud_type.lower()
     )
 
     results.append(
         [
             "System",
             "Cores",
-            f"GFLOPS-{config.OS_RELEASE}",
-            f"GFLOP Scaling-{config.OS_RELEASE}",
+            f"GFLOPS-{os_release}",
+            f"GFLOP Scaling-{os_release}",
             "Cost/hr",
-            f"Price/Perf-{config.OS_RELEASE}",
+            f"Price/Perf-{os_release}",
         ]
     )
     results.append(

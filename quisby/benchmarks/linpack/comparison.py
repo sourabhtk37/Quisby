@@ -1,4 +1,3 @@
-import quisby.config as config
 from quisby.sheet.sheetapi import sheet
 from quisby.sheet.sheet_util import (
     read_sheet,

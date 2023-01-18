@@ -1,7 +1,6 @@
 from itertools import groupby
 
 from quisby.util import mk_int, process_instance
-import quisby.config as config
 
 
 def create_summary_linpack_data(results):

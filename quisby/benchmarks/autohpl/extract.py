@@ -1,7 +1,6 @@
 import csv
 
 from quisby.pricing import cloud_pricing
-import quisby.config as config
 from quisby.benchmarks.linpack.extract import linpack_format_data
 
 

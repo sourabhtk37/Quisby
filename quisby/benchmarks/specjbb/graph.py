@@ -2,7 +2,6 @@ import logging
 import time
 from itertools import groupby
 
-import quisby.config as config
 from quisby.sheet.sheetapi import sheet
 from quisby.sheet.sheet_util import (
     clear_sheet_charts,
