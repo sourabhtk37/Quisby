@@ -26,14 +26,38 @@ Bechmarks currently supported:
 
 It extracts data from benchmark results file or summary results produced by wrapper benchmark programs and move that results to Google Sheet via sheets API V4. 
 
-## Usage
-Run
-```bash
-$ pip install quisby
-```
 
-It takes in an input file with list of location to the test results.
-The location file will look like:
+### Executable creation
+pyinstaller --noconfirm --log-level=INFO -p quisby/ quisby.py
+
+This command creates quisby executable. It binds all the dependencies into a file, making it easy to use.
+
+## Prerequisites to run quisby executable
+
+1. A google service account credentials(credentials.json) to hit various google APIs. 
+2. Create a folder ~/.config/quisby/ if it doesn't exist. 
+3. Copy credentials.json to the created folder.
+4. Copy example.ini file to ~/.config/quisby/config.ini.
+
+test_name(Name of test)                        
+test_path( Path to test results directory )                        
+results_location( Path to results_location file )                  
+system_name( Mention cloud/baremetal system )
+spreadsheetId( Mention spreadsheet ID if exists, otherwise quisby creates a new one for you ) 
+users( Mention the users you need to give access too. Example - abc@gmail.com,xyz@gmail.com )                                
+
+# How to run quisby
+
+1. Extract the tar to the executable
+2. Fill out the fields in config.ini file.
+3. Run ./quisby.app 
+
+
+### Run quisby using pip
+```bash
+$ 
+```
+$ pip install quisby
 
 ``` 
 test: results_linpack
@@ -69,21 +93,13 @@ and it would return a newly created spreadsheet with the comparison data.
 
 ## Development 
 
-```bash
 #Clone the repo
-git clone git@github.com:sourabhtk37/data-to-sheet.git
+git clone git@github.com:sousinha1997/quisby.git
 
 # Installation
 source ./install.sh
 (optional, for configuring aws and/or azure cli)
 source ./install -aws -azure
-```
-quisby is now configured for local development, to run it:
-
-```bash
-$ poetry run quisby [options] <location_file>
-```
 
 ## Contributing
-
 Create issues and create a seperate feature branch to work on it. Push the changes to your clone repo and then create a pull request to the master branch of the origin repo.
