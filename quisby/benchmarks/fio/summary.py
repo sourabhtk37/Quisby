@@ -25,7 +25,6 @@ def fio_run_sort_data(results):
 
 def create_summary_fio_run_data(results,OS_RELEASE):
     summary_results = []
-    run_metric = {"1024KiB": "iops", "4KiB": "lat", "2300KiB": "iops"}
     run_metric = {"1024KiB": ["iops", "lat"], "4KiB": ["lat", "iops"]}
     try:
         results = fio_run_sort_data(results)
