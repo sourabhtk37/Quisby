@@ -24,19 +24,19 @@ def fio_run_sort_data(results):
 
 
 def create_summary_fio_run_data(results,OS_RELEASE):
+    """ Create summary of the extracted raw data
+        Parameters
+        ----------
+        results : list
+            Extracted raw data from results location"""
     summary_results = []
-    run_metric = {"1024KiB": ["iops", "lat"], "4KiB": ["lat", "iops"]}
     try:
         results = fio_run_sort_data(results)
     except Exception as exc:
         print(str(exc))
     for header, items in groupby(results, key=lambda x: [x[0][0],x[0][1],x[0][2]]):
         try:
-            run_data = {}
-
             items = list(items)
-            for i in items:
-                columns =i[0][0] +f"-{run_metric[i[0][2].split('-')[0]]}-{OS_RELEASE}"
             summary_results.append([""])
             summary_results.append([header[0], header[1], header[2]])
             summary_results.append(["iteration_name", items[0][1][1]])

@@ -36,10 +36,19 @@ def extract_csv_data(csv_data, path):
         logging.error("Data format incorrect. Skipping data")
     return results
 
+
 def group_data(run_data, system_name,OS_RELEASE):
 
-    run_metric = {"1024KiB": "iops", "4KiB": "lat", "2300KiB": "iops"}
-
+    """ Groups data into similar metric groups
+        Parameters
+        ----------
+        run_data : list
+            Extracted raw data from results location
+        system_name : str
+            Machine name
+        OS_RELEASE : str
+            Release version of machine"""
+    run_metric = {"1024KiB": ["iops", "lat"], "4KiB": ["lat", "iops"]}
     grouped_data = []
     for key, items in groupby(sorted(run_data), key=lambda x: x[0].split("-")):
         for item in items:
@@ -95,6 +104,15 @@ def process_fio_run_result(URL, system_name):
 
 
 def extract_fio_run_data(path, system_name,OS_RELEASE):
+    """Extracts raw data from results location and groups into a specific format
+            Parameters
+            ----------
+            path : str
+                Path to results csv file
+            system_name : str
+                Machine name
+            OS_RELEASE : str
+                Release version of machine"""
     results = []
     try:
         with open(path + "/result.csv") as csv_file:
