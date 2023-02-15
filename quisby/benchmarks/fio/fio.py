@@ -19,15 +19,12 @@ def extract_csv_data(csv_data, path):
     results = []
     logging.info(f"extract csv data: {path}")
     header_row = csv_data.pop(0).split(",")
-
     io_depth = re.findall(r"iod.*?_(\d+)", path)[0]
     ndisks = re.findall(r"ndisks_(\d+)", path)[0]
     njobs = re.findall(r"njobs_(\d+)", path)[0]
-
     try:
         for header in HEADER_TO_EXTRACT:
             indexof_all.append(header_row.index(header))
-
         for row in csv_data:
             run_data = []
             if row:
@@ -35,32 +32,35 @@ def extract_csv_data(csv_data, path):
                 for index in indexof_all:
                     run_data.append(csv_row[index])
                 results.append([csv_row[1], ndisks, njobs, io_depth, *run_data])
-    except ValueError:
-        logging.error("Data format incorrect. Skipping data") 
-    
+    except Exception as exc:
+        logging.error("Data format incorrect. Skipping data")
     return results
 
 
 def group_data(run_data, system_name,OS_RELEASE):
 
-    run_metric = {"1024KiB": "iops", "4KiB": "lat", "2300KiB": "iops"}
-
+    """ Groups data into similar metric groups
+        Parameters
+        ----------
+        run_data : list
+            Extracted raw data from results location
+        system_name : str
+            Machine name
+        OS_RELEASE : str
+            Release version of machine"""
+    run_metric = {"1024KiB": ["iops", "lat"], "4KiB": ["lat", "iops"]}
     grouped_data = []
     for key, items in groupby(sorted(run_data), key=lambda x: x[0].split("-")):
-
-        grouped_data.append([""])
-        grouped_data.append(
-            [system_name, key[0], f"{key[1]}-{run_metric[key[1]]}"])
-        grouped_data.append(
-            ["iteration_name", f"{run_metric[key[1]]}-{OS_RELEASE}"])
         for item in items:
-            
-            row_hash = f"{item[1]}_d-{item[2]}_j-{item[3]}_iod"
-            if "1024KiB" in key[1] or "2300KiB" in key[1]:
-                grouped_data.append([row_hash, item[4]])
-            elif "4KiB" in key[1]:
-                grouped_data.append([row_hash, item[5]])
-    
+            for value in run_metric[key[1]]:
+                grouped_data.append([""])
+                grouped_data.append([system_name, key[0], f"{key[1]}-{value}"])
+                grouped_data.append(["iteration_name", f"{value}-{OS_RELEASE}"])
+                row_hash = f"{item[1]}_d-{item[2]}_j-{item[3]}_iod"
+                if "iops" in value:
+                    grouped_data.append([row_hash, item[4]])
+                elif "lat" in value:
+                    grouped_data.append([row_hash, item[5]])
     return grouped_data
 
 
@@ -104,14 +104,22 @@ def process_fio_run_result(URL, system_name):
 
 
 def extract_fio_run_data(path, system_name,OS_RELEASE):
+    """Extracts raw data from results location and groups into a specific format
+            Parameters
+            ----------
+            path : str
+                Path to results csv file
+            system_name : str
+                Machine name
+            OS_RELEASE : str
+                Release version of machine"""
     results = []
-
-    ls_dir = os.listdir(path)
-
-    with open(path + "/result.csv") as csv_file:
-        csv_data = csv_file.readlines()
-        csv_data[-1] = csv_data[-1].strip()
-
-        results += extract_csv_data(csv_data, os.path.basename(path))
-
-    return group_data(results, system_name,OS_RELEASE)
+    try:
+        with open(path + "/result.csv") as csv_file:
+            csv_data = csv_file.readlines()
+            csv_data[-1] = csv_data[-1].strip()
+            results += extract_csv_data(csv_data, os.path.basename(path))
+        return group_data(results, system_name,OS_RELEASE)
+    except Exception as exc:
+        logging.error("Unable to find fio path")
+    return []
