@@ -4,10 +4,11 @@ import pprint
 import json
 import datetime
 import subprocess
-
 import boto3
 from quisby.util import process_instance, read_config
-
+import os
+homedir = os.getenv("HOME")
+json_path = homedir+"/.config/quisby/azure_prices.json"
 
 # ToDo: Timestamp work
 def get_azure_pricing(system_name, region="US Gov"):
@@ -44,7 +45,7 @@ def get_azure_pricing(system_name, region="US Gov"):
 
     #     print(process)
 
-    with open("~/.config/quisby/azure_prices.json", "r") as read_file:
+    with open(json_path, "r") as read_file:
         data = json.load(read_file)
 
         name, version = system_name.split("_")[1:]
