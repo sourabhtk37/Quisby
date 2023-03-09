@@ -44,7 +44,6 @@ def process_speccpu(path, system_name, suite,OS_RELEASE):
             results.append([data_row['Benchmarks'], data_row['Base Rate']])
         except Exception as exc:
             pass
-    print(results)
     return results
     
 
