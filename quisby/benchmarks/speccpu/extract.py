@@ -32,16 +32,18 @@ import csv
 
 def process_speccpu(path, system_name, suite,OS_RELEASE):
     results = []
-    suite_path = glob.glob(f"{path}/*{suite}.refrate.results.csv")[0]
 
-    with open(suite_path) as csv_file:
+    with open(path) as csv_file:
         speccpu_results = list(csv.DictReader(csv_file, delimiter=":"))
 
     results.append([""])
     results.append([system_name, suite])
     results.append(["Benchmark", f"Base_Rate-{OS_RELEASE}"])
     for data_row in speccpu_results:
-        results.append([data_row['Benchmarks'], data_row['Base Rate']])
+        try:
+            results.append([data_row['Benchmarks'], data_row['Base Rate']])
+        except Exception as exc:
+            pass
     print(results)
     return results
     
