@@ -22,6 +22,12 @@ def fio_run_sort_data(results):
         )
     return sorted_result
 
+def key_func(sublist):
+    parts = sublist[0].split('_')
+    d_num = int(parts[0])
+    j_num = int(parts[1].split("-")[1])
+    iod_num = int(parts[2].split("-")[1])
+    return (d_num, j_num, iod_num, float(sublist[1]))
 
 def create_summary_fio_run_data(results,OS_RELEASE):
     """ Create summary of the extracted raw data
@@ -30,6 +36,7 @@ def create_summary_fio_run_data(results,OS_RELEASE):
         results : list
             Extracted raw data from results location"""
     summary_results = []
+    sort_result_disk = []
     try:
         results = fio_run_sort_data(results)
     except Exception as exc:
@@ -42,7 +49,10 @@ def create_summary_fio_run_data(results,OS_RELEASE):
             summary_results.append(["iteration_name", items[0][1][1]])
             for index, item in enumerate(items):
                 # Add individual data tables
-                summary_results.append(item[2])
+                sort_result_disk.append(item[2])
+            summary_results.extend(sorted(sort_result_disk, key=key_func))
+            sort_result_disk = []
+
         except Exception as exc:
             pass
     return summary_results
