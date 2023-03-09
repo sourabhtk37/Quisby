@@ -122,4 +122,5 @@ def extract_fio_run_data(path, system_name,OS_RELEASE):
         return group_data(results, system_name,OS_RELEASE)
     except Exception as exc:
         logging.error("Unable to find fio path")
+        print(str(exc))
     return []

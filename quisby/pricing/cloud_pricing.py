@@ -44,7 +44,7 @@ def get_azure_pricing(system_name, region="US Gov"):
 
     #     print(process)
 
-    with open("azure_prices.json", "r") as read_file:
+    with open("~/.config/quisby/azure_prices.json", "r") as read_file:
         data = json.load(read_file)
 
         name, version = system_name.split("_")[1:]

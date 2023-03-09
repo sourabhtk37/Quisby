@@ -54,5 +54,6 @@ def create_summary_fio_run_data(results,OS_RELEASE):
             sort_result_disk = []
 
         except Exception as exc:
+            print(str(exc))
             pass
     return summary_results
