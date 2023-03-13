@@ -1,12 +1,15 @@
 # Using this package which is a HTTP library
-from os.path import getmtime
-import pprint
+import logging
+import sys
+import time
 import json
-import datetime
-import subprocess
-
+import requests
 import boto3
 from quisby.util import process_instance, read_config
+import os
+
+homedir = os.getenv("HOME")
+json_path = homedir + "/.config/quisby/azure_prices.json"
 
 
 # ToDo: Timestamp work
@@ -62,6 +65,51 @@ def get_azure_pricing(system_name, region="US Gov"):
                     return resource["MeterRates"]["0"]
 
 
+def get_gcp_prices(instance_name, region):
+    url = "https://cloudpricingcalculator.appspot.com/static/data/pricelist.json"
+
+    # Get previous price list
+    try:
+        with open(homedir+"/.config/quisby/gcp_prices.json") as file_in:
+            price_data = json.loads(file_in.read())
+    except Exception as exc:
+        logging.ERROR("Doesn't exist")
+
+    response = requests.get(url, stream=True)
+    decoded_response = response.content.decode("UTF-8")
+    google_ext_prices = json.loads(decoded_response)
+
+    if "gcp_price_list" not in google_ext_prices:
+        sys.stderr.write('Google Cloud pricing data missing "gcp_price_list" node\n')
+        return None
+
+    gcp_price_list = google_ext_prices["gcp_price_list"]
+    prefix = instance_name.split("-")
+    instance_name = prefix[0].upper()
+    for name, prices in gcp_price_list.items():
+        if not instance_name in name:
+            continue
+        for key, price in prices.items():
+            if region in key:
+                try:
+                    price_data["compute"][region][name] = price
+                except Exception as exc:
+                    price_data = {}
+                    price_data["compute"] = {}
+                    price_data["compute"][region] = {}
+                    price_data["compute"][region][name] = price
+
+    # Update last-modified timestamp.
+    try:
+        price_data["updated"] = int(time.time())
+    except Exception as exc:
+        price_data["updated"] = int(time.time())
+
+    with open("/Users/soumyasinha/.config/quisby/gcp_prices.json", "w") as file_out:
+        json_str = json.dumps(price_data)
+        file_out.write(json_str)
+
+
 def get_aws_instance_info(instance_name, region):
     """
     AWS pricing is retreived using the aws boto3 client pricing API.
@@ -94,7 +142,7 @@ def get_aws_instance_info(instance_name, region):
 
 def get_aws_pricing(instance_name, region):
 
-    price_list = get_aws_instance_info(instance_name, region) 
+    price_list = get_aws_instance_info(instance_name, region)
 
     # Filter pricing details
     if price_list:
@@ -114,13 +162,13 @@ def get_aws_pricing(instance_name, region):
 def get_aws_cpucount(instance_name, region):
     cpu_count = 1
     price_list = get_aws_instance_info(instance_name, region)
- 
+
     if price_list:
         price_item = json.loads(price_list[0])
 
         cpu_count = price_item["product"]["attributes"]["vcpu"]
 
-    return cpu_count 
+    return cpu_count
 
 def get_cloud_pricing(instance_name, region, cloud_type):
     if cloud_type == "aws":
@@ -128,6 +176,9 @@ def get_cloud_pricing(instance_name, region, cloud_type):
 
     elif cloud_type == "azure":
         return get_azure_pricing(instance_name, region)
+
+    elif cloud_type == "gcp":
+        return get_gcp_prices(instance_name, region)
 
     elif cloud_type == "local":
         return 1
@@ -138,7 +189,10 @@ def get_cloud_cpu_count(instance_name, region, cloud_type):
 
     elif cloud_type == "azure":
         return int(process_instance(instance_name, "size"))
-    
+
+    elif cloud_type == "gcp":
+        return get_gcp_prices(instance_name, region)
+
     elif cloud_type == "local":
         return 1
 
