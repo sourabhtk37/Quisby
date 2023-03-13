@@ -68,46 +68,31 @@ def get_azure_pricing(system_name, region="US Gov"):
 def get_gcp_prices(instance_name, region):
     url = "https://cloudpricingcalculator.appspot.com/static/data/pricelist.json"
 
-    # Get previous price list
-    try:
-        with open(homedir+"/.config/quisby/gcp_prices.json") as file_in:
-            price_data = json.loads(file_in.read())
-    except Exception as exc:
-        logging.ERROR("Doesn't exist")
-
     response = requests.get(url, stream=True)
     decoded_response = response.content.decode("UTF-8")
     google_ext_prices = json.loads(decoded_response)
-
+    price_data = {}
     if "gcp_price_list" not in google_ext_prices:
         sys.stderr.write('Google Cloud pricing data missing "gcp_price_list" node\n')
         return None
-
+    prefix=""
     gcp_price_list = google_ext_prices["gcp_price_list"]
-    prefix = instance_name.split("-")
-    instance_name = prefix[0].upper()
+    machine_fam = instance_name.split("-")[0].upper()
+    if machine_fam in ("N2","N2D", "T2D", "T2A", "C2", "C2D", "M1", "M2"):
+        prefix = "CP-COMPUTEENGINE-" + machine_fam + "-PREDEFINED-VM-CORE".strip()
+    elif machine_fam in ("N1", "E2"):
+        prefix = 'CP-COMPUTEENGINE-VMIMAGE-' + instance_name.upper().strip()
+    else:
+        logging.error("This machine prices not available")
+        return
+
     for name, prices in gcp_price_list.items():
-        if not instance_name in name:
-            continue
-        for key, price in prices.items():
-            if region in key:
-                try:
-                    price_data["compute"][region][name] = price
-                except Exception as exc:
-                    price_data = {}
-                    price_data["compute"] = {}
-                    price_data["compute"][region] = {}
-                    price_data["compute"][region][name] = price
+        if prefix == name:
+            for key, price in prices.items():
+                if region == key:
+                    return gcp_price_list[name][region]
+            return
 
-    # Update last-modified timestamp.
-    try:
-        price_data["updated"] = int(time.time())
-    except Exception as exc:
-        price_data["updated"] = int(time.time())
-
-    with open("/Users/soumyasinha/.config/quisby/gcp_prices.json", "w") as file_out:
-        json_str = json.dumps(price_data)
-        file_out.write(json_str)
 
 
 def get_aws_instance_info(instance_name, region):
@@ -200,5 +185,6 @@ def get_cloud_cpu_count(instance_name, region, cloud_type):
 
 if __name__ == "__main__":
     region = "US East 2"
-    print(get_azure_pricing("Standard_D32s_v3", region))
+    #print(get_azure_pricing("Standard_D32s_v3", region))
     # print(get_aws_cpucount("i3en.24xlarge", "US East (N. Virginia)"))
+    get_gcp_prices("n2-standard-16","us")
