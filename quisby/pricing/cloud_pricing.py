@@ -176,7 +176,7 @@ def get_cloud_cpu_count(instance_name, region, cloud_type):
         return int(process_instance(instance_name, "size"))
 
     elif cloud_type == "gcp":
-        return get_gcp_prices(instance_name, region)
+        return int(process_instance(instance_name, "size"))
 
     elif cloud_type == "local":
         return 1
