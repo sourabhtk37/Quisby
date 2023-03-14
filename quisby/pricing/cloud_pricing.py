@@ -39,7 +39,7 @@ def get_azure_pricing(instance_name, region):
     vm = "linux-" + series + version + "-" + tier
 
     if os.path.exists(homedir + json_path):
-        # fetch pruce information from json
+        # fetch price information from json
         try:
             with open('data.json') as f:
                 data = json.load(f)
