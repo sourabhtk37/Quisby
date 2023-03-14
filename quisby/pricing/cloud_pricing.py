@@ -41,7 +41,7 @@ def get_azure_pricing(instance_name, region):
     if os.path.exists(homedir + json_path):
         # fetch price information from json
         try:
-            with open('data.json') as f:
+            with open(homedir + json_path) as f:
                 data = json.load(f)
         except Exception as exc:
             logging.error("Error extracting data from file. File corrupted. Redirecting to url fetching.")
@@ -49,8 +49,8 @@ def get_azure_pricing(instance_name, region):
     else:
         # fetch price information from url
         data = fetch_from_url()
-        if data is None:
-            return data
+    if data is None:
+        return data
     price = data.json()["offers"][vm]['prices']['perhour'][region]["value"]
     print("VM SKU: {}".format(instance_name))
     print("Hourly price: {} USD".format(price))
