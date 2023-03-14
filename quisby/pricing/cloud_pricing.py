@@ -12,7 +12,19 @@ homedir = os.getenv("HOME")
 json_path = homedir + "/.config/quisby/azure_prices.json"
 
 
-# ToDo: Timestamp work
+def fetch_from_url():
+    url = "https://azure.microsoft.com/api/v3/pricing/virtual-machines/calculator"
+    try:
+        response = requests.get(url)
+    except Exception as exc:
+        print(str(exc))
+    if response.status_code == 200:
+        return response.json()
+    else:
+        print("Error: {}".format(response.text))
+        return None
+
+
 def get_azure_pricing(instance_name, region):
     prefix = instance_name.split("_")
     series = ""
@@ -25,19 +37,24 @@ def get_azure_pricing(instance_name, region):
     except Exception as exc:
         logging.info("Version not present")
     vm = "linux-" + series + version + "-" + tier
-    url = "https://azure.microsoft.com/api/v3/pricing/virtual-machines/calculator"
-    try:
-        response = requests.get(url)
-    except Exception as exc:
-        print(str(exc))
-    if response.status_code == 200:
-        price = response.json()["offers"][vm]['prices']['perhour'][region]["value"]
-        print("VM SKU: {}".format(instance_name))
-        print("Hourly price: {} USD".format(price))
-        return price
+
+    if os.path.exists(homedir + json_path):
+        # fetch pruce information from json
+        try:
+            with open('data.json') as f:
+                data = json.load(f)
+        except Exception as exc:
+            logging.error("Error extracting data from file. File corrupted. Redirecting to url fetching.")
+            data = fetch_from_url()
     else:
-        print("Error: {}".format(response.text))
-        return None
+        # fetch price information from url
+        data = fetch_from_url()
+        if data is None:
+            return data
+    price = data.json()["offers"][vm]['prices']['perhour'][region]["value"]
+    print("VM SKU: {}".format(instance_name))
+    print("Hourly price: {} USD".format(price))
+    return price
 
 
 def get_gcp_prices(instance_name, region):
