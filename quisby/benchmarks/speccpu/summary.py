@@ -3,7 +3,7 @@ from itertools import groupby
 from quisby.util import mk_int, process_instance
 
 
-def create_summary_speccpu_data(results):
+def create_summary_speccpu_data(results,OS_RELEASE):
     sorted_result = []
     results = [list(g) for k, g in groupby(results, key=lambda x: x != [""]) if k]
     results.sort(

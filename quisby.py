@@ -137,6 +137,7 @@ def data_handler():
             if "test " in data:
                 if results:
                     spreadsheetId = process_results(results,test_name,cloud_type,OS_TYPE,OS_RELEASE,spreadsheet_name,spreadsheetId)
+                results=[]
                 test_name = data.replace("test ","").replace("results_","").replace(".csv","").strip()
                 source = data.split()[-1].split("_")[0].strip()
             elif "new_series" in data:

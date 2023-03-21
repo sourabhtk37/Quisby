@@ -27,7 +27,7 @@ def create_summary_uperf_data(results,OS_RELEASE):
     summary_results = []
     group_by_test_name = {}
 
-    sorted_results = combine_uperf_data(results)
+    sorted_results = [combine_uperf_data(results)]
 
     for result in sorted_results:
         for row in result:
@@ -72,7 +72,7 @@ def extract_uperf_data(path, system_name):
     try:
         csv_data = requests.get(path)
         csv_reader = list(csv.reader(csv_data.text.split("\n")))
-    except requests.exceptions.InvalidSchema:
+    except Exception:
         with open(path) as csv_file:
             csv_reader = list(csv.reader(csv_file))
 

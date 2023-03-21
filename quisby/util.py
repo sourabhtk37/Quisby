@@ -1,7 +1,10 @@
 import re
 from configparser import ConfigParser
+import os
 
-config_location = "~/.config/quisby/"
+home_dir = os.getenv("HOME")
+config_location = home_dir + "/.config/quisby/"
+
 invalid_compare_list = ["pig"]
 
 def create_parser():
@@ -47,6 +50,27 @@ def process_instance(instance_name, *args):
     regex_match = re.match(pattern, instance_name, flags=re.IGNORECASE)
     return regex_match.group(*args)
 
+def process_group(label_name, *args):
+    cloud_type = read_config("cloud","cloud_type")
+    if cloud_type == "azure":
+        pattern = r"Standard_(?P<family>\w)(?P<sub_family>\D)?(?P<size>\d+)(?P<feature>\w+)?_(?P<accel_type>\w\d)?_?(?P<version>\w\d)"
+
+    if cloud_type == "aws":
+        pattern = r"(?P<family>\w)(?P<version>\d)(?P<feature>\w+)?.(?P<size>\d+)?(?P<bool_xlarge>x)?(?P<machine_type>\w+)"
+
+    if cloud_type == "gcp":
+        pattern = r"(?P<family>\w)(?P<version>\d)(?P<sub_family>\w)?-(?P<feature>\w+)?-(?P<size>\d+)?"
+
+    if cloud_type == "local":
+        pattern = r"(?P<family>\D+)(?P<size>\d+)"
+        regex_match = re.match(pattern, instance_name, flags=re.IGNORECASE)
+        if "size" in args:
+            return regex_match.group(2)
+        else:
+            return regex_match.group(1)
+
+    regex_match = re.match(pattern, instance_name, flags=re.IGNORECASE)
+    return regex_match.group(*args)
 
 def mk_int(string):
     if string:
