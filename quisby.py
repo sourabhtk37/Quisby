@@ -177,7 +177,7 @@ def data_handler():
                             results += ret_val
                     elif check_test_is_hammerdb(test_name):
                         ret_val = extract_hammerdb_data(
-                            path, system_name, test_name)
+                            path, system_name, test_name,OS_RELEASE)
                         if ret_val:
                             results += ret_val
                     elif test_name == "fio_run":
