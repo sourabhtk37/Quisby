@@ -5,6 +5,8 @@ import argparse
 import fileinput
 import time
 import logging
+
+from quisby.benchmarks.coremark.coremark import extract_coremark_data
 from quisby.sheet.sheetapi import sheet
 from quisby.sheet.sheet_util import (
     get_sheet,
@@ -207,6 +209,10 @@ def data_handler():
                             results += ret_val
                     elif test_name == "etcd":
                         ret_val = extract_etcd_data(path, system_name)
+                        if ret_val:
+                            results += ret_val
+                    elif test_name == "coremark":
+                        ret_val = extract_coremark_data(path, system_name, OS_RELEASE)
                         if ret_val:
                             results += ret_val
                     else:
