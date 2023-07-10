@@ -6,7 +6,14 @@ import fileinput
 import time
 import logging
 
-from quisby.benchmarks.coremark.coremark import extract_coremark_data
+from quisby.benchmarks.coremark.coremark import extract_coremark_data,create_summary_coremark_data
+from quisby.benchmarks.coremark.graph import graph_coremark_data
+from quisby.benchmarks.coremark_pro.coremark_pro import extract_coremark_pro_data,create_summary_coremark_pro_data
+from quisby.benchmarks.coremark_pro.graph import graph_coremark_pro_data
+from quisby.benchmarks.passmark.passmark import extract_passmark_data,create_summary_passmark_data
+from quisby.benchmarks.passmark.graph import graph_passmark_data
+from quisby.benchmarks.pyperf.pyperf import extract_pyperf_data,create_summary_pyperf_data
+from quisby.benchmarks.pyperf.graph import graph_pyperf_data
 from quisby.sheet.sheetapi import sheet
 from quisby.sheet.sheet_util import (
     get_sheet,
@@ -213,6 +220,18 @@ def data_handler():
                             results += ret_val
                     elif test_name == "coremark":
                         ret_val = extract_coremark_data(path, system_name, OS_RELEASE)
+                        if ret_val:
+                            results += ret_val
+                    elif test_name == "coremark_pro":
+                        ret_val = extract_coremark_pro_data(path, system_name, OS_RELEASE)
+                        if ret_val:
+                            results += ret_val
+                    elif test_name == "passmark":
+                        ret_val = extract_passmark_data(path, system_name, OS_RELEASE)
+                        if ret_val:
+                            results += ret_val
+                    elif test_name == "pyperf":
+                        ret_val = extract_pyperf_data(path, system_name, OS_RELEASE)
                         if ret_val:
                             results += ret_val
                     else:
