@@ -20,8 +20,8 @@ def create_series_range_list_coremark(column_count, sheetId, start_index, end_in
                                 "startColumnIndex": index + 1,
                                 "endColumnIndex": index + 2,
                             }
-                        ]
-                    }
+                        ],
+                    },
                 },
                 "type": "COLUMN",
             }
@@ -36,7 +36,6 @@ def graph_coremark_data(spreadsheetId,range):
     end_index = 0
 
     data = read_sheet(spreadsheetId, range)
-    clear_sheet_charts(spreadsheetId, range)
 
     for index, row in enumerate(data):
         if "System name" in row:
@@ -71,6 +70,9 @@ def graph_coremark_data(spreadsheetId,range):
                                         "position": "LEFT_AXIS",
                                         "title": "Test passes",
                                     },
+                                ],
+                                'series': [
+                                    {'color': {'colorType': 'AUTO'}}
                                 ],
                                 "domains": [
                                     {

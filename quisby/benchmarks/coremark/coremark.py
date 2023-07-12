@@ -5,9 +5,13 @@ import logging
 
 """ Custom key to sort the data base don instance name """
 def custom_key(item):
-    instance_type = item[1][0].split("-")[0]
-    instance_number = int(item[1][0].split('-')[-1])
-    return (instance_type, instance_number)
+    if item[1][0] == "localhost":
+        instance_type = item[1][0]
+        return (instance_type)
+    else:
+        instance_type = item[1][0].split("-")[0]
+        instance_number = int(item[1][0].split('-')[-1])
+        return (instance_type, instance_number)
 
 def create_summary_coremark_data(results,OS_RELEASE):
     final_results = []

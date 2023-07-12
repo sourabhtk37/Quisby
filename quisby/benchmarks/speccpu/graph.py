@@ -39,7 +39,6 @@ def graph_speccpu_data(spreadsheetId, test_name):
     start_index, end_index = None, None
 
     data = read_sheet(spreadsheetId, test_name)
-    clear_sheet_charts(spreadsheetId, test_name)
 
     for index, row in enumerate(data):
         if "Benchmark" in row:

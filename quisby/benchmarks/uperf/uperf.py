@@ -73,8 +73,11 @@ def extract_uperf_data(path, system_name):
         csv_data = requests.get(path)
         csv_reader = list(csv.reader(csv_data.text.split("\n")))
     except Exception:
-        with open(path) as csv_file:
-            csv_reader = list(csv.reader(csv_file))
+        if path.endswith("result.csv"):
+            with open(path) as csv_file:
+                csv_reader = list(csv.reader(csv_file))
+        else:
+            return None
 
     # find all ports result index in csv row
     for index, row in enumerate(csv_reader[0]):

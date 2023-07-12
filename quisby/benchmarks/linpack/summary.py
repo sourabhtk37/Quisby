@@ -3,7 +3,7 @@ from itertools import groupby
 from quisby.util import mk_int, process_instance
 
 
-def create_summary_linpack_data(results):
+def create_summary_linpack_data(results,OS_RELEASE):
 
     sorted_results = []
 

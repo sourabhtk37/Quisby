@@ -36,7 +36,6 @@ def graph_passmark_data(spreadsheetId,range):
     end_index = 0
 
     data = read_sheet(spreadsheetId, range)
-    clear_sheet_charts(spreadsheetId, range)
 
     for index, row in enumerate(data):
         if "GEOMEAN" in row:

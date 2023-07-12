@@ -30,6 +30,10 @@ def write_config(section,key,value):
 
 def process_instance(instance_name, *args):
     cloud_type = read_config("cloud","cloud_type")
+    if instance_name == "localhost":
+        machine = "local"
+    else:
+        machine = instance_name
     if cloud_type == "azure":
         pattern = r"Standard_(?P<family>\w)(?P<sub_family>\D)?(?P<size>\d+)(?P<feature>\w+)?_(?P<accel_type>\w\d)?_?(?P<version>\w\d)"
 
@@ -40,14 +44,11 @@ def process_instance(instance_name, *args):
         pattern = r"(?P<family>\w)(?P<version>\d)(?P<sub_family>\w)?-(?P<feature>\w+)?-(?P<size>\d+)?"
 
     if cloud_type == "local":
-        pattern = r"(?P<family>\D+)(?P<size>\d+)"
-        regex_match = re.match(pattern, instance_name, flags=re.IGNORECASE)
-        if "size" in args:
-            return regex_match.group(2)
-        else:
-            return regex_match.group(1)
+        pattern = r"(?P<family>\D+)"
+        regex_match = re.match(pattern, machine, flags=re.IGNORECASE)
+        return regex_match.group(1)
 
-    regex_match = re.match(pattern, instance_name, flags=re.IGNORECASE)
+    regex_match = re.match(pattern, machine, flags=re.IGNORECASE)
     return regex_match.group(*args)
 
 def process_group(label_name, *args):
@@ -73,6 +74,8 @@ def process_group(label_name, *args):
     return regex_match.group(*args)
 
 def mk_int(string):
+    if string == 'local':
+        return 1
     if string:
         string = string.strip()
         return int(string) if string else 1
@@ -120,3 +123,4 @@ def combine_two_array_alternating(results, value, ele):
         results.append(holder_list)
 
     return results
+

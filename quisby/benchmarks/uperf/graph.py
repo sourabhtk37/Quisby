@@ -52,7 +52,6 @@ def graph_uperf_data(spreadsheetId, range):
     }
 
     uperf_results = read_sheet(spreadsheetId, range)
-    clear_sheet_charts(spreadsheetId, range)
 
     for index, row in enumerate(uperf_results):
         if row:

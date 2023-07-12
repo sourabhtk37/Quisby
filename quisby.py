@@ -68,7 +68,7 @@ from quisby.benchmarks.speccpu.comparison import compare_speccpu_results
 from quisby.benchmarks.etcd.etcd import (
     extract_etcd_data, create_summary_etcd_data, graph_etcd_data, compare_etcd_results)
 from quisby.util import read_config,write_config
-
+from quisby.sheet.sheet_util import clear_sheet_charts,clear_sheet_data
 logging.basicConfig(level=logging.INFO)
 
 
@@ -98,13 +98,15 @@ def process_results(results,test_name,cloud_type,OS_TYPE,OS_RELEASE,spreadsheet_
     except Exception as exc:
         logging.error("Error summarising "+str(test_name)+" data")
         print(str(exc))
-        return
+        return spreadsheetId
     try:
         create_sheet(spreadsheetId, test_name)
+        clear_sheet_charts(spreadsheetId, test_name)
+        clear_sheet_data(spreadsheetId, test_name)
         append_to_sheet(spreadsheetId, results, test_name)
     except Exception as exc:
         logging.error("Error appending "+str(test_name)+" data to sheet")
-        return
+        return spreadsheetId
     # Graphing up data
     try:
         if check_test_is_hammerdb(test_name):
@@ -114,7 +116,7 @@ def process_results(results,test_name,cloud_type,OS_TYPE,OS_RELEASE,spreadsheet_
                 spreadsheetId, test_name)
     except Exception as exc:
         logging.error("Error graphing "+str(test_name)+" data")
-        return
+        return spreadsheetId
 
     return spreadsheetId
 
@@ -147,8 +149,8 @@ def data_handler():
                 if results:
                     spreadsheetId = process_results(results,test_name,cloud_type,OS_TYPE,OS_RELEASE,spreadsheet_name,spreadsheetId)
                 results=[]
-                test_name = data.replace("test ","").replace("results_","").replace(".csv","").strip()
-                source = data.split()[-1].split("_")[0].strip()
+                test_name = data.replace("test ","").strip()
+                source = "results"
             elif "new_series" in data:
                 continue
             else:
@@ -237,9 +239,9 @@ def data_handler():
                     else:
                         continue
 
-                except ValueError as exc:
+                except Exception as exc:
                     logging.error(str(exc))
-                    continue
+
         try:
             spreadsheetId = process_results(results,test_name,cloud_type,OS_TYPE,OS_RELEASE,spreadsheet_name,spreadsheetId)
         except Exception as exc:
@@ -254,8 +256,8 @@ def compare_results(args):
     spreadsheet_name = []
     comparison_list = []
 
-    spreadsheets = args.spreadsheets.split(",")
-    test_name = [args.test_name] if args.test_name else []
+    spreadsheets = args
+    test_name = "uperf"
 
     for spreadsheet in spreadsheets:
         sheet_names = []
@@ -268,7 +270,7 @@ def compare_results(args):
             sheet_names.append(sheet["properties"]["title"].strip())
         sheet_list.append(sheet_names)
     if test_name:
-        comparison_list = test_name
+        comparison_list = [test_name]
     else:
         # Find sheets that are present in all spreadsheets i.e intersection
         comparison_list = set(sheet_list[0])
@@ -285,8 +287,8 @@ def compare_results(args):
         if check_test_is_hammerdb(test_name):
             compare_hammerdb_results(spreadsheets, spreadsheetId, test_name)
         else:
-            globals()[f"compare_{test_name}_results"](
-                spreadsheets, spreadsheetId, test_name
+            globals()[f"compare_uperf_results"](
+                spreadsheets, spreadsheetId, "uperf"
             )
         if index + 1 != len(comparison_list):
             logging.info(
@@ -299,6 +301,7 @@ def compare_results(args):
 
 def reduce_data():
     data_handler()
+    #compare_results(["1GiqDQY2C5T-llFac5zJwHOwaIxdQzKguRMHEWW1UC0A","1coe4XmL4p3qfPCjjouxOJj4SfiK3zvhm_TVXrH4a404"])
 
 if __name__ == "__main__":
     reduce_data()

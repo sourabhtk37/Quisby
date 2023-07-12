@@ -44,7 +44,6 @@ def graph_fio_run_data(spreadsheetId, test_name):
     start_index, end_index = None, None
 
     data = read_sheet(spreadsheetId, test_name)
-    clear_sheet_charts(spreadsheetId, test_name)
 
     if len(data) > 1000:
         append_empty_row_sheet(spreadsheetId, 500, test_name)

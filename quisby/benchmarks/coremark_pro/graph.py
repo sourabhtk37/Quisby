@@ -38,7 +38,6 @@ def graph_coremark_pro_data(spreadsheetId,range):
     end_index = 0
 
     data = read_sheet(spreadsheetId, range)
-    clear_sheet_charts(spreadsheetId, range)
 
     for index, row in enumerate(data):
         if "System name" in row:
@@ -47,7 +46,7 @@ def graph_coremark_pro_data(spreadsheetId,range):
         a = len(data)
         if start_index:
             if row == []:
-                end_index = index - 1
+                end_index = index
             if index + 1 == len(data):
                 end_index = index + 1
 

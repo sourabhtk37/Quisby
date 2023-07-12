@@ -2,17 +2,20 @@
 from scipy.stats import gmean
 
 def custom_key(item):
-    instance_type = item[0].split("-")[0]
-    instance_number = int(item[0].split('-')[-1])
-    return (instance_type, instance_number)
+    if item[0] == "localhost":
+        return (item[0])
+    else:
+        instance_type = item[0].split("-")[0]
+        instance_number = int(item[0].split('-')[-1])
+        return (instance_type, instance_number)
 
 
 def create_summary_pyperf_data(data,OS_RELEASE):
 
-    results = [sorted(['SYSTEM',"N0_OF_TEST_PROCESSES",'CPU_INTEGER_MATH', 'CPU_FLOATINGPOINT_MATH', 'CPU_PRIME', 'CPU_SORTING', 'CPU_ENCRYPTION', 'CPU_COMPRESSION', 'CPU_SINGLETHREAD', 'CPU_PHYSICS', 'CPU_MATRIX_MULT_SSE', 'CPU_mm', 'CPU_sse'])]
+    results = [['SYSTEM',"N0_OF_TEST_PROCESSES","CPU_INTEGER_MATH", "CPU_FLOATINGPOINT_MATH", "CPU_PRIME", "CPU_SORTING", "CPU_ENCRYPTION", "CPU_COMPRESSION", "CPU_SINGLETHREAD", "CPU_PHYSICS", "CPU_MATRIX_MULT_SSE", "CPU_mm", "CPU_sse", "CPU_fma", "CPU_avx", "CPU_avx512", "m_CPU_enc_SHA", "m_CPU_enc_AES", "m_CPU_enc_ECDSA", "ME_ALLOC_S", "ME_READ_S", "ME_READ_L", "ME_WRITE", "ME_LARGE", "ME_LATENCY", "ME_THREADED", "SUMM_CPU", "SUMM_ME"]]
     processed_data = None
     gmean_data = []
-    SYSTEM_GEOMEAN = [["SYSTEM_NAME","GEOMEAN"]]
+    SYSTEM_GEOMEAN = []
     end_index = 0
     start_index = 0
     system = ""
@@ -36,8 +39,10 @@ def create_summary_pyperf_data(data,OS_RELEASE):
             if not row[0] == 'NumTestProcesses':
                 gmean_data.append(float(row[1]))
             processed_data.append(row[1])
-
+    results.append(processed_data)
+    SYSTEM_GEOMEAN.append([system, gmean(gmean_data)])
     results.append([""])
+    results.append(["SYSTEM_NAME", "GEOMEAN"])
     for item in SYSTEM_GEOMEAN:
         results.append(item)
     return results
@@ -48,18 +53,18 @@ def extract_pyperf_data(path, system_name, OS_RELEASE):
     results = []
     # Extract data from file
     try:
-        if path.endswith(".csv"):
+        if path.endswith("results.csv"):
             with open(path) as file:
-                coremark_results = file.readlines()
+                pyperf_results = file.readlines()
         else:
             return None
     except Exception as exc:
         print(str(exc))
         return None
 
-    for index, data in enumerate(coremark_results):
-        coremark_results[index] = data.strip("\n").split(":")
+    for index, data in enumerate(pyperf_results):
+        pyperf_results[index] = data.strip("\n").split(":")
     results.append([""])
     results.append([system_name])
-    results.extend(coremark_results)
+    results.extend(pyperf_results)
     return results

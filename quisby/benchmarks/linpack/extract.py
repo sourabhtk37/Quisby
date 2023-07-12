@@ -72,7 +72,8 @@ def extract_linpack_data(path, system_name):
     if os.path.basename(summary_file).endswith("csv"):
         with open(summary_file) as csv_file:
             csv_reader = csv.DictReader(csv_file, delimiter=":")
-            last_row = list(csv_reader)[-2]
+            list_data = list(csv_reader)
+            last_row = list_data[-1]
             gflops = last_row["MB/sec"]
             threads = last_row["threads"]
     else:

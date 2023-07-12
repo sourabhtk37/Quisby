@@ -45,7 +45,6 @@ def graph_specjbb_data(spreadsheetId, range):
     end_index = 0
 
     data = read_sheet(spreadsheetId, range)
-    clear_sheet_charts(spreadsheetId, range)
 
     for index, row in enumerate(data):
         try:
@@ -71,7 +70,6 @@ def graph_specjbb_data(spreadsheetId, range):
                         "chart": {
                             "spec": {
                                 "title": "%s : %s" % (range, graph_data[0][0]),
-                                "subtitle": f"{graph_data[1][0].split('.')[0]}",
                                 "basicChart": {
                                     "chartType": "COLUMN",
                                     "legendPosition": "BOTTOM_LEGEND",

@@ -75,8 +75,11 @@ def extract_specjbb_data(path, system_name,OS_RELEASE):
 
     # File read
     try:
-        with open(path) as csv_file:
-            specjbb_results = list(csv.DictReader(csv_file, delimiter=":"))
+        if path.endswith(".csv"):
+            with open(path) as csv_file:
+                specjbb_results = list(csv.DictReader(csv_file, delimiter=":"))
+        else:
+            return None
     except Exception as exc:
         print(str(exc))
         return None
