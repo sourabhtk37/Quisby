@@ -12,7 +12,7 @@ def custom_key(item):
 
 def create_summary_passmark_data(data,OS_RELEASE):
 
-    results = [['SYSTEM',"N0_OF_TEST_PROCESSES","CPU_INTEGER_MATH", "CPU_FLOATINGPOINT_MATH", "CPU_PRIME", "CPU_SORTING", "CPU_ENCRYPTION", "CPU_COMPRESSION", "CPU_SINGLETHREAD", "CPU_PHYSICS", "CPU_MATRIX_MULT_SSE", "CPU_mm", "CPU_sse", "CPU_fma", "CPU_avx", "CPU_avx512", "m_CPU_enc_SHA", "m_CPU_enc_AES", "m_CPU_enc_ECDSA", "ME_ALLOC_S", "ME_READ_S", "ME_READ_L", "ME_WRITE", "ME_LARGE", "ME_LATENCY", "ME_THREADED", "SUMM_CPU", "SUMM_ME"
+    results = [['SYSTEM',"NO_OF_TEST_PROCESSES","CPU_INTEGER_MATH", "CPU_FLOATINGPOINT_MATH", "CPU_PRIME", "CPU_SORTING", "CPU_ENCRYPTION", "CPU_COMPRESSION", "CPU_SINGLETHREAD", "CPU_PHYSICS", "CPU_MATRIX_MULT_SSE", "CPU_mm", "CPU_sse", "CPU_fma", "CPU_avx", "CPU_avx512", "m_CPU_enc_SHA", "m_CPU_enc_AES", "m_CPU_enc_ECDSA", "ME_ALLOC_S", "ME_READ_S", "ME_READ_L", "ME_WRITE", "ME_LARGE", "ME_LATENCY", "ME_THREADED", "SUMM_CPU", "SUMM_ME"
 ]]
     processed_data = None
     gmean_data = []

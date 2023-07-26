@@ -150,6 +150,7 @@ def data_handler():
                     spreadsheetId = process_results(results,test_name,cloud_type,OS_TYPE,OS_RELEASE,spreadsheet_name,spreadsheetId)
                 results=[]
                 test_name = data.replace("test ","").strip()
+                logging.info(" Loading graphs for " + str(test_name)+"...")
                 source = "results"
             elif "new_series" in data:
                 continue
@@ -237,7 +238,7 @@ def data_handler():
                         if ret_val:
                             results += ret_val
                     else:
-                        continue
+                        logging("Mentioned benchmark not yet supported ! ")
 
                 except Exception as exc:
                     logging.error(str(exc))
@@ -257,7 +258,7 @@ def compare_results(args):
     comparison_list = []
 
     spreadsheets = args
-    test_name = "uperf"
+    test_name = []
 
     for spreadsheet in spreadsheets:
         sheet_names = []
@@ -283,25 +284,27 @@ def compare_results(args):
     spreadsheetId = create_spreadsheet(spreadsheet_name, comparison_list[0])
 
     for index, test_name in enumerate(comparison_list):
-        write_config("test","test_name",test_name)
-        if check_test_is_hammerdb(test_name):
-            compare_hammerdb_results(spreadsheets, spreadsheetId, test_name)
-        else:
-            globals()[f"compare_uperf_results"](
-                spreadsheets, spreadsheetId, "uperf"
-            )
-        if index + 1 != len(comparison_list):
-            logging.info(
-                "# Sleeping 10 sec to workaround the Google Sheet per minute API limit"
-            )
-            time.sleep(10)
+        try:
+            write_config("test","test_name",test_name)
+            if check_test_is_hammerdb(test_name):
+                compare_hammerdb_results(spreadsheets, spreadsheetId, test_name)
+            else:
+                globals()[f"compare_{test_name}_results"](
+                    spreadsheets, spreadsheetId, test_name
+                )
+            if index + 1 != len(comparison_list):
+                logging.info(
+                    "# Sleeping 10 sec to workaround the Google Sheet per minute API limit"
+                )
+                time.sleep(10)
+        except Exception as exc:
+            print("This benchmark "+test_name+" comparison failed")
 
     print(f"https://docs.google.com/spreadsheets/d/{spreadsheetId}")
 
 
 def reduce_data():
     data_handler()
-    #compare_results(["1GiqDQY2C5T-llFac5zJwHOwaIxdQzKguRMHEWW1UC0A","1coe4XmL4p3qfPCjjouxOJj4SfiK3zvhm_TVXrH4a404"])
 
 if __name__ == "__main__":
     reduce_data()
