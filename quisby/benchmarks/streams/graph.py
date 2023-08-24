@@ -54,7 +54,7 @@ def graph_streams_data(spreadsheetId, test_name):
     start_index = 0
     end_index = 0
     data = read_sheet(spreadsheetId,"streams")
-    clear_sheet_charts(spreadsheetId, "streams")
+
     for index, row in enumerate(data):
         if "Max Througput" in row:
             start_index = index
@@ -91,7 +91,6 @@ def graph_streams_data(spreadsheetId, test_name):
                         "chart": {
                             "spec": {
                                 "title": "%s: %s" % (test_name, graph_data[0][0]),
-                                "subtitle": f"{graph_data[1][0].split('.')[0]}",
                                 "basicChart": {
                                     "chartType": "COLUMN",
                                     "legendPosition": "BOTTOM_LEGEND",

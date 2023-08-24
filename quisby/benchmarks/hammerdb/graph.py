@@ -44,7 +44,6 @@ def graph_hammerdb_data(spreadsheetId, range):
     start_index, end_index = 0, 0
 
     hammerdb_results = read_sheet(spreadsheetId, range)
-    clear_sheet_charts(spreadsheetId, range)
 
     for index, row in enumerate(hammerdb_results):
 
@@ -72,7 +71,6 @@ def graph_hammerdb_data(spreadsheetId, range):
                     "chart": {
                         "spec": {
                             "title": f"{header_name}",
-                            "subtitle": f"{graph_data[0][1].split('.')[0]}",
                             "basicChart": {
                                 "chartType": "COLUMN",
                                 "legendPosition": "BOTTOM_LEGEND",

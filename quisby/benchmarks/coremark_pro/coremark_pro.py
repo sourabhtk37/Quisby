@@ -1,6 +1,4 @@
 
-import logging
-
 
 
 """ Custom key to sort the data base don instance name """
@@ -13,31 +11,25 @@ def custom_key(item):
         instance_number = int(item[1][0].split('-')[-1])
         return (instance_type, instance_number)
 
-def create_summary_coremark_data(results,OS_RELEASE):
+def create_summary_coremark_pro_data(results,OS_RELEASE):
     final_results = []
-    cal_data = [["System name","test passes"]]
-
+    multi_iter = [["Multi Iterations"],["System name", "Score"]]
+    single_iter = [["Single Iterations"],["System name", "Score"]]
     # Sort data based on instance name
     sorted_data = sorted(results, key=custom_key)
-    print(sorted_data)
-
     # Add summary data
     for item in sorted_data:
-        sum = 0
-        avg = 0
-        iterations = 0
-        for index in range(3,len(item)):
-            sum = sum + float(item[index][1])
-            iterations = iterations + 1
-        avg = float(sum/iterations)
-        cal_data.append([item[1][0],avg])
-
-        final_results += item
+        for index in range(3, len(item)):
+            multi_iter.append([item[1][0],item[index][1]])
+            single_iter.append([item[1][0],item[index][2]])
+            #final_results += item
     final_results += [[""]]
-    final_results += cal_data
+    final_results += multi_iter
+    final_results += [[""]]
+    final_results +=single_iter
     return final_results
 
-def extract_coremark_data(path, system_name, OS_RELEASE):
+def extract_coremark_pro_data(path, system_name, OS_RELEASE):
     """"""
     results = []
     processed_data =[]
@@ -59,13 +51,11 @@ def extract_coremark_data(path, system_name, OS_RELEASE):
     # Format the data
     iteration = 1
     for row in coremark_results:
-        if "test passes" in row:
+        if "Test" in row:
             processed_data.append([""])
             processed_data.append([system_name])
-            processed_data.append([row[0], row[2]])
-        else:
-            processed_data.append([iteration, row[2]])
-            iteration = iteration + 1
+            processed_data.append([row[0], row[1], row[2]])
+        elif "Score" in row:
+            processed_data.append(["Score", row[1], row[2]])
     results.append(processed_data)
-
     return results

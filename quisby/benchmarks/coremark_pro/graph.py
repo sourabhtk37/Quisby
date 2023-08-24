@@ -1,9 +1,11 @@
 
+
+
 from quisby.sheet.sheet_util import read_sheet,clear_sheet_charts,get_sheet
 from quisby.sheet.sheetapi import sheet
 import time
 
-def create_series_range_list_coremark(column_count, sheetId, start_index, end_index):
+def create_series_range_list_coremark_pro(column_count, sheetId, start_index, end_index):
     series = []
 
     for index in range(column_count):
@@ -20,8 +22,8 @@ def create_series_range_list_coremark(column_count, sheetId, start_index, end_in
                                 "startColumnIndex": index + 1,
                                 "endColumnIndex": index + 2,
                             }
-                        ],
-                    },
+                        ]
+                    }
                 },
                 "type": "COLUMN",
             }
@@ -29,7 +31,7 @@ def create_series_range_list_coremark(column_count, sheetId, start_index, end_in
 
     return series
 
-def graph_coremark_data(spreadsheetId,range):
+def graph_coremark_pro_data(spreadsheetId,range):
     GRAPH_COL_INDEX = 1
     GRAPH_ROW_INDEX = 0
     start_index = 0
@@ -40,10 +42,11 @@ def graph_coremark_data(spreadsheetId,range):
     for index, row in enumerate(data):
         if "System name" in row:
             start_index = index
+            iteration = data[index - 1][0]
         a = len(data)
         if start_index:
             if row == []:
-                end_index = index - 1
+                end_index = index
             if index + 1 == len(data):
                 end_index = index + 1
 
@@ -60,7 +63,7 @@ def graph_coremark_data(spreadsheetId,range):
                 "addChart": {
                     "chart": {
                         "spec": {
-                            "title": "%s : %s" % (range, "Test passes"),
+                            "title": "%s : %s : %s" % (range, "score", iteration),
                             "basicChart": {
                                 "chartType": "COLUMN",
                                 "legendPosition": "BOTTOM_LEGEND",
@@ -68,11 +71,8 @@ def graph_coremark_data(spreadsheetId,range):
                                     {"position": "BOTTOM_AXIS", "title": ""},
                                     {
                                         "position": "LEFT_AXIS",
-                                        "title": "Test passes",
+                                        "title": "Score",
                                     },
-                                ],
-                                'series': [
-                                    {'color': {'colorType': 'AUTO'}}
                                 ],
                                 "domains": [
                                     {
@@ -91,7 +91,7 @@ def graph_coremark_data(spreadsheetId,range):
                                         }
                                     }
                                 ],
-                                "series": create_series_range_list_coremark(
+                                "series": create_series_range_list_coremark_pro(
                                     column_count, sheetId, start_index, end_index
                                 ),
                                 "headerCount": 1,

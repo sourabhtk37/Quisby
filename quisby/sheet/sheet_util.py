@@ -164,12 +164,12 @@ def apply_named_range(spreadsheetId, name, range="A:Z"):
     print(response)
 
 
-def clear_sheet_data(spreadsheetId, range="A1:Z1000"):
+def clear_sheet_data(spreadsheetId, range):
     # Clear values
     sheet.values().clear(spreadsheetId=spreadsheetId, range=range, body={}).execute()
 
 
-def clear_sheet_charts(spreadsheetId, range="A2:Z1000"):
+def clear_sheet_charts(spreadsheetId, range):
     # Clear charts
     sheet_properties = get_sheet(spreadsheetId, range)
 
@@ -188,7 +188,7 @@ def get_named_range(spreadsheetId, range="A:F"):
 
     return spreadsheet['namedRanges']
 
-def append_empty_row_sheet(spreadsheetId, rows, range="A:F"):
+def append_empty_row_sheet(spreadsheetId, rows,range):
     
     sheetId = get_sheet(spreadsheetId, range)["sheets"][0]["properties"]["sheetId"]
 

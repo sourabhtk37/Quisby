@@ -6,7 +6,14 @@ import fileinput
 import time
 import logging
 
-from quisby.benchmarks.coremark.coremark import extract_coremark_data
+from quisby.benchmarks.coremark.coremark import extract_coremark_data,create_summary_coremark_data
+from quisby.benchmarks.coremark.graph import graph_coremark_data
+from quisby.benchmarks.coremark_pro.coremark_pro import extract_coremark_pro_data,create_summary_coremark_pro_data
+from quisby.benchmarks.coremark_pro.graph import graph_coremark_pro_data
+from quisby.benchmarks.passmark.passmark import extract_passmark_data,create_summary_passmark_data
+from quisby.benchmarks.passmark.graph import graph_passmark_data
+from quisby.benchmarks.pyperf.pyperf import extract_pyperf_data,create_summary_pyperf_data
+from quisby.benchmarks.pyperf.graph import graph_pyperf_data
 from quisby.sheet.sheetapi import sheet
 from quisby.sheet.sheet_util import (
     get_sheet,
@@ -61,7 +68,7 @@ from quisby.benchmarks.speccpu.comparison import compare_speccpu_results
 from quisby.benchmarks.etcd.etcd import (
     extract_etcd_data, create_summary_etcd_data, graph_etcd_data, compare_etcd_results)
 from quisby.util import read_config,write_config
-
+from quisby.sheet.sheet_util import clear_sheet_charts,clear_sheet_data
 logging.basicConfig(level=logging.INFO)
 
 
@@ -91,13 +98,15 @@ def process_results(results,test_name,cloud_type,OS_TYPE,OS_RELEASE,spreadsheet_
     except Exception as exc:
         logging.error("Error summarising "+str(test_name)+" data")
         print(str(exc))
-        return
+        return spreadsheetId
     try:
         create_sheet(spreadsheetId, test_name)
+        clear_sheet_charts(spreadsheetId, test_name)
+        clear_sheet_data(spreadsheetId, test_name)
         append_to_sheet(spreadsheetId, results, test_name)
     except Exception as exc:
         logging.error("Error appending "+str(test_name)+" data to sheet")
-        return
+        return spreadsheetId
     # Graphing up data
     try:
         if check_test_is_hammerdb(test_name):
@@ -107,7 +116,7 @@ def process_results(results,test_name,cloud_type,OS_TYPE,OS_RELEASE,spreadsheet_
                 spreadsheetId, test_name)
     except Exception as exc:
         logging.error("Error graphing "+str(test_name)+" data")
-        return
+        return spreadsheetId
 
     return spreadsheetId
 
@@ -140,8 +149,9 @@ def data_handler():
                 if results:
                     spreadsheetId = process_results(results,test_name,cloud_type,OS_TYPE,OS_RELEASE,spreadsheet_name,spreadsheetId)
                 results=[]
-                test_name = data.replace("test ","").replace("results_","").replace(".csv","").strip()
-                source = data.split()[-1].split("_")[0].strip()
+                test_name = data.replace("test ","").strip()
+                logging.info(" Loading graphs for " + str(test_name)+"...")
+                source = "results"
             elif "new_series" in data:
                 continue
             else:
@@ -215,12 +225,24 @@ def data_handler():
                         ret_val = extract_coremark_data(path, system_name, OS_RELEASE)
                         if ret_val:
                             results += ret_val
+                    elif test_name == "coremark_pro":
+                        ret_val = extract_coremark_pro_data(path, system_name, OS_RELEASE)
+                        if ret_val:
+                            results += ret_val
+                    elif test_name == "passmark":
+                        ret_val = extract_passmark_data(path, system_name, OS_RELEASE)
+                        if ret_val:
+                            results += ret_val
+                    elif test_name == "pyperf":
+                        ret_val = extract_pyperf_data(path, system_name, OS_RELEASE)
+                        if ret_val:
+                            results += ret_val
                     else:
-                        continue
+                        logging("Mentioned benchmark not yet supported ! ")
 
-                except ValueError as exc:
+                except Exception as exc:
                     logging.error(str(exc))
-                    continue
+
         try:
             spreadsheetId = process_results(results,test_name,cloud_type,OS_TYPE,OS_RELEASE,spreadsheet_name,spreadsheetId)
         except Exception as exc:
@@ -235,8 +257,8 @@ def compare_results(args):
     spreadsheet_name = []
     comparison_list = []
 
-    spreadsheets = args.spreadsheets.split(",")
-    test_name = [args.test_name] if args.test_name else []
+    spreadsheets = args
+    test_name = []
 
     for spreadsheet in spreadsheets:
         sheet_names = []
@@ -249,7 +271,7 @@ def compare_results(args):
             sheet_names.append(sheet["properties"]["title"].strip())
         sheet_list.append(sheet_names)
     if test_name:
-        comparison_list = test_name
+        comparison_list = [test_name]
     else:
         # Find sheets that are present in all spreadsheets i.e intersection
         comparison_list = set(sheet_list[0])
@@ -262,18 +284,21 @@ def compare_results(args):
     spreadsheetId = create_spreadsheet(spreadsheet_name, comparison_list[0])
 
     for index, test_name in enumerate(comparison_list):
-        write_config("test","test_name",test_name)
-        if check_test_is_hammerdb(test_name):
-            compare_hammerdb_results(spreadsheets, spreadsheetId, test_name)
-        else:
-            globals()[f"compare_{test_name}_results"](
-                spreadsheets, spreadsheetId, test_name
-            )
-        if index + 1 != len(comparison_list):
-            logging.info(
-                "# Sleeping 10 sec to workaround the Google Sheet per minute API limit"
-            )
-            time.sleep(10)
+        try:
+            write_config("test","test_name",test_name)
+            if check_test_is_hammerdb(test_name):
+                compare_hammerdb_results(spreadsheets, spreadsheetId, test_name)
+            else:
+                globals()[f"compare_{test_name}_results"](
+                    spreadsheets, spreadsheetId, test_name
+                )
+            if index + 1 != len(comparison_list):
+                logging.info(
+                    "# Sleeping 10 sec to workaround the Google Sheet per minute API limit"
+                )
+                time.sleep(10)
+        except Exception as exc:
+            print("This benchmark "+test_name+" comparison failed")
 
     print(f"https://docs.google.com/spreadsheets/d/{spreadsheetId}")
 
