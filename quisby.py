@@ -83,15 +83,6 @@ def check_test_is_hammerdb(test_name):
 
 
 def process_results(results, test_name, cloud_type, os_type, os_release, spreadsheet_name, spreadsheetid):
-    if not spreadsheetid:
-        logging.info("Creating a new spreadsheet... ")
-        spreadsheet_name = f"{cloud_type}-{os_type}-{os_release}-{spreadsheet_name}"
-        spreadsheetid = create_spreadsheet(spreadsheet_name, test_name)
-        logging.info("Spreadsheet name : " + spreadsheet_name)
-        logging.info("Spreadsheet ID : " + spreadsheetid)
-    else:
-        logging.info("Spreadsheet already provided as input")
-        logging.info("Spreadsheet : " + f"https://docs.google.com/spreadsheets/d/{spreadsheetid}")
 
     # Summarise data
     try:
@@ -163,6 +154,21 @@ def data_handler():
     spreadsheetid = read_config('spreadsheet', 'spreadsheetId')
     test_path = read_config('test', 'test_path')
     results_path = read_config('test', 'results_location')
+
+    if not spreadsheetid:
+        logging.info("Creating a new spreadsheet... ")
+        spreadsheet_name = f"{cloud_type}-{os_type}-{os_release}-{spreadsheet_name}"
+        spreadsheetid = create_spreadsheet(spreadsheet_name, test_name)
+        logging.info("Spreadsheet name : " + spreadsheet_name)
+        logging.info("Spreadsheet ID : " + spreadsheetid)
+    else:
+        logging.warning("Collecting spreadsheet information from config...")
+        logging.info("Spreadsheet name : " + spreadsheet_name)
+        logging.info("Spreadsheet ID : " + spreadsheetid)
+        logging.info("Spreadsheet : " + f"https://docs.google.com/spreadsheets/d/{spreadsheetid}")
+        logging.warning("!!! Quit Application to prevent overwriting of existing data !!!")
+        time.sleep(10)
+        logging.info("No action provided. Overwriting the existing sheet.")
 
     # Strip empty lines from location file
     for line in fileinput.FileInput(results_path, inplace=1):
