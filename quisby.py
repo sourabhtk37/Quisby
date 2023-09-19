@@ -280,7 +280,7 @@ def data_handler():
             register_details_json(spreadsheet_name, spreadsheetid)
 
 
-def compare_results(args):
+def compare_results(*args):
     sheet_list = []
     spreadsheet_name = []
     comparison_list = []
@@ -326,7 +326,7 @@ def compare_results(args):
                 )
                 time.sleep(10)
         except Exception as exc:
-            logging.error("This benchmark " + test_name + " comparison failed")
+            logging.error("Benchmark " + test_name + " comparison failed")
 
     logging.info(f"https://docs.google.com/spreadsheets/d/{spreadsheetid}")
     register_details_json(spreadsheet_name, spreadsheetid)
@@ -336,8 +336,8 @@ def reduce_data():
     data_handler()
 
 
-def compare_data(args):
-    compare_results(args)
+def compare_data(*args):
+    compare_results(*args)
 
 
 # Set up logging
