@@ -1,6 +1,7 @@
 import json
 import os.path
 import fileinput
+import sys
 import time
 import logging
 
@@ -280,12 +281,10 @@ def data_handler():
             register_details_json(spreadsheet_name, spreadsheetid)
 
 
-def compare_results(*args):
+def compare_results(spreadsheets):
     sheet_list = []
     spreadsheet_name = []
     comparison_list = []
-
-    spreadsheets = args
     test_name = []
 
     logging.info("Comparing the data provided..")
@@ -336,8 +335,8 @@ def reduce_data():
     data_handler()
 
 
-def compare_data(*args):
-    compare_results(*args)
+def compare_data(s_list):
+    compare_results(s_list)
 
 
 # Set up logging
@@ -346,4 +345,18 @@ configure_logging()
 if __name__ == "__main__":
     print(
         "**************************************** STARTING QUISBY APPLICATION **************************************** ")
-    reduce_data()
+    if len(sys.argv) > 1:
+        if sys.argv[1] == "process":
+            reduce_data()
+        elif sys.argv[1] == "compare":
+            try:
+                s_list = sys.argv[2].split(",")
+                compare_data(s_list)
+            except Exception as exc:
+                logging.error("Please provide a valid list of spreadsheets to compare")
+        else:
+            logging.warning("Incorrect options provided.Proceeding with default action...")
+            reduce_data()
+    else:
+        logging.warning("No options provided.Proceeding with default action...")
+        reduce_data()
