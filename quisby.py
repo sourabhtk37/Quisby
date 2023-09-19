@@ -130,8 +130,9 @@ def process_results(results, test_name, cloud_type, os_type, os_release, spreads
 
 
 def register_details_json(spreadsheet_name, spreadsheet_id):
+    logging.info("Collecting spreadsheet information...")
     home_dir = os.getenv("HOME")
-    filename = home_dir + "/quisby/charts.json"
+    filename = home_dir + "/.config/quisby/charts.json"
     if not os.path.exists(filename):
         data = {"chartlist": {spreadsheet_name: spreadsheet_id}}
         with open(filename, "w") as f:
@@ -142,6 +143,7 @@ def register_details_json(spreadsheet_name, spreadsheet_id):
         data["chartlist"][spreadsheet_name] = spreadsheet_id
         with open(filename, "w") as f:
             json.dump(data, f)
+    logging.info({spreadsheet_name: spreadsheet_id})
 
 
 # TODO: simplify functions once data location is exact
@@ -196,7 +198,6 @@ def data_handler():
                         ret_val = extract_streams_data(path, system_name, os_release)
                         if ret_val:
                             results += ret_val
-                    # TODO: support url fetching
                     elif test_name == "uperf":
                         ret_val = extract_uperf_data(path, system_name)
                         if ret_val:
@@ -205,7 +206,6 @@ def data_handler():
                         ret_val = extract_linpack_data(path, system_name)
                         if ret_val:
                             results += ret_val
-                    # TODO: support url fetching
                     elif test_name == "specjbb":
                         ret_value = extract_specjbb_data(path, system_name, os_release)
                         if ret_value is not None:
