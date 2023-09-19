@@ -50,7 +50,7 @@ def create_summary_specjbb_data(specjbb_data,OS_RELEASE):
             try:
                 pt, cph, pe = calc_peak_throughput_peak_efficiency(item)
             except Exception as exc:
-                print(str(exc))
+                logging.error(str(exc))
                 break
             peak_throughput.append([item[1][0], pt])
             cost_per_hour.append([item[1][0], cph])
@@ -81,7 +81,7 @@ def extract_specjbb_data(path, system_name,OS_RELEASE):
         else:
             return None
     except Exception as exc:
-        print(str(exc))
+        logging.error(str(exc))
         return None
 
     # Find position of SPEC Scores

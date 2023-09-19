@@ -2,6 +2,9 @@
 
 
 """ Custom key to sort the data base don instance name """
+import logging
+
+
 def custom_key(item):
     if item[1][0] == "localhost":
         instance_type = item[1][0]
@@ -42,7 +45,7 @@ def extract_coremark_pro_data(path, system_name, OS_RELEASE):
         else:
             return None
     except Exception as exc:
-        print(str(exc))
+        logging.error(str(exc))
         return None
 
     for index, data in enumerate(coremark_results):

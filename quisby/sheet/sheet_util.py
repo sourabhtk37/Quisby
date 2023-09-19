@@ -13,26 +13,28 @@ def check_sheet_exists(sheet_info, test_name):
 
 
 def permit_users():
-    users = read_config("access","users").split(",")
+    logging.info("Providing write access to specified users")
+    users = read_config("access", "users").split(",")
     if users == ['']:
-        logging.info("Permission not porvided to any users")
         return
-    spreadsheetId=read_config("spreadsheet","spreadsheetId")
+    spreadsheetid = read_config("spreadsheet","spreadsheetId")
     drive_api = build('drive', 'v3', credentials=creds)
     for user in users:
-        domain_permission = {
-            'type': 'user',
-            'role': 'writer',
-            # Magic almost undocumented variable which makes files appear in your Google Drive
-            'emailAddress': user
-        }
-        req = drive_api.permissions().create(
-            fileId=spreadsheetId,
-            body=domain_permission,
-            fields="id"
-        )
+        try:
+            domain_permission = {
+                'type': 'user',
+                'role': 'writer',
+                'emailAddress': user
+            }
+            req = drive_api.permissions().create(
+                fileId=spreadsheetid,
+                body=domain_permission,
+                fields="id"
+            )
 
-        req.execute()
+            req.execute()
+        except Exception as exc:
+            logging.error("Unable to provide access to this user : "+user)
 
 
 def create_spreadsheet(spreadsheet_name, test_name):
@@ -56,11 +58,11 @@ def create_spreadsheet(spreadsheet_name, test_name):
     }
 
     spreadsheet = sheet.create(body=spreadsheet).execute()
-    spreadsheetId = spreadsheet["spreadsheetId"]
-    write_config("spreadsheet", "spreadsheetId", spreadsheetId)
+    spreadsheetid = spreadsheet["spreadsheetId"]
+    write_config("spreadsheet", "spreadsheetId", spreadsheetid)
     write_config("spreadsheet","spreadsheet_name",spreadsheet_name)
     permit_users()
-    return spreadsheetId
+    return spreadsheetid
 
 
 def get_sheet(spreadsheetId, test_name,range="!a:z"):
@@ -84,6 +86,7 @@ def create_sheet(spreadsheetId, test_name):
 
     # Create sheet if it doesn't exit
     if not check_sheet_exists(sheet_info, test_name):
+        logging.info("Sheet for this benchmark doesn't exist. Creating...")
         sheet_count = len(sheet_info)
 
         requests = {
@@ -161,17 +164,16 @@ def apply_named_range(spreadsheetId, name, range="A:Z"):
         .execute()
     )
 
-    print(response)
+    logging.info(response)
 
 
-def clear_sheet_data(spreadsheetId, range):
-    # Clear values
-    sheet.values().clear(spreadsheetId=spreadsheetId, range=range, body={}).execute()
+def clear_sheet_data(spreadsheetid, range):
+    sheet.values().clear(spreadsheetId=spreadsheetid, range=range, body={}).execute()
 
 
-def clear_sheet_charts(spreadsheetId, range):
-    # Clear charts
-    sheet_properties = get_sheet(spreadsheetId, range)
+def clear_sheet_charts(spreadsheetid, range):
+
+    sheet_properties = get_sheet(spreadsheetid, range)
 
     if "charts" in sheet_properties["sheets"][0]:
         for chart in sheet_properties["sheets"][0]["charts"]:
@@ -180,7 +182,7 @@ def clear_sheet_charts(spreadsheetId, range):
 
             body = {"requests": requests}
 
-            sheet.batchUpdate(spreadsheetId=spreadsheetId, body=body).execute()
+            sheet.batchUpdate(spreadsheetId=spreadsheetid, body=body).execute()
 
 
 def get_named_range(spreadsheetId, range="A:F"):
