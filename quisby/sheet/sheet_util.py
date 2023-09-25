@@ -59,8 +59,6 @@ def create_spreadsheet(spreadsheet_name, test_name):
 
     spreadsheet = sheet.create(body=spreadsheet).execute()
     spreadsheetid = spreadsheet["spreadsheetId"]
-    write_config("spreadsheet", "spreadsheetId", spreadsheetid)
-    write_config("spreadsheet","spreadsheet_name",spreadsheet_name)
     permit_users()
     return spreadsheetid
 

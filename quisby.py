@@ -158,7 +158,9 @@ def data_handler():
     if not spreadsheetid:
         logging.info("Creating a new spreadsheet... ")
         spreadsheet_name = f"{cloud_type}-{os_type}-{os_release}-{spreadsheet_name}"
-        spreadsheetid = create_spreadsheet(spreadsheet_name, test_name)
+        spreadsheetid = create_spreadsheet(spreadsheet_name, "summary")
+        write_config("spreadsheet", "spreadsheet_id", spreadsheetid)
+        write_config("spreadsheet", "spreadsheet_name", spreadsheet_name)
         logging.info("Spreadsheet name : " + spreadsheet_name)
         logging.info("Spreadsheet ID : " + spreadsheetid)
     else:
@@ -314,8 +316,26 @@ def compare_results(spreadsheets):
         comparison_list = list(comparison_list)
 
     logging.info("Creating new spreadsheet..")
-    spreadsheet_name = " and ".join(spreadsheet_name)
-    spreadsheetid = create_spreadsheet(spreadsheet_name, comparison_list[0])
+
+    spreadsheet_name = read_config('spreadsheet', 'comp_name')
+    spreadsheetid = read_config('spreadsheet', 'comp_id')
+
+    if not spreadsheetid:
+        logging.info("Creating a new spreadsheet... ")
+        spreadsheet_name = " and ".join(spreadsheet_name)
+        spreadsheetid = create_spreadsheet(spreadsheet_name, comparison_list[0])
+        write_config("spreadsheet", "comp_id", spreadsheetid)
+        write_config("spreadsheet", "comp_name", spreadsheet_name)
+        logging.info("Spreadsheet name : " + spreadsheet_name)
+        logging.info("Spreadsheet ID : " + spreadsheetid)
+    else:
+        logging.warning("Collecting spreadsheet information from config...")
+        logging.info("Comp spreadsheet name : " + spreadsheet_name)
+        logging.info("Comp spreadsheet ID : " + spreadsheetid)
+        logging.info("Spreadsheet : " + f"https://docs.google.com/spreadsheets/d/{spreadsheetid}")
+        logging.warning("!!! Quit Application to prevent overwriting of existing data !!!")
+        time.sleep(10)
+        logging.info("No action provided. Overwriting the existing sheet.")
 
     for index, test_name in enumerate(comparison_list):
         try:

@@ -1,7 +1,8 @@
+import logging
+
 from quisby.sheet.sheetapi import sheet
 from quisby.sheet.sheet_util import (
     read_sheet,
-    create_spreadsheet,
     append_to_sheet,
     clear_sheet_charts,
     clear_sheet_data,
@@ -337,7 +338,15 @@ def compare_linpack_results(spreadsheets, spreadsheetId, test_name):
                             price_perf_diff,
                         ]
                     )
+    try:
+        create_sheet(spreadsheetId, test_name)
+        logging.info("Deleting existing charts and data from the sheet...")
+        clear_sheet_charts(spreadsheetId, test_name)
+        clear_sheet_data(spreadsheetId, test_name)
+        logging.info("Appending new " + test_name + " data to sheet...")
+        append_to_sheet(spreadsheetId, results, test_name)
+        graph_linpack_comparison(spreadsheetId, test_name)
+    except Exception as exc:
+        logging.error("Failed to append data to sheet")
+        return spreadsheetId
 
-    create_sheet(spreadsheetId, test_name)
-    append_to_sheet(spreadsheetId, results, test_name)
-    graph_linpack_comparison(spreadsheetId, test_name)
