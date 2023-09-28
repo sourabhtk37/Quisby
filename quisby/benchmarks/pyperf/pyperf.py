@@ -59,7 +59,7 @@ def extract_pyperf_data(path, system_name, OS_RELEASE):
         else:
             return None
     except Exception as exc:
-        print(str(exc))
+        logging.error(str(exc))
         return None
 
     for index, data in enumerate(pyperf_results):

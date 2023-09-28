@@ -29,7 +29,7 @@ def untar_files(path):
                     system_name = root.split("/")[-1].strip("_0")
 
                 except AttributeError:
-                    print("Unknown results file")
+                    logging.error("Unknown results file")
                     logging.warning(f"Issue with result: {file_path}, ignoring")
                     continue
 

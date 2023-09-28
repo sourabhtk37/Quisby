@@ -1,11 +1,11 @@
+import logging
 from itertools import groupby
 
 from quisby.sheet.sheet_util import (
-    create_spreadsheet,
     append_to_sheet,
     read_sheet,
     get_sheet,
-    create_sheet,
+    create_sheet, clear_sheet_data, clear_sheet_charts,
 )
 from quisby.util import combine_two_array_alternating
 from quisby.benchmarks.speccpu.graph import graph_speccpu_data
@@ -33,7 +33,16 @@ def compare_speccpu_results(spreadsheets, spreadsheetId, test_name):
             if value[0][0] == ele[0][0] and value[0][1] == ele[0][1]:
                 results.append(value[0])
                 results = combine_two_array_alternating(results, value[1:], ele[1:])
-                
-    create_sheet(spreadsheetId, test_name)
-    append_to_sheet(spreadsheetId, results, test_name)
-    graph_speccpu_data(spreadsheetId, test_name)
+    try:
+        create_sheet(spreadsheetId, test_name)
+        logging.info("Deleting existing charts and data from the sheet...")
+        clear_sheet_charts(spreadsheetId, test_name)
+        clear_sheet_data(spreadsheetId, test_name)
+        logging.info("Appending new " + test_name + " data to sheet...")
+        append_to_sheet(spreadsheetId, results, test_name)
+        graph_speccpu_data(spreadsheetId, test_name)
+    except Exception as exc:
+        logging.error("Failed to append data to sheet")
+        return spreadsheetId
+
+

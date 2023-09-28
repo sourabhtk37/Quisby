@@ -1,3 +1,4 @@
+import logging
 
 from scipy.stats import gmean
 
@@ -61,7 +62,7 @@ def extract_passmark_data(path, system_name, OS_RELEASE):
         else:
             return None
     except Exception as exc:
-        print(str(exc))
+        logging.error(str(exc))
         return None
 
     for index, data in enumerate(coremark_results):

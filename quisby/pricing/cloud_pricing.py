@@ -17,11 +17,11 @@ def fetch_from_url():
     try:
         response = requests.get(url)
     except Exception as exc:
-        print(str(exc))
+        logging.error(str(exc))
     if response.status_code == 200:
         return response.json()
     else:
-        print("Error: {}".format(response.text))
+        logging.error("Error: {}".format(response.text))
         return None
 
 
@@ -52,8 +52,8 @@ def get_azure_pricing(instance_name, region):
     if data is None:
         return data
     price = data.json()["offers"][vm]['prices']['perhour'][region]["value"]
-    print("VM SKU: {}".format(instance_name))
-    print("Hourly price: {} USD".format(price))
+    logging.info("VM SKU: {}".format(instance_name))
+    logging.info("Hourly price: {} USD".format(price))
     return price
 
 

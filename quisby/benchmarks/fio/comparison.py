@@ -1,11 +1,11 @@
+import logging
 from itertools import groupby
 
 from quisby.sheet.sheet_util import (
-    create_spreadsheet,
     append_to_sheet,
     read_sheet,
     get_sheet,
-    create_sheet
+    create_sheet, clear_sheet_charts, clear_sheet_data
 )
 from quisby.util import combine_two_array_alternating
 from quisby.benchmarks.fio.graph import graph_fio_run_data
@@ -18,7 +18,7 @@ def compare_fio_run_results(spreadsheets, spreadsheetId, test_name="fio"):
 
     for spreadsheet in spreadsheets:
         values.append(read_sheet(spreadsheet, range=test_name))
-        spreadsheet_name.append(get_sheet(spreadsheet, range=[])["properties"]["title"])
+        spreadsheet_name.append(get_sheet(spreadsheet,test_name)["properties"]["title"])
 
     for index, value in enumerate(values):
         values[index] = (list(g) for k, g in groupby(value, key=lambda x: x != []) if k)
@@ -33,7 +33,18 @@ def compare_fio_run_results(spreadsheets, spreadsheetId, test_name="fio"):
                 results.append(value[0])
                 results = combine_two_array_alternating(results, value[1:], ele[1:])
 
-    create_sheet(spreadsheetId, test_name)
-    append_to_sheet(spreadsheetId, results, test_name)
-    graph_fio_run_data(spreadsheetId, test_name)
+    try:
+        create_sheet(spreadsheetId, test_name)
+        logging.info("Deleting existing charts and data from the sheet...")
+        clear_sheet_charts(spreadsheetId, test_name)
+        clear_sheet_data(spreadsheetId, test_name)
+        logging.info("Appending new " + test_name + " data to sheet...")
+        append_to_sheet(spreadsheetId, results, test_name)
+        graph_fio_run_data(spreadsheetId, test_name)
+    except Exception as exc:
+        logging.error("Failed to append data to sheet")
+        return spreadsheetId
+
+
+
 

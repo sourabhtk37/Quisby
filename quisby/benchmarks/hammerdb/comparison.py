@@ -1,11 +1,11 @@
+import logging
 from itertools import groupby
 
 from quisby.sheet.sheet_util import (
-    create_spreadsheet,
     append_to_sheet,
     read_sheet,
     get_sheet,
-    create_sheet
+    create_sheet, clear_sheet_charts, clear_sheet_data
 )
 from quisby.util import combine_two_array_alternating
 from quisby.benchmarks.hammerdb.graph import graph_hammerdb_data
@@ -35,6 +35,15 @@ def compare_hammerdb_results(spreadsheets, spreadsheetId, test_name):
             if value[0][1].split(".")[0] == ele[0][1].split(".")[0]:
                 results = combine_two_array_alternating(results, value, ele)
 
-    create_sheet(spreadsheetId, test_name)
-    append_to_sheet(spreadsheetId, results, test_name)
-    graph_hammerdb_data(spreadsheetId, test_name)
+    try:
+        create_sheet(spreadsheetId, test_name)
+        logging.info("Deleting existing charts and data from the sheet...")
+        clear_sheet_charts(spreadsheetId, test_name)
+        clear_sheet_data(spreadsheetId, test_name)
+        logging.info("Appending new " + test_name + " data to sheet...")
+        append_to_sheet(spreadsheetId, results, test_name)
+        graph_hammerdb_data(spreadsheetId, test_name)
+    except Exception as exc:
+        logging.error("Failed to append data to sheet")
+        return spreadsheetId
+

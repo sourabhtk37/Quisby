@@ -1,9 +1,8 @@
 
+""" Custom key to sort the data base don instance name """
 import logging
 
 
-
-""" Custom key to sort the data base don instance name """
 def custom_key(item):
     if item[1][0] == "localhost":
         instance_type = item[1][0]
@@ -19,7 +18,6 @@ def create_summary_coremark_data(results,OS_RELEASE):
 
     # Sort data based on instance name
     sorted_data = sorted(results, key=custom_key)
-    print(sorted_data)
 
     # Add summary data
     for item in sorted_data:
@@ -50,7 +48,7 @@ def extract_coremark_data(path, system_name, OS_RELEASE):
         else:
             return None
     except Exception as exc:
-        print(str(exc))
+        logging.error(str(exc))
         return None
 
     for index, data in enumerate(coremark_results):

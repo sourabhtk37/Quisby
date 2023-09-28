@@ -20,7 +20,7 @@ def pig_sort_data_by_system_family(results):
     return sorted_result
 
 
-def create_summary_pig_data(pig_data):
+def create_summary_pig_data(pig_data,os_release):
     results = []
 
     pig_data = pig_sort_data_by_system_family(pig_data)
