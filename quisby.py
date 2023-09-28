@@ -151,7 +151,7 @@ def data_handler():
     os_type = read_config('test', 'OS_TYPE')
     os_release = read_config('test', 'OS_RELEASE')
     spreadsheet_name = read_config('spreadsheet', 'spreadsheet_name')
-    spreadsheetid = read_config('spreadsheet', 'spreadsheetId')
+    spreadsheetid = read_config('spreadsheet', 'spreadsheet_id')
     test_path = read_config('test', 'test_path')
     results_path = read_config('test', 'results_location')
 
@@ -175,7 +175,9 @@ def data_handler():
     # Strip empty lines from location file
     for line in fileinput.FileInput(results_path, inplace=1):
         if line.rstrip():
-            print(line, end="")
+            #print(line, end="")
+            pass
+
 
     with open(results_path) as file:
         logging.info("Reading data files path provided in file : " + results_path)

@@ -30,7 +30,7 @@ def write_config(section,key,value):
 
 def process_instance(instance_name, *args):
     cloud_type = read_config("cloud","cloud_type")
-    if instance_name == "localhost":
+    if instance_name != "gcp" or instance_name !="aws" or instance_name != "azure":
         machine = "local"
     else:
         machine = instance_name
@@ -64,13 +64,13 @@ def process_group(label_name, *args):
 
     if cloud_type == "local":
         pattern = r"(?P<family>\D+)(?P<size>\d+)"
-        regex_match = re.match(pattern, instance_name, flags=re.IGNORECASE)
+        regex_match = re.match(pattern, label_name, flags=re.IGNORECASE)
         if "size" in args:
             return regex_match.group(2)
         else:
             return regex_match.group(1)
 
-    regex_match = re.match(pattern, instance_name, flags=re.IGNORECASE)
+    regex_match = re.match(pattern, label_name, flags=re.IGNORECASE)
     return regex_match.group(*args)
 
 def mk_int(string):

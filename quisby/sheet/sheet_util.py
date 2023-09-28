@@ -12,12 +12,11 @@ def check_sheet_exists(sheet_info, test_name):
     return False
 
 
-def permit_users():
+def permit_users(spreadsheetid):
     logging.info("Providing write access to specified users")
     users = read_config("access", "users").split(",")
     if users == ['']:
         return
-    spreadsheetid = read_config("spreadsheet","spreadsheetId")
     drive_api = build('drive', 'v3', credentials=creds)
     for user in users:
         try:
@@ -59,7 +58,7 @@ def create_spreadsheet(spreadsheet_name, test_name):
 
     spreadsheet = sheet.create(body=spreadsheet).execute()
     spreadsheetid = spreadsheet["spreadsheetId"]
-    permit_users()
+    permit_users(spreadsheetid)
     return spreadsheetid
 
 
