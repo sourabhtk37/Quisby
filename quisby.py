@@ -175,8 +175,7 @@ def data_handler():
     # Strip empty lines from location file
     for line in fileinput.FileInput(results_path, inplace=1):
         if line.rstrip():
-            #print(line, end="")
-            pass
+            print(line, end="")
 
 
     with open(results_path) as file:
