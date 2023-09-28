@@ -30,7 +30,8 @@ def write_config(section,key,value):
 
 def process_instance(instance_name, *args):
     cloud_type = read_config("cloud","cloud_type")
-    if instance_name != "gcp" or instance_name !="aws" or instance_name != "azure":
+    if instance_name == "localhost":
+        cloud_type = "local"
         machine = "local"
     else:
         machine = instance_name
