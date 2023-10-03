@@ -29,6 +29,8 @@ import csv
 #             results.append([row[0], f"{row[3]}"])
 
 #     return results
+import logging
+
 
 def process_speccpu(path, system_name, suite,OS_RELEASE):
     results = []
@@ -43,6 +45,7 @@ def process_speccpu(path, system_name, suite,OS_RELEASE):
         try:
             results.append([data_row['Benchmarks'], data_row['Base Rate']])
         except Exception as exc:
+            logging.debug(str(exc))
             pass
     return results
     

@@ -33,6 +33,7 @@ def extract_csv_data(csv_data, path):
                     run_data.append(csv_row[index])
                 results.append([csv_row[1], ndisks, njobs, io_depth, *run_data])
     except Exception as exc:
+        logging.debug(str(exc))
         logging.error("Data format incorrect. Skipping data")
     return results
 

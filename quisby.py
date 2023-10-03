@@ -1,21 +1,27 @@
+import argparse
 import json
 import os.path
 import fileinput
 import sys
 import time
 import logging
+from quisby import util
 
 from quisby.benchmarks.coremark.coremark import extract_coremark_data, create_summary_coremark_data
 from quisby.benchmarks.coremark.graph import graph_coremark_data
+from quisby.benchmarks.coremark.compare import compare_coremark_results
 
 from quisby.benchmarks.coremark_pro.coremark_pro import extract_coremark_pro_data, create_summary_coremark_pro_data
 from quisby.benchmarks.coremark_pro.graph import graph_coremark_pro_data
+from quisby.benchmarks.coremark_pro.compare import compare_coremark_pro_results
 
 from quisby.benchmarks.passmark.passmark import extract_passmark_data, create_summary_passmark_data
 from quisby.benchmarks.passmark.graph import graph_passmark_data
+from quisby.benchmarks.passmark.compare import compare_passmark_results
 
 from quisby.benchmarks.pyperf.pyperf import extract_pyperf_data, create_summary_pyperf_data
 from quisby.benchmarks.pyperf.graph import graph_pyperf_data
+from quisby.benchmarks.pyperf.compare import compare_pyperf_results
 
 from quisby.benchmarks.streams.streams import extract_streams_data, create_summary_streams_data
 from quisby.benchmarks.streams.graph import graph_streams_data
@@ -188,7 +194,7 @@ def data_handler():
                                                     spreadsheet_name, spreadsheetid)
                 results = []
                 test_name = data.replace("test ", "").strip()
-                print("********************** Extracting and preprocessing " + str(test_name) + " data "
+                logging.info("********************** Extracting and preprocessing " + str(test_name) + " data "
                                                                                                 "**********************")
                 source = "results"
             elif "new_series" in data:
@@ -316,14 +322,11 @@ def compare_results(spreadsheets):
             comparison_list.intersection_update(sheets)
         comparison_list = list(comparison_list)
 
-    logging.info("Creating new spreadsheet..")
-
-    spreadsheet_name = read_config('spreadsheet', 'comp_name')
+    spreadsheet_name = " and ".join(spreadsheet_name)
     spreadsheetid = read_config('spreadsheet', 'comp_id')
 
     if not spreadsheetid:
         logging.info("Creating a new spreadsheet... ")
-        spreadsheet_name = " and ".join(spreadsheet_name)
         spreadsheetid = create_spreadsheet(spreadsheet_name, comparison_list[0])
         write_config("spreadsheet", "comp_id", spreadsheetid)
         write_config("spreadsheet", "comp_name", spreadsheet_name)
@@ -331,7 +334,6 @@ def compare_results(spreadsheets):
         logging.info("Spreadsheet ID : " + spreadsheetid)
     else:
         logging.warning("Collecting spreadsheet information from config...")
-        logging.info("Comp spreadsheet name : " + spreadsheet_name)
         logging.info("Comp spreadsheet ID : " + spreadsheetid)
         logging.info("Spreadsheet : " + f"https://docs.google.com/spreadsheets/d/{spreadsheetid}")
         logging.warning("!!! Quit Application to prevent overwriting of existing data !!!")
@@ -352,6 +354,7 @@ def compare_results(spreadsheets):
                 )
                 time.sleep(10)
         except Exception as exc:
+            logging.debug(str(exc))
             logging.error("Benchmark " + test_name + " comparison failed")
 
     logging.info(f"https://docs.google.com/spreadsheets/d/{spreadsheetid}")
@@ -370,20 +373,32 @@ def compare_data(s_list):
 configure_logging()
 
 if __name__ == "__main__":
-    print(
-        "**************************************** STARTING QUISBY APPLICATION **************************************** ")
-    if len(sys.argv) > 1:
-        if sys.argv[1] == "process":
-            reduce_data()
-        elif sys.argv[1] == "compare":
-            try:
-                s_list = sys.argv[2].split(",")
-                compare_data(s_list)
-            except Exception as exc:
-                logging.error("Please provide a valid list of spreadsheets to compare")
-        else:
-            logging.warning("Incorrect options provided.Proceeding with default action...")
-            reduce_data()
+    logging.info("**************************************** STARTING QUISBY APPLICATION "
+          "**************************************** ")
+    parser = argparse.ArgumentParser(description="A script to take name, age, and city.")
+    parser.add_argument("--config", type=str, required=False, help="Location to config file")
+    parser.add_argument("--compare", type=str, required=False, help="Location to config file")
+    args = parser.parse_args()
+    if not (args.config):
+        home_dir = os.getenv("HOME")
+        util.config_location = home_dir + "/.config/quisby/config.ini"
     else:
-        logging.warning("No options provided.Proceeding with default action...")
+        util.config_location = args.config
+
+    logging.info("Config path : " + util.config_location)
+
+    if not args.compare:
+        logging.warning("Proceeding with default action...")
         reduce_data()
+
+    if args.compare:
+        try:
+            s_list = args.compare.split(",")
+            if len(s_list) > 1:
+                compare_data(s_list)
+            raise Exception
+        except Exception as exc:
+            logging.debug(str(exc))
+            logging.error("Please provide a valid list of spreadsheets to compare")
+            exit(0)
+
