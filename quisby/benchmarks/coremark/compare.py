@@ -9,12 +9,10 @@ from quisby.sheet.sheet_util import (
     create_sheet, clear_sheet_data, clear_sheet_charts,
 )
 from quisby.util import combine_two_array_alternating, merge_lists_alternately
-from quisby.benchmarks.streams.graph import graph_streams_data
+from quisby.benchmarks.coremark.graph import graph_coremark_data
 
 
-def compare_streams_results(
-    spreadsheets, spreadsheetId, test_name, table_name=["Max Througput"]
-):
+def compare_coremark_results(spreadsheets, spreadsheetId, test_name, table_name=["System Name"]):
     values = []
     results = []
     spreadsheet_name = []
@@ -55,7 +53,7 @@ def compare_streams_results(
         clear_sheet_data(spreadsheetId, test_name)
         logging.info("Appending new " + test_name + " data to sheet...")
         append_to_sheet(spreadsheetId, results, test_name)
-        graph_streams_data(spreadsheetId, test_name)
+        graph_coremark_data(spreadsheetId, test_name)
     except Exception as exc:
         logging.debug(str(exc))
         logging.error("Failed to append data to sheet")
@@ -66,9 +64,10 @@ def compare_streams_results(
 
 if __name__ == "__main__":
     spreadsheets = [
-        "",
-        "",
+        "1MsO506DIQOt_fcDqwJr3mFOqi_77fQxnWvj6k4qFpZk",
+        "1Z9YUCM22mD2mJ_NeudaMJmdeQhUHsshmGb-3XQRVd5Y",
     ]
-    test_name = "stream"
+    test_name = "coremark"
 
-    compare_streams_results(spreadsheets, test_name)
+    compare_coremark_results(spreadsheets,"1x-XjP0S74D-dbsBMmHufLHhjsiK994h29QcOUxNwdcE", test_name,
+                            table_name=["System Name"])

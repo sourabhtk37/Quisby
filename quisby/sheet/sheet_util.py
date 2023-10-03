@@ -33,6 +33,7 @@ def permit_users(spreadsheetid):
 
             req.execute()
         except Exception as exc:
+            logging.debug(str(exc))
             logging.error("Unable to provide access to this user : "+user)
 
 

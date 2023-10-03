@@ -9,12 +9,10 @@ from quisby.sheet.sheet_util import (
     create_sheet, clear_sheet_data, clear_sheet_charts,
 )
 from quisby.util import combine_two_array_alternating, merge_lists_alternately
-from quisby.benchmarks.streams.graph import graph_streams_data
+from quisby.benchmarks.passmark.graph import graph_passmark_data
 
 
-def compare_streams_results(
-    spreadsheets, spreadsheetId, test_name, table_name=["Max Througput"]
-):
+def compare_passmark_results(spreadsheets, spreadsheetId, test_name, table_name=["SYSTEM_NAME"]):
     values = []
     results = []
     spreadsheet_name = []
@@ -32,10 +30,10 @@ def compare_streams_results(
         for ele in list_2:
             # Check max throughput
             if value[0][0] in table_name and ele[0][0] in table_name:
-                if value[1][0].split(".")[0] == ele[1][0].split(".")[0]:
                     results.append([""])
-                    for item1 in value:
-                        for item2 in ele:
+                    results.append(value[0])
+                    for item1 in value[1:]:
+                        for item2 in ele[1:]:
                             if item1[0] == item2[0]:
                                 results = merge_lists_alternately(results, item1, item2)
                     break
@@ -55,7 +53,7 @@ def compare_streams_results(
         clear_sheet_data(spreadsheetId, test_name)
         logging.info("Appending new " + test_name + " data to sheet...")
         append_to_sheet(spreadsheetId, results, test_name)
-        graph_streams_data(spreadsheetId, test_name)
+        graph_passmark_data(spreadsheetId, test_name)
     except Exception as exc:
         logging.debug(str(exc))
         logging.error("Failed to append data to sheet")
@@ -66,9 +64,10 @@ def compare_streams_results(
 
 if __name__ == "__main__":
     spreadsheets = [
-        "",
-        "",
+        "1MsO506DIQOt_fcDqwJr3mFOqi_77fQxnWvj6k4qFpZk",
+        "1Z9YUCM22mD2mJ_NeudaMJmdeQhUHsshmGb-3XQRVd5Y",
     ]
-    test_name = "stream"
+    test_name = "passmark"
 
-    compare_streams_results(spreadsheets, test_name)
+    compare_passmark_results(spreadsheets,"1x-XjP0S74D-dbsBMmHufLHhjsiK994h29QcOUxNwdcE", test_name,
+                            table_name=["SYSTEM_NAME"])

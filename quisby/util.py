@@ -3,7 +3,7 @@ from configparser import ConfigParser
 import os
 
 home_dir = os.getenv("HOME")
-config_location = home_dir + "/.config/quisby/"
+config_location = None
 
 invalid_compare_list = ["pig"]
 
@@ -11,10 +11,11 @@ def create_parser():
     configur = ConfigParser()
     return configur
 
-def read_config(section,key):
+def read_config(section, key):
+    global config_location
     configur=create_parser()
-    with open(config_location+"config.ini","r") as configfile:
-        configur.read(config_location+"config.ini")
+    with open(config_location) as configfile:
+        configur.read(config_location)
         if configur.get(section,key) is not None:
             return configur.get(section,key)
         else:
@@ -22,9 +23,10 @@ def read_config(section,key):
 
 def write_config(section,key,value):
     configur=create_parser()
-    configur.read(config_location+"config.ini")
+    global config_location
+    configur.read(config_location)
     configur.set(section, key, value)
-    with open(config_location+"config.ini","w") as configfile:
+    with open(config_location,"w") as configfile:
         configur.write(configfile)
 
 

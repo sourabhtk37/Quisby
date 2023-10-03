@@ -35,6 +35,7 @@ def get_azure_pricing(instance_name, region):
         tier = prefix[0].lower()
         version = prefix[2].lower()
     except Exception as exc:
+        logging.debug(str(exc))
         logging.info("Version not present")
     vm = "linux-" + series + version + "-" + tier
 

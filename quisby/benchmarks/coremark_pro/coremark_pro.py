@@ -45,7 +45,8 @@ def extract_coremark_pro_data(path, system_name, OS_RELEASE):
         else:
             return None
     except Exception as exc:
-        logging.error(str(exc))
+        logging.debug(str(exc))
+        logging.error("Unable to extract data from csv file for coremark_pro")
         return None
 
     for index, data in enumerate(coremark_results):

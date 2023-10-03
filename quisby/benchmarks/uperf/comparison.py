@@ -42,6 +42,7 @@ def compare_uperf_results(spreadsheets, spreadsheetId, test_name):
         append_to_sheet(spreadsheetId, results, test_name)
         graph_uperf_data(spreadsheetId, test_name)
     except Exception as exc:
+        logging.debug(str(exc))
         logging.error("Failed to append data to sheet")
         return spreadsheetId
 
