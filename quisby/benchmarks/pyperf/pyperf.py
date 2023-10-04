@@ -44,7 +44,7 @@ def create_summary_pyperf_data(data,OS_RELEASE):
             end_index = start_index + 1
             start_index = 0
         elif end_index:
-            if not row[0] == 'NumTestProcesses' and type(row[1] == "str"):
+            if not row[0] == 'NumTestProcesses':
                 gmean_data.append(float(row[1]))
             processed_data.append(row[1])
     results.append(processed_data)
