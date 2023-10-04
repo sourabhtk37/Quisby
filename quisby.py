@@ -77,7 +77,7 @@ from quisby.benchmarks.etcd.etcd import extract_etcd_data, create_summary_etcd_d
 
 from quisby.util import read_config, write_config
 from quisby.sheet.sheet_util import clear_sheet_charts, clear_sheet_data, get_sheet, create_sheet, append_to_sheet, \
-    create_spreadsheet
+    create_spreadsheet, permit_users
 from quisby.logging.logging_configure import configure_logging
 
 
@@ -98,6 +98,7 @@ def process_results(results, test_name, cloud_type, os_type, os_release, spreads
             logging.info("Summarising " + test_name + " data...")
             results = globals()[f"create_summary_{test_name}_data"](results, os_release)
     except Exception as exc:
+        logging.error(str(exc))
         logging.error("Failed to summarise data")
         return spreadsheetid
 
@@ -110,6 +111,7 @@ def process_results(results, test_name, cloud_type, os_type, os_release, spreads
         logging.info("Appending new " + test_name + " data to sheet...")
         append_to_sheet(spreadsheetid, results, test_name)
     except Exception as exc:
+        logging.error(str(exc))
         logging.error("Failed to append data to sheet")
         return spreadsheetid
 
@@ -121,6 +123,7 @@ def process_results(results, test_name, cloud_type, os_type, os_release, spreads
         else:
             globals()[f"graph_{test_name}_data"](spreadsheetid, test_name)
     except Exception as exc:
+        logging.error(str(exc))
         logging.error("Failed to graph data")
         return spreadsheetid
 
@@ -173,6 +176,7 @@ def data_handler():
         logging.warning("Collecting spreadsheet information from config...")
         logging.info("Spreadsheet name : " + spreadsheet_name)
         logging.info("Spreadsheet ID : " + spreadsheetid)
+        permit_users(spreadsheetid)
         logging.info("Spreadsheet : " + f"https://docs.google.com/spreadsheets/d/{spreadsheetid}")
         logging.warning("!!! Quit Application to prevent overwriting of existing data !!!")
         time.sleep(10)
@@ -251,7 +255,7 @@ def data_handler():
                         ret_val = extract_aim_data(path, system_name)
                         if ret_val:
                             results += ret_val
-                    elif test_name == "autohpl":
+                    elif test_name == "auto_hpl":
                         ret_val = extract_autohpl_data(path, system_name)
                         if ret_val:
                             results += ret_val
@@ -354,7 +358,7 @@ def compare_results(spreadsheets):
                 )
                 time.sleep(10)
         except Exception as exc:
-            logging.debug(str(exc))
+            logging.error(str(exc))
             logging.error("Benchmark " + test_name + " comparison failed")
 
     logging.info(f"https://docs.google.com/spreadsheets/d/{spreadsheetid}")
@@ -398,7 +402,7 @@ if __name__ == "__main__":
                 compare_data(s_list)
             raise Exception
         except Exception as exc:
-            logging.debug(str(exc))
+            logging.error(str(exc))
             logging.error("Please provide a valid list of spreadsheets to compare")
             exit(0)
 
