@@ -4,7 +4,7 @@ from quisby.pricing import cloud_pricing
 from quisby.benchmarks.linpack.extract import linpack_format_data
 
 
-def extract_autohpl_data(path, system_name):
+def extract_auto_hpl_data(path, system_name):
 
     if path.endswith(".csv"):
         with open(path) as file:

@@ -63,9 +63,10 @@ from quisby.benchmarks.aim.extract import extract_aim_data
 from quisby.benchmarks.aim.summary import create_summary_aim_data
 from quisby.benchmarks.aim.graph import graph_aim_data
 
-from quisby.benchmarks.autohpl.extract import extract_autohpl_data
-from quisby.benchmarks.autohpl.summary import create_summary_autohpl_data
-from quisby.benchmarks.autohpl.graph import graph_autohpl_data
+from quisby.benchmarks.auto_hpl.extract import extract_auto_hpl_data
+from quisby.benchmarks.auto_hpl.summary import create_summary_auto_hpl_data
+from quisby.benchmarks.auto_hpl.graph import graph_auto_hpl_data
+from quisby.benchmarks.auto_hpl.comparison import compare_auto_hpl_results
 
 from quisby.benchmarks.speccpu.extract import extract_speccpu_data
 from quisby.benchmarks.speccpu.summary import create_summary_speccpu_data
@@ -256,7 +257,7 @@ def data_handler():
                         if ret_val:
                             results += ret_val
                     elif test_name == "auto_hpl":
-                        ret_val = extract_autohpl_data(path, system_name)
+                        ret_val = extract_auto_hpl_data(path, system_name)
                         if ret_val:
                             results += ret_val
                     elif test_name == "speccpu":
