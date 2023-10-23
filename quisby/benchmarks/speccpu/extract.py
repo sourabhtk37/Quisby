@@ -53,7 +53,9 @@ def process_speccpu(path, system_name, suite,OS_RELEASE):
 def extract_speccpu_data(path, system_name,OS_RELEASE):
     results = []
 
-    for suite in ["fprate", "intrate"]:
-        results += process_speccpu(path, system_name, suite,OS_RELEASE)
+    if "fprate" in path:
+        results += process_speccpu(path, system_name, "fprate" ,OS_RELEASE)
+    elif "intrate" in path:
+        results += process_speccpu(path, system_name, "intrate", OS_RELEASE)
 
     return results
