@@ -3,9 +3,6 @@ import configparser
 import os
 from logging.handlers import RotatingFileHandler
 
-home_dir = os.getenv("HOME")
-config_location = home_dir + "/.config/quisby/"
-
 
 class ColoredFormatter(logging.Formatter):
     COLORS = {
@@ -21,10 +18,10 @@ class ColoredFormatter(logging.Formatter):
         log_message = super().format(record)
         return f"{self.COLORS.get(record.levelname, self.COLORS['RESET'])}{log_message}{self.COLORS['RESET']}"
 
-def configure_logging():
+def configure_logging(config_location):
     # Load configuration
     config = configparser.ConfigParser()
-    config.read(config_location+"config.ini")
+    config.read(config_location)
 
     log_level = config['LOGGING']['level']
     log_filename = config['LOGGING']['filename']
