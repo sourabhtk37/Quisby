@@ -374,11 +374,8 @@ def compare_data(s_list):
     compare_results(s_list)
 
 
-# Set up logging
-configure_logging()
-
 if __name__ == "__main__":
-    logging.info("**************************************** STARTING QUISBY APPLICATION "
+    print("**************************************** STARTING QUISBY APPLICATION "
           "**************************************** ")
     parser = argparse.ArgumentParser(description="A script to take name, age, and city.")
     parser.add_argument("--config", type=str, required=False, help="Location to config file")
@@ -389,6 +386,9 @@ if __name__ == "__main__":
         util.config_location = home_dir + "/.config/quisby/config.ini"
     else:
         util.config_location = args.config
+
+    # Set up logging
+    configure_logging(util.config_location)
 
     logging.info("Config path : " + util.config_location)
 
