@@ -61,7 +61,7 @@ def create_summary_streams_data(stream_data,OS_RELEASE):
         results.append([""])
         results.append(
             [
-                "Max Througput",
+                "Max Throughput",
                 f"Copy-{OS_RELEASE}",
                 f"Scale-{OS_RELEASE}",
                 f"Add-{OS_RELEASE}",
