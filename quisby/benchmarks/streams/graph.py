@@ -56,7 +56,7 @@ def graph_streams_data(spreadsheetId, test_name):
     data = read_sheet(spreadsheetId,"streams")
 
     for index, row in enumerate(data):
-        if "Max Througput" in row:
+        if "Max Throughput" in row:
             start_index = index
 
         if start_index:

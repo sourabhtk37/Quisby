@@ -13,7 +13,7 @@ from quisby.benchmarks.streams.graph import graph_streams_data
 
 
 def compare_streams_results(
-    spreadsheets, spreadsheetId, test_name, table_name=["Max Througput"]
+    spreadsheets, spreadsheetId, test_name, table_name=["Max Throughput"]
 ):
     values = []
     results = []
