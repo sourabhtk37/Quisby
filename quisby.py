@@ -362,7 +362,7 @@ def compare_results(spreadsheets):
             logging.error(str(exc))
             logging.error("Benchmark " + test_name + " comparison failed")
 
-    logging.info(f"https://docs.google.com/spreadsheets/d/{spreadsheetid}")
+    print(f"https://docs.google.com/spreadsheets/d/{spreadsheetid}")
     register_details_json(spreadsheet_name, spreadsheetid)
 
 

@@ -43,6 +43,7 @@ def configure_logging(config_location):
         format='%(asctime)s [%(levelname)s] %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S',
         handlers=[
+            logging.StreamHandler(),
             rotating_handler
         ]
     )
