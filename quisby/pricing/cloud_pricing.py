@@ -187,9 +187,9 @@ def get_instance_vcpu_count(instance_type, region):
         return None
 
 
-def get_cloud_pricing(instance_name, region, cloud_type):
+def get_cloud_pricing(instance_name, region, cloud_type,os_type):
     if cloud_type == "aws":
-        return get_aws_pricing(instance_name, region)
+        return get_aws_pricing(instance_name, region,os_type)
 
     elif cloud_type == "azure":
         return get_azure_pricing(instance_name, region)
@@ -219,8 +219,8 @@ if __name__ == "__main__":
     # print(get_azure_pricing("Standard_D32s_v3",region))
     # print(get_gcp_prices("n2-standard-16",region)
     region = "us-east-1"  # Replace with your desired AWS region
-    instance_type = ["m6g.xlarge", "m6g.8xlarge"]  # Replace with your desired EC2 instance type
-    os_type = ["RHEL", "Linux", "Ubuntu Pro"]
+    instance_type = ["m6i.xlarge", "m6i.24xlarge"]  # Replace with your desired EC2 instance type
+    os_type = ["rhel", "Linux", "Ubuntu Pro"]
     list_aws_regions(region)
     list_operating_systems(region)
     for instance in instance_type:

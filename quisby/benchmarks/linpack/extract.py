@@ -12,9 +12,10 @@ def linpack_format_data(**kwargs):
     Add data into format to be shown in spreadsheets
     Supports linpack like data. eg: autohpl
     """
-    region = read_config("cloud","region")
-    cloud_type = read_config("cloud","cloud_type")
-    os_release =read_config("test","OS_RELEASE")
+    region = read_config("cloud", "region")
+    cloud_type = read_config("cloud", "cloud_type")
+    os_release = read_config("test", "OS_RELEASE")
+    os_type = read_config("test", "os_type")
     results = kwargs["results"] if kwargs["results"] else []
     system_name = kwargs["system_name"] if kwargs["system_name"] else None
     if kwargs["gflops"]:
@@ -23,7 +24,7 @@ def linpack_format_data(**kwargs):
         return None
 
     price_per_hour = get_cloud_pricing(
-        system_name, region, cloud_type.lower()
+        system_name, region, cloud_type.lower(), os_type
     )
 
     no_of_cores = get_cloud_cpu_count(
