@@ -4,7 +4,6 @@ import os.path
 import fileinput
 import sys
 import time
-import logging
 from quisby import util
 
 from quisby.benchmarks.coremark.coremark import extract_coremark_data, create_summary_coremark_data
@@ -79,7 +78,7 @@ from quisby.benchmarks.etcd.etcd import extract_etcd_data, create_summary_etcd_d
 from quisby.util import read_config, write_config
 from quisby.sheet.sheet_util import clear_sheet_charts, clear_sheet_data, get_sheet, create_sheet, append_to_sheet, \
     create_spreadsheet, permit_users
-from quisby.logging.logging_configure import configure_logging
+from quisby import custom_logger
 
 
 def check_test_is_hammerdb(test_name):
@@ -96,43 +95,43 @@ def process_results(results, test_name, cloud_type, os_type, os_release, spreads
         if check_test_is_hammerdb(test_name):
             results = create_summary_hammerdb_data(results)
         else:
-            logging.info("Summarising " + test_name + " data...")
+            custom_logger.info("Summarising " + test_name + " data...")
             results = globals()[f"create_summary_{test_name}_data"](results, os_release)
     except Exception as exc:
-        logging.error(str(exc))
-        logging.error("Failed to summarise data")
+        custom_logger.error(str(exc))
+        custom_logger.error("Failed to summarise data")
         return spreadsheetid
 
     # Append data
     try:
         create_sheet(spreadsheetid, test_name)
-        logging.info("Deleting existing charts and data from the sheet...")
+        custom_logger.info("Deleting existing charts and data from the sheet...")
         clear_sheet_charts(spreadsheetid, test_name)
         clear_sheet_data(spreadsheetid, test_name)
-        logging.info("Appending new " + test_name + " data to sheet...")
+        custom_logger.info("Appending new " + test_name + " data to sheet...")
         append_to_sheet(spreadsheetid, results, test_name)
     except Exception as exc:
-        logging.error(str(exc))
-        logging.error("Failed to append data to sheet")
+        custom_logger.error(str(exc))
+        custom_logger.error("Failed to append data to sheet")
         return spreadsheetid
 
     # Graph up data
     try:
-        logging.info("Graphing " + test_name + " data...")
+        custom_logger.info("Graphing " + test_name + " data...")
         if check_test_is_hammerdb(test_name):
             graph_hammerdb_data(spreadsheetid, test_name)
         else:
             globals()[f"graph_{test_name}_data"](spreadsheetid, test_name)
     except Exception as exc:
-        logging.error(str(exc))
-        logging.error("Failed to graph data")
+        custom_logger.error(str(exc))
+        custom_logger.error("Failed to graph data")
         return spreadsheetid
 
     return spreadsheetid
 
 
 def register_details_json(spreadsheet_name, spreadsheet_id):
-    logging.info("Collecting spreadsheet information...")
+    custom_logger.info("Collecting spreadsheet information...")
     home_dir = os.getenv("HOME")
     filename = home_dir + "/.config/quisby/charts.json"
     if not os.path.exists(filename):
@@ -145,7 +144,7 @@ def register_details_json(spreadsheet_name, spreadsheet_id):
         data["chartlist"][spreadsheet_name] = spreadsheet_id
         with open(filename, "w") as f:
             json.dump(data, f)
-    logging.info({spreadsheet_name: spreadsheet_id})
+    custom_logger.info({spreadsheet_name: spreadsheet_id})
 
 
 # TODO: simplify functions once data location is exact
@@ -156,7 +155,7 @@ def data_handler():
     global count
     results = []
 
-    logging.info("Loading configurations...")
+    custom_logger.info("Loading configurations...")
     cloud_type = read_config('cloud', 'cloud_type')
     os_type = read_config('test', 'OS_TYPE')
     os_release = read_config('test', 'OS_RELEASE')
@@ -166,22 +165,22 @@ def data_handler():
     results_path = read_config('test', 'results_location')
 
     if not spreadsheetid:
-        logging.info("Creating a new spreadsheet... ")
+        custom_logger.info("Creating a new spreadsheet... ")
         spreadsheet_name = f"{cloud_type}-{os_type}-{os_release}-{spreadsheet_name}"
         spreadsheetid = create_spreadsheet(spreadsheet_name, "summary")
         write_config("spreadsheet", "spreadsheet_id", spreadsheetid)
         write_config("spreadsheet", "spreadsheet_name", spreadsheet_name)
-        logging.info("Spreadsheet name : " + spreadsheet_name)
-        logging.info("Spreadsheet ID : " + spreadsheetid)
+        custom_logger.info("Spreadsheet name : " + spreadsheet_name)
+        custom_logger.info("Spreadsheet ID : " + spreadsheetid)
     else:
-        logging.warning("Collecting spreadsheet information from config...")
-        logging.info("Spreadsheet name : " + spreadsheet_name)
-        logging.info("Spreadsheet ID : " + spreadsheetid)
+        custom_logger.warning("Collecting spreadsheet information from config...")
+        custom_logger.info("Spreadsheet name : " + spreadsheet_name)
+        custom_logger.info("Spreadsheet ID : " + spreadsheetid)
         permit_users(spreadsheetid)
-        logging.info("Spreadsheet : " + f"https://docs.google.com/spreadsheets/d/{spreadsheetid}")
-        logging.warning("!!! Quit Application to prevent overwriting of existing data !!!")
+        custom_logger.info("Spreadsheet : " + f"https://docs.google.com/spreadsheets/d/{spreadsheetid}")
+        custom_logger.warning("!!! Quit Application to prevent overwriting of existing data !!!")
         time.sleep(10)
-        logging.info("No action provided. Overwriting the existing sheet.")
+        custom_logger.info("No action provided. Overwriting the existing sheet.")
 
     # Strip empty lines from location file
     for line in fileinput.FileInput(results_path, inplace=1):
@@ -190,7 +189,7 @@ def data_handler():
 
 
     with open(results_path) as file:
-        logging.info("Reading data files path provided in file : " + results_path)
+        custom_logger.info("Reading data files path provided in file : " + results_path)
         test_result_path = file.readlines()
         for data in test_result_path:
             if "test " in data:
@@ -199,7 +198,7 @@ def data_handler():
                                                     spreadsheet_name, spreadsheetid)
                 results = []
                 test_name = data.replace("test ", "").strip()
-                logging.info("********************** Extracting and preprocessing " + str(test_name) + " data "
+                custom_logger.info("********************** Extracting and preprocessing " + str(test_name) + " data "
                                                                                                 "**********************")
                 source = "results"
             elif "new_series" in data:
@@ -214,7 +213,7 @@ def data_handler():
                         data = data.strip("\n").strip("'")
                         path, system_name = data.split(",")
                     path = test_path + "/" + path.strip()
-                    logging.debug(path)
+                    custom_logger.debug(path)
                     if test_name == "streams":
                         ret_val = extract_streams_data(path, system_name, os_release)
                         if ret_val:
@@ -285,19 +284,19 @@ def data_handler():
                         if ret_val:
                             results += ret_val
                     else:
-                        logging.info("Mentioned benchmark not yet supported ! ")
+                        custom_logger.info("Mentioned benchmark not yet supported ! ")
 
                 except Exception as exc:
-                    logging.error(str(exc))
+                    custom_logger.error(str(exc))
 
         if results is not []:
             try:
                 spreadsheetid = process_results(results, test_name, cloud_type, os_type, os_release, spreadsheet_name,
                                                 spreadsheetid)
             except Exception as exc:
-                logging.error(str(exc))
+                custom_logger.error(str(exc))
                 pass
-            logging.info(f"https://docs.google.com/spreadsheets/d/{spreadsheetid}")
+            custom_logger.info(f"https://docs.google.com/spreadsheets/d/{spreadsheetid}")
             register_details_json(spreadsheet_name, spreadsheetid)
 
 
@@ -307,8 +306,8 @@ def compare_results(spreadsheets):
     comparison_list = []
     test_name = []
 
-    logging.info("Comparing the data provided..")
-    logging.info("Collecting list of benchmarks...")
+    custom_logger.info("Comparing the data provided..")
+    custom_logger.info("Collecting list of benchmarks...")
     for spreadsheet in spreadsheets:
         sheet_names = []
         sheets = get_sheet(spreadsheet, test_name=test_name)
@@ -321,7 +320,7 @@ def compare_results(spreadsheets):
         comparison_list = [test_name]
     else:
         # Find sheets that are present in all spreadsheets i.e intersection
-        logging.info("Extracting common benchmarks for comparison...")
+        custom_logger.info("Extracting common benchmarks for comparison...")
         comparison_list = set(sheet_list[0])
         for sheets in sheet_list[1:]:
             comparison_list.intersection_update(sheets)
@@ -331,38 +330,38 @@ def compare_results(spreadsheets):
     spreadsheetid = read_config('spreadsheet', 'comp_id')
 
     if not spreadsheetid:
-        logging.info("Creating a new spreadsheet... ")
+        custom_logger.info("Creating a new spreadsheet... ")
         spreadsheetid = create_spreadsheet(spreadsheet_name, comparison_list[0])
         write_config("spreadsheet", "comp_id", spreadsheetid)
         write_config("spreadsheet", "comp_name", spreadsheet_name)
-        logging.info("Spreadsheet name : " + spreadsheet_name)
-        logging.info("Spreadsheet ID : " + spreadsheetid)
+        custom_logger.info("Spreadsheet name : " + spreadsheet_name)
+        custom_logger.info("Spreadsheet ID : " + spreadsheetid)
     else:
-        logging.warning("Collecting spreadsheet information from config...")
-        logging.info("Comp spreadsheet ID : " + spreadsheetid)
-        logging.info("Spreadsheet : " + f"https://docs.google.com/spreadsheets/d/{spreadsheetid}")
-        logging.warning("!!! Quit Application to prevent overwriting of existing data !!!")
+        custom_logger.warning("Collecting spreadsheet information from config...")
+        custom_logger.info("Comp spreadsheet ID : " + spreadsheetid)
+        custom_logger.info("Spreadsheet : " + f"https://docs.google.com/spreadsheets/d/{spreadsheetid}")
+        custom_logger.warning("!!! Quit Application to prevent overwriting of existing data !!!")
         time.sleep(10)
-        logging.info("No action provided. Overwriting the existing sheet.")
+        custom_logger.info("No action provided. Overwriting the existing sheet.")
 
     for index, test_name in enumerate(comparison_list):
         try:
-            logging.info("Comparing " + test_name + " value...")
+            custom_logger.info("Comparing " + test_name + " value...")
             write_config("test", "test_name", test_name)
             if check_test_is_hammerdb(test_name):
                 compare_hammerdb_results(spreadsheets, spreadsheetid, test_name)
             else:
                 globals()[f"compare_{test_name}_results"](spreadsheets, spreadsheetid, test_name)
             if index + 1 != len(comparison_list):
-                logging.info(
+                custom_logger.info(
                     "# Sleeping 10 sec to workaround the Google Sheet per minute API limit"
                 )
                 time.sleep(10)
         except Exception as exc:
-            logging.error(str(exc))
-            logging.error("Benchmark " + test_name + " comparison failed")
+            custom_logger.error(str(exc))
+            custom_logger.error("Benchmark " + test_name + " comparison failed")
 
-    logging.info(f"https://docs.google.com/spreadsheets/d/{spreadsheetid}")
+    custom_logger.info(f"https://docs.google.com/spreadsheets/d/{spreadsheetid}")
     register_details_json(spreadsheet_name, spreadsheetid)
 
 
@@ -375,7 +374,7 @@ def compare_data(s_list):
 
 
 if __name__ == "__main__":
-    print("**************************************** STARTING QUISBY APPLICATION "
+    custom_logger.info("**************************************** STARTING QUISBY APPLICATION "
           "**************************************** ")
     parser = argparse.ArgumentParser(description="A script to take name, age, and city.")
     parser.add_argument("--config", type=str, required=False, help="Location to config file")
@@ -387,13 +386,10 @@ if __name__ == "__main__":
     else:
         util.config_location = args.config
 
-    # Set up logging
-    configure_logging(util.config_location)
-
-    logging.info("Config path : " + util.config_location)
+    custom_logger.info("Config path : " + util.config_location)
 
     if not args.compare:
-        logging.warning("Proceeding with default action...")
+        custom_logger.warning("Proceeding with default action...")
         reduce_data()
 
     if args.compare:
@@ -403,7 +399,7 @@ if __name__ == "__main__":
                 compare_data(s_list)
             raise Exception
         except Exception as exc:
-            logging.error(str(exc))
-            logging.error("Please provide a valid list of spreadsheets to compare")
+            custom_logger.error(str(exc))
+            custom_logger.error("Please provide a valid list of spreadsheets to compare")
             exit(0)
 

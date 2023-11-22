@@ -1,4 +1,4 @@
-import logging
+from quisby import custom_logger
 
 from scipy.stats import gmean
 
@@ -69,7 +69,7 @@ def extract_passmark_data(path, system_name, OS_RELEASE):
         else:
             return None
     except Exception as exc:
-        logging.error(str(exc))
+        custom_logger.error(str(exc))
         return None
 
     for index, data in enumerate(coremark_results):

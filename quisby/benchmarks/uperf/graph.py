@@ -1,4 +1,4 @@
-import logging
+from quisby import custom_logger
 import time
 from itertools import groupby
 

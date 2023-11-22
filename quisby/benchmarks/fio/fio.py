@@ -1,6 +1,6 @@
 import re
 import os
-import logging
+from quisby import custom_logger
 from itertools import groupby
 
 import requests
@@ -17,7 +17,7 @@ HEADER_TO_EXTRACT = [
 def extract_csv_data(csv_data, path):
     indexof_all = []
     results = []
-    logging.info(f"extract csv data: {path}")
+    custom_logger.info(f"extract csv data: {path}")
     header_row = csv_data.pop(0).split(",")
     io_depth = re.findall(r"iod.*?_(\d+)", path)[0]
     ndisks = re.findall(r"ndisks_(\d+)", path)[0]
@@ -33,8 +33,8 @@ def extract_csv_data(csv_data, path):
                     run_data.append(csv_row[index])
                 results.append([csv_row[1], ndisks, njobs, io_depth, *run_data])
     except Exception as exc:
-        logging.debug(str(exc))
-        logging.error("Data format incorrect. Skipping data")
+        custom_logger.debug(str(exc))
+        custom_logger.error("Data format incorrect. Skipping data")
     return results
 
 
@@ -122,6 +122,6 @@ def extract_fio_run_data(path, system_name,OS_RELEASE):
             results += extract_csv_data(csv_data, os.path.basename(path))
         return group_data(results, system_name,OS_RELEASE)
     except Exception as exc:
-        logging.error("Unable to find fio path")
-        logging.error(str(exc))
+        custom_logger.error("Unable to find fio path")
+        custom_logger.error(str(exc))
     return []

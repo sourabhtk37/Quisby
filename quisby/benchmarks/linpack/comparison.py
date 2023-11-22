@@ -1,4 +1,4 @@
-import logging
+from quisby import custom_logger
 
 from quisby.sheet.sheetapi import sheet
 from quisby.sheet.sheet_util import (
@@ -340,14 +340,14 @@ def compare_linpack_results(spreadsheets, spreadsheetId, test_name):
                     )
     try:
         create_sheet(spreadsheetId, test_name)
-        logging.info("Deleting existing charts and data from the sheet...")
+        custom_logger.info("Deleting existing charts and data from the sheet...")
         clear_sheet_charts(spreadsheetId, test_name)
         clear_sheet_data(spreadsheetId, test_name)
-        logging.info("Appending new " + test_name + " data to sheet...")
+        custom_logger.info("Appending new " + test_name + " data to sheet...")
         append_to_sheet(spreadsheetId, results, test_name)
         graph_linpack_comparison(spreadsheetId, test_name)
     except Exception as exc:
-        logging.debug(str(exc))
-        logging.error("Failed to append data to sheet")
+        custom_logger.debug(str(exc))
+        custom_logger.error("Failed to append data to sheet")
         return spreadsheetId
 

@@ -1,5 +1,5 @@
 # Using this package which is a HTTP library
-import logging
+from quisby import custom_logger
 import sys
 import time
 import json
@@ -17,11 +17,11 @@ def fetch_from_url():
     try:
         response = requests.get(url)
     except Exception as exc:
-        logging.error(str(exc))
+        custom_logger.error(str(exc))
     if response.status_code == 200:
         return response.json()
     else:
-        logging.error("Error: {}".format(response.text))
+        custom_logger.error("Error: {}".format(response.text))
         return None
 
 
@@ -35,8 +35,8 @@ def get_azure_pricing(instance_name, region):
         tier = prefix[0].lower()
         version = prefix[2].lower()
     except Exception as exc:
-        logging.debug(str(exc))
-        logging.info("Version not present")
+        custom_logger.debug(str(exc))
+        custom_logger.info("Version not present")
     vm = "linux-" + series + version + "-" + tier
 
     if os.path.exists(homedir + json_path):
@@ -45,7 +45,7 @@ def get_azure_pricing(instance_name, region):
             with open(homedir + json_path) as f:
                 data = json.load(f)
         except Exception as exc:
-            logging.error("Error extracting data from file. File corrupted. Redirecting to url fetching.")
+            custom_logger.error("Error extracting data from file. File corrupted. Redirecting to url fetching.")
             data = fetch_from_url()
     else:
         # fetch price information from url
@@ -53,8 +53,8 @@ def get_azure_pricing(instance_name, region):
     if data is None:
         return data
     price = data.json()["offers"][vm]['prices']['perhour'][region]["value"]
-    logging.info("VM SKU: {}".format(instance_name))
-    logging.info("Hourly price: {} USD".format(price))
+    custom_logger.info("VM SKU: {}".format(instance_name))
+    custom_logger.info("Hourly price: {} USD".format(price))
     return price
 
 
@@ -76,7 +76,7 @@ def get_gcp_prices(instance_name, region):
     elif machine_fam in ("N1", "E2"):
         prefix = 'CP-COMPUTEENGINE-VMIMAGE-' + instance_name.upper().strip()
     else:
-        logging.error("This machine price is not available")
+        custom_logger.error("This machine price is not available")
         return
 
     for name, prices in gcp_price_list.items():

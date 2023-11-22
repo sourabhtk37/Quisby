@@ -1,4 +1,4 @@
-import logging
+from quisby import custom_logger
 from googleapiclient.discovery import build
 from quisby.sheet.sheetapi import sheet, creds
 from quisby.util import read_config, write_config
@@ -13,7 +13,7 @@ def check_sheet_exists(sheet_info, test_name):
 
 
 def permit_users(spreadsheetid):
-    logging.info("Providing write access to specified users")
+    custom_logger.info("Providing write access to specified users")
     users = read_config("access", "users").split(",")
     if users == ['']:
         return
@@ -33,8 +33,8 @@ def permit_users(spreadsheetid):
 
             req.execute()
         except Exception as exc:
-            logging.debug(str(exc))
-            logging.error("Unable to provide access to this user : "+user)
+            custom_logger.debug(str(exc))
+            custom_logger.error("Unable to provide access to this user : "+user)
 
 
 def create_spreadsheet(spreadsheet_name, test_name):
@@ -84,7 +84,7 @@ def create_sheet(spreadsheetId, test_name):
 
     # Create sheet if it doesn't exit
     if not check_sheet_exists(sheet_info, test_name):
-        logging.info("Sheet for this benchmark doesn't exist. Creating...")
+        custom_logger.info("Sheet for this benchmark doesn't exist. Creating...")
         sheet_count = len(sheet_info)
 
         requests = {
@@ -162,7 +162,7 @@ def apply_named_range(spreadsheetId, name, range="A:Z"):
         .execute()
     )
 
-    logging.info(response)
+    custom_logger.info(response)
 
 
 def clear_sheet_data(spreadsheetid, range):
