@@ -85,7 +85,36 @@ def get_gcp_prices(instance_name, region):
                 if region == key:
                     return gcp_price_list[name][region]
             return
+def list_aws_regions(region):
+    try:
+        ec2 = boto3.client('ec2',region)
+        regions = [region['RegionName'] for region in ec2.describe_regions()['Regions']
+                   if region['OptInStatus'] != 'not-opted-in']
+        return regions
+    except Exception as exc:
+        print("Unable to fetch aws regions")
+        return None
 
+def list_operating_systems(region):
+    try:
+        client = boto3.client('pricing', region_name=region)
+
+        response = client.get_products(ServiceCode='AmazonEC2')
+
+        operating_systems = set()
+
+        if 'PriceList' in response:
+            for price_list in response['PriceList']:
+                product = json.loads(price_list)
+                if 'attributes' in product['product']:
+                    attributes = product['product']['attributes']
+                    if 'operatingSystem' in attributes:
+                        os = attributes['operatingSystem']
+                        operating_systems.add(os)
+        return operating_systems
+    except Exception as exc:
+        print("Unable to fetch OS list")
+        return None
 
 def get_aws_instance_info(instance_name, region):
     """
@@ -97,7 +126,6 @@ def get_aws_instance_info(instance_name, region):
 
     returns: integer pricing in USD
     """
-    region = read_config("cloud", "region")
     pricing = boto3.client("pricing", region_name=region)
 
     OPERATING_SYSTEM = "AmazonEC2"
@@ -107,7 +135,8 @@ def get_aws_instance_info(instance_name, region):
             {
                 'Type': 'TERM_MATCH',
                 'Field': 'ServiceCode',
-                'Value': OPERATING_SYSTEM
+                'Value': OPERATING_SYSTEM,
+
             },
         ],
         FormatVersion='aws_v1',
@@ -117,40 +146,50 @@ def get_aws_instance_info(instance_name, region):
     return response['PriceList']
 
 
-def get_aws_pricing(instance_name, region):
-    price_list = get_aws_instance_info(instance_name, region)
+def get_aws_pricing(instance_type, region, os_type):
+    product = "AmazonEC2"
+    client = boto3.client('pricing', region_name=region)
+    filters = [
+        {"Type": "TERM_MATCH", "Field": "regionCode", "Value": region},
+        {"Type": "TERM_MATCH", "Field": "instanceType", "Value": instance_type},
+        {"Type": "TERM_MATCH", "Field": "operatingSystem", "Value": os_type},
+    ]
 
-    # Filter pricing details
-    if price_list:
-        price_item = json.loads(price_list[0])
+    response = client.get_products(ServiceCode=product, Filters=filters)
 
-        terms = price_item["terms"]
+    if "PriceList" in response:
+        try:
+            price_list = json.loads(response["PriceList"][0])
 
-        price_dimension = terms["OnDemand"][iter(terms["OnDemand"]).__next__()][
-            "priceDimensions"
-        ]
-        price = price_dimension[iter(price_dimension).__next__()]["pricePerUnit"]["USD"]
+            # Extract pricing information as needed
+            terms = price_list["terms"]["OnDemand"]
+            for _, term_info in terms.items():
+                for _, price_dimension in term_info["priceDimensions"].items():
+                    price_per_hour = price_dimension["pricePerUnit"]["USD"]
+                    print(
+                        f"Price per Hour: for " + instance_type + " for os " + os_type + " in region " + region + " is " + price_per_hour + " USD")
+                    return price_per_hour
+        except Exception as exc:
+            print("Unable to fetch prices of " + instance_type + " for os_type " + os_type + " in region " + region)
+            return None
 
-        return price
+
+def get_instance_vcpu_count(instance_type, region):
+    ec2 = boto3.client('ec2', region_name=region)
+
+    instance_info = ec2.describe_instance_types(InstanceTypes=[instance_type])
+
+    if 'InstanceTypes' in instance_info:
+        instance = instance_info['InstanceTypes'][0]
+        vcpu_count = instance['VCpuInfo']['DefaultVCpus']
+        return vcpu_count
     else:
         return None
 
 
-def get_aws_cpucount(instance_name, region):
-    cpu_count = 1
-    price_list = get_aws_instance_info(instance_name, region)
-
-    if price_list:
-        price_item = json.loads(price_list[0])
-
-        cpu_count = price_item["product"]["attributes"]["vcpu"]
-
-    return cpu_count
-
-
-def get_cloud_pricing(instance_name, region, cloud_type):
+def get_cloud_pricing(instance_name, region, cloud_type,os_type):
     if cloud_type == "aws":
-        return get_aws_pricing(instance_name, region)
+        return get_aws_pricing(instance_name, region,os_type)
 
     elif cloud_type == "azure":
         return get_azure_pricing(instance_name, region)
@@ -164,7 +203,7 @@ def get_cloud_pricing(instance_name, region, cloud_type):
 
 def get_cloud_cpu_count(instance_name, region, cloud_type):
     if cloud_type == "aws":
-        return get_aws_cpucount(instance_name, region)
+        return get_instance_vcpu_count(instance_name, region)
 
     elif cloud_type == "azure":
         return int(process_instance(instance_name, "size"))
@@ -177,8 +216,14 @@ def get_cloud_cpu_count(instance_name, region, cloud_type):
 
 
 if __name__ == "__main__":
-    # region = "us-east"
     # print(get_azure_pricing("Standard_D32s_v3",region))
-    # print(get_aws_cpucount("i3en.24xlarge",region))
     # print(get_gcp_prices("n2-standard-16",region)
-    pass
+    region = "us-east-1"  # Replace with your desired AWS region
+    instance_type = ["m6i.xlarge", "m6i.24xlarge"]  # Replace with your desired EC2 instance type
+    os_type = ["rhel", "Linux", "Ubuntu Pro"]
+    list_aws_regions(region)
+    list_operating_systems(region)
+    for instance in instance_type:
+        for os in os_type:
+            get_instance_vcpu_count(instance, region)
+            get_aws_pricing(instance,region, os)

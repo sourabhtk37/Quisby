@@ -23,12 +23,13 @@ def specjbb_sort_data_by_system_family(results):
 
 
 def calc_peak_throughput_peak_efficiency(data):
-    region = read_config("cloud","region")
-    cloud_type = read_config("cloud","cloud_type")
+    region = read_config("cloud", "region")
+    cloud_type = read_config("cloud", "cloud_type")
+    os_type = read_config("test", "os_type")
     cost_per_hour, peak_throughput, peak_efficiency = None, None, None
     try:
         cost_per_hour = get_cloud_pricing(
-            data[1][0], region, cloud_type.lower())
+            data[1][0], region, cloud_type.lower(), os_type)
         peak_throughput = max(data[3:], key=lambda x: int(x[1]))[1]
         peak_efficiency = float(peak_throughput) / float(cost_per_hour)
     except Exception as exc:
