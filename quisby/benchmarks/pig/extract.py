@@ -1,4 +1,4 @@
-import logging
+from quisby import custom_logger
 import re
 
 from quisby.pricing.cloud_pricing import get_cloud_cpu_count
@@ -20,7 +20,7 @@ def extract_pig_data(path, system_name,OS_RELEASE):
                 else:
                     result_data.append(line.strip("\n").split(":"))
     except Exception as exc:
-        logging.error(str(exc))
+        custom_logger.error(str(exc))
         return None
 
     

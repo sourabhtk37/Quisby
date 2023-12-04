@@ -1,6 +1,6 @@
 import glob
 import csv
-
+from quisby import custom_logger
 # def process_speccpu(path, system_name, suite):
 #     results = []
 #     suite_path = glob.glob(f"{path}/*{suite}.refrate.results.csv")[0]
@@ -29,8 +29,6 @@ import csv
 #             results.append([row[0], f"{row[3]}"])
 
 #     return results
-import logging
-
 
 def process_speccpu(path, system_name, suite,OS_RELEASE):
     results = []
@@ -45,7 +43,7 @@ def process_speccpu(path, system_name, suite,OS_RELEASE):
         try:
             results.append([data_row['Benchmarks'], data_row['Base Rate']])
         except Exception as exc:
-            logging.debug(str(exc))
+            custom_logger.debug(str(exc))
             pass
     return results
     

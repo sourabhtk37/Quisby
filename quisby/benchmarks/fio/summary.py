@@ -1,4 +1,4 @@
-import logging
+from quisby import custom_logger
 from itertools import groupby
 
 from quisby.util import mk_int, process_instance
@@ -41,7 +41,7 @@ def create_summary_fio_run_data(results,OS_RELEASE):
     try:
         results = fio_run_sort_data(results)
     except Exception as exc:
-        logging.error(str(exc))
+        custom_logger.error(str(exc))
     for header, items in groupby(results, key=lambda x: [x[0][0],x[0][1],x[0][2]]):
         try:
             items = list(items)
@@ -55,6 +55,6 @@ def create_summary_fio_run_data(results,OS_RELEASE):
             sort_result_disk = []
 
         except Exception as exc:
-            logging.error(str(exc))
+            custom_logger.error(str(exc))
             pass
     return summary_results

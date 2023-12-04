@@ -1,5 +1,5 @@
 import csv
-import logging
+from quisby import custom_logger
 from itertools import groupby
 
 import requests

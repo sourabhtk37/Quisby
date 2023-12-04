@@ -1,8 +1,4 @@
-
-
-
-""" Custom key to sort the data base don instance name """
-import logging
+from quisby import custom_logger
 
 
 from quisby.util import read_config
@@ -51,8 +47,8 @@ def extract_coremark_pro_data(path, system_name, OS_RELEASE):
         else:
             return None
     except Exception as exc:
-        logging.debug(str(exc))
-        logging.error("Unable to extract data from csv file for coremark_pro")
+        custom_logger.debug(str(exc))
+        custom_logger.error("Unable to extract data from csv file for coremark_pro")
         return None
 
     for index, data in enumerate(coremark_results):
