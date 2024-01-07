@@ -33,7 +33,7 @@ def calc_peak_throughput_peak_efficiency(data):
         peak_efficiency = float(peak_throughput) / float(cost_per_hour)
     except Exception as exc:
         logging.debug(str(exc))
-        logging.ERROR("Error calculating value !")
+        logging.error("Error calculating value !")
     return peak_throughput, cost_per_hour, peak_efficiency
 
 
