@@ -1,4 +1,4 @@
-import logging
+from quisby import custom_logger
 import time
 from itertools import groupby
 
@@ -133,3 +133,4 @@ def graph_specjbb_data(spreadsheetId, range):
         except Exception as exc:
             logging.debug(str(exc))
             logging.error("Unable to graph specjbb data")
+
